@@ -583,27 +583,29 @@
                   {{ u.activo ? 'ACTIVO' : 'INACTIVO' }}
                 </span>
               </td>
-              <td>
-             <!-- Si está ACTIVO → permitir DESACTIVAR -->
-            <button
-                        v-if="u.activo"
-                        type="button"
-                        class="sistpec-btn-danger sistpec-btn-sm"
-                        @click="desactivarUsuario(u)"
-                    >
-                        DESACTIVAR
-                    </button>
+             <td>
+           <!-- Botón DESACTIVAR -->
+        <button
+           type="button"
+           class="sistpec-btn-danger sistpec-btn-sm"
+           :disabled="!u.activo"
+           @click="desactivarUsuario(u)"
+        >
+            DESACTIVAR
+        </button>
 
-                <!-- Si está INACTIVO → permitir REACTIVAR -->
-                    <button
-                        v-else
-                        type="button"
-                        class="sistpec-btn-primary sistpec-btn-sm"
-                        @click="reactivarUsuario(u)"
-                        >
-                        REACTIVAR
-                    </button>
-                </td>
+         <!-- Botón REACTIVAR -->
+        <button
+          type="button"
+          class="sistpec-btn-secondary sistpec-btn-sm"
+          :disabled="u.activo"
+          @click="reactivarUsuario(u)"
+          style="margin-left: 6px;"
+        >
+          REACTIVAR
+        </button>
+          </td>
+
 
             </tr>
             <tr v-if="usuariosFiltrados.length === 0">
@@ -1108,7 +1110,38 @@ function desactivarUsuario(u) {
 
   mensajeExito.value = 'El usuario se ha desactivado correctamente.';
 }
+
+function reactivarUsuario(u) {
+  errores.value      = [];
+  mensajeExito.value = '';
+
+  if (u.activo) {
+    errores.value.push('El usuario ya se encuentra activo.');
+    return;
+  }
+
+  const ok = window.confirm(
+    `¿Desea reactivar al usuario "${u.nombre_usuario}"?`
+  );
+  if (!ok) return;
+
+  const idx = usuariosDemoTabla.value.findIndex(x => x.id === u.id);
+  if (idx === -1) {
+    errores.value.push('No se encontró el usuario en la lista.');
+    return;
+  }
+
+  usuariosDemoTabla.value[idx] = {
+    ...usuariosDemoTabla.value[idx],
+    activo: true
+  };
+
+  mensajeExito.value = 'El usuario se ha reactivado correctamente.';
+}
+
 </script>
+
+
 
 <style scoped>
 /* Acciones */
