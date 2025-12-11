@@ -75,7 +75,8 @@
         />
       </div>
 
-      <div class="sistpec-form-group sistpec-form-group-inline">
+      <!-- RANGO FECHA REGISTRO -->
+      <div class="sistpec-form-group sistpec-form-group-inline rango-fecha">
         <label>Fecha de registro (caso)</label>
         <div class="sistpec-form-inline-inputs">
           <input
@@ -90,7 +91,8 @@
         </div>
       </div>
 
-      <div class="sistpec-form-group sistpec-form-group-inline">
+      <!-- RANGO FECHA RESULTADO -->
+      <div class="sistpec-form-group sistpec-form-group-inline rango-fecha">
         <label>Fecha de carga de resultados</label>
         <div class="sistpec-form-inline-inputs">
           <input
@@ -114,7 +116,8 @@
         </select>
       </div>
 
-      <div class="sistpec-form-group sistpec-search-actions">
+      <!-- BOTONES: OCUPAN TODA LA FILA Y SE ALINEAN A LA IZQUIERDA -->
+      <div class="sistpec-form-group sistpec-search-actions sistpec-search-actions-full">
         <button
           type="button"
           class="sistpec-btn-primary"
@@ -211,7 +214,7 @@ const filtros = ref({
   resultado: '' // POSITIVO | NEGATIVO | ''
 });
 
-// Datos demo (luego se reemplazan por datos del backend)
+// Datos demo
 const resultadosDemoTabla = ref([
   {
     id: 1,
@@ -263,7 +266,7 @@ const resultadosFiltrados = computed(() => {
       return false;
     }
 
-    // Arete / muestra (buscamos en ambos campos)
+    // Arete / muestra
     if (f.identificador_arete_muestra) {
       const idTexto = `${r.numero_arete || ''} ${r.numero_muestra || ''}`.toLowerCase();
       if (!idTexto.includes(f.identificador_arete_muestra.toLowerCase())) {
@@ -339,8 +342,6 @@ function buscarResultados() {
 
   seBusco.value = true;
 
-  // Aquí, cuando tengas backend, harías la llamada a la API.
-  // Por ahora, solo filtramos la tabla demo.
   if (resultadosFiltrados.value.length) {
     mensajeExito.value = `Se encontraron ${resultadosFiltrados.value.length} resultado(s) que coinciden con la búsqueda.`;
   } else {
@@ -449,10 +450,21 @@ function limpiarFiltros() {
   box-shadow: 0 0 0 1px rgba(47, 107, 50, 0.15);
 }
 
+/* grupo inline para rangos de fecha */
 .sistpec-form-group-inline .sistpec-form-inline-inputs {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+/* cada input de fecha ocupa el mismo espacio y no se monta */
+.sistpec-form-inline-inputs input {
+  flex: 1;
+  min-width: 0;
+}
+
+.rango-fecha {
+  grid-column: span 2; /* les damos más ancho */
 }
 
 .vigencia-sep {
@@ -460,10 +472,17 @@ function limpiarFiltros() {
   color: #666;
 }
 
+/* Botones de búsqueda */
 .sistpec-search-actions {
   display: flex;
   align-items: flex-end;
   gap: 8px;
+}
+
+/* Que los botones ocupen toda la fila y queden a la izquierda */
+.sistpec-search-actions-full {
+  grid-column: 1 / -1;
+  justify-content: flex-start;
 }
 
 /* Botones */
@@ -564,6 +583,14 @@ function limpiarFiltros() {
 @media (max-width: 768px) {
   .sistpec-search-bar {
     grid-template-columns: 1fr;
+  }
+
+  .rango-fecha {
+    grid-column: span 1;
+  }
+
+  .sistpec-search-actions-full {
+    grid-column: span 1;
   }
 }
 </style>

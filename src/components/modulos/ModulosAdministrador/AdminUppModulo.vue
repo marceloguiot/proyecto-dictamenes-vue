@@ -1,5 +1,4 @@
 <template>
-  <!-- Barra de acciones (botones Consultar / Eliminar) -->
   <section class="modulo-acciones">
     <span class="modulo-acciones-titulo">Acciones disponibles</span>
 
@@ -10,13 +9,12 @@
         type="button"
         class="sistpec-btn-accion"
         :class="{ active: selectedAction === accion.id }"
-        @click="cambiarAccion(accion.id)"
+        @click="selectedAction = accion.id"
       >
         {{ accion.label }}
       </button>
     </div>
 
-    <!-- Mensaje que cambia según la acción -->
     <div class="sistpec-info-box">
       <p class="sistpec-info-text">
         {{ descripcionAccionActual }}
@@ -24,8 +22,8 @@
     </div>
   </section>
 
-  <section class="modulo-contenido" ref="moduloContenidoRef">
-    <!-- ALERTAS DE ERRORES -->
+  <section class="modulo-contenido">
+    <!-- ALERTAS -->
     <div
       v-if="errores.length"
       class="modulo-alert modulo-alert--error"
@@ -37,7 +35,6 @@
       </ul>
     </div>
 
-    <!-- ALERTA DE ÉXITO -->
     <div
       v-if="mensajeExito"
       class="modulo-alert modulo-alert--success"
@@ -49,14 +46,23 @@
     <div v-if="selectedAction === 'consultar'">
       <h3 class="subtitulo">Consultar UPP</h3>
 
-      <!-- Barra de filtros -->
+      <!-- Filtros -->
       <div class="sistpec-search-bar">
         <div class="sistpec-form-group">
           <label>Clave UPP</label>
           <input
-            v-model="filtros.upp"
+            v-model="filtros.clave_upp"
             type="text"
-            placeholder="Ej. VER-0001-2025"
+            placeholder="Ej. UPP-VER-001"
+          />
+        </div>
+
+        <div class="sistpec-form-group">
+          <label>Nombre de la UPP</label>
+          <input
+            v-model="filtros.nombre_upp"
+            type="text"
+            placeholder="Nombre de la unidad"
           />
         </div>
 
@@ -65,7 +71,7 @@
           <input
             v-model="filtros.propietario"
             type="text"
-            placeholder="Nombre y/o apellidos"
+            placeholder="Nombre del propietario"
           />
         </div>
 
@@ -74,7 +80,7 @@
           <input
             v-model="filtros.municipio"
             type="text"
-            placeholder="Ej. Xalapa"
+            placeholder="Municipio"
           />
         </div>
 
@@ -83,55 +89,63 @@
           <input
             v-model="filtros.localidad"
             type="text"
-            placeholder="Ej. El Castillo"
+            placeholder="Localidad"
           />
+        </div>
+
+        <div class="sistpec-form-group">
+          <label>Estatus</label>
+          <select v-model="filtros.estatus">
+            <option value="">Todos</option>
+            <option value="ACTIVA">Activa</option>
+            <option value="BAJA">Baja</option>
+          </select>
+        </div>
+
+        <div class="sistpec-form-group sistpec-search-actions">
+          <button
+            type="button"
+            class="sistpec-btn-primary"
+            @click="buscarUpp"
+          >
+            BUSCAR
+          </button>
+          <button
+            type="button"
+            class="sistpec-btn-secondary"
+            @click="limpiarFiltros"
+          >
+            LIMPIAR FILTROS
+          </button>
         </div>
       </div>
 
-      <!-- Botones buscar / limpiar -->
-      <div class="sistpec-search-actions sistpec-search-actions-bottom">
-        <button
-          type="button"
-          class="sistpec-btn-primary"
-          @click="buscarUpps"
-        >
-          BUSCAR
-        </button>
-        <button
-          type="button"
-          class="sistpec-btn-secondary"
-          @click="limpiarFiltros"
-        >
-          LIMPIAR FILTROS
-        </button>
-      </div>
-
-      <!-- Tabla de resultados -->
-      <div class="sistpec-table-wrapper">
+      <!-- Resultados -->
+      <div class="sistpec-table-wrapper" v-if="seBusco">
         <table class="sistpec-table">
           <thead>
             <tr>
               <th>Clave UPP</th>
+              <th>Nombre UPP</th>
               <th>Propietario</th>
               <th>Municipio</th>
               <th>Localidad</th>
-              <th>Estrato</th>
               <th>Estatus</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="u in uppFiltradas" :key="u.id">
-              <td>{{ u.upp }}</td>
+              <td>{{ u.clave_upp }}</td>
+              <td>{{ u.nombre_upp }}</td>
               <td>{{ u.propietario }}</td>
               <td>{{ u.municipio }}</td>
               <td>{{ u.localidad }}</td>
-              <td>{{ u.estrato || '-' }}</td>
               <td>
                 <span
                   class="badge"
-                  :class="u.activo ? 'badge--activo' : 'badge--inactivo'"
+                  :class="u.estatus === 'ACTIVA' ? 'badge--activo' : 'badge--inactivo'"
                 >
-                  {{ u.activo ? 'ACTIVA' : 'INACTIVA' }}
+                  {{ u.estatus }}
                 </span>
               </td>
             </tr>
@@ -143,17 +157,20 @@
           </tbody>
         </table>
       </div>
+
+      <div v-else class="sin-resultados sin-busqueda">
+        Capture al menos un filtro y presione <strong>BUSCAR</strong> para mostrar las UPP.
+      </div>
     </div>
 
-    <!-- ================= ELIMINAR / DESACTIVAR UPP ================= -->
+    <!-- ================= ELIMINAR UPP ================= -->
     <div v-else-if="selectedAction === 'eliminar'">
-      <h3 class="subtitulo">Eliminar (desactivar) UPP</h3>
+      <h3 class="subtitulo">Eliminar (dar de baja) UPP</h3>
 
       <div class="sistpec-info-box">
         <p class="sistpec-info-text">
-          La eliminación se realiza como baja lógica: la UPP se marca como
-          <strong>INACTIVA</strong> y ya no puede usarse para nuevos dictámenes,
-          pero se conserva el historial en SISTPEC.
+          La eliminación se maneja como baja lógica: la UPP se marca como
+          <strong>BAJA</strong> y ya no se considera activa en el sistema.
         </p>
       </div>
 
@@ -162,9 +179,18 @@
         <div class="sistpec-form-group">
           <label>Clave UPP</label>
           <input
-            v-model="filtros.upp"
+            v-model="filtros.clave_upp"
             type="text"
-            placeholder="Ej. VER-0001-2025"
+            placeholder="Ej. UPP-VER-001"
+          />
+        </div>
+
+        <div class="sistpec-form-group">
+          <label>Nombre de la UPP</label>
+          <input
+            v-model="filtros.nombre_upp"
+            type="text"
+            placeholder="Nombre de la unidad"
           />
         </div>
 
@@ -173,95 +199,65 @@
           <input
             v-model="filtros.propietario"
             type="text"
-            placeholder="Nombre y/o apellidos"
+            placeholder="Nombre del propietario"
           />
         </div>
 
-        <div class="sistpec-form-group">
-          <label>Municipio</label>
-          <input
-            v-model="filtros.municipio"
-            type="text"
-            placeholder="Ej. Xalapa"
-          />
-        </div>
-
-        <div class="sistpec-form-group">
-          <label>Localidad</label>
-          <input
-            v-model="filtros.localidad"
-            type="text"
-            placeholder="Ej. El Castillo"
-          />
+        <div class="sistpec-form-group sistpec-search-actions">
+          <button
+            type="button"
+            class="sistpec-btn-primary"
+            @click="buscarUpp"
+          >
+            BUSCAR
+          </button>
+          <button
+            type="button"
+            class="sistpec-btn-secondary"
+            @click="limpiarFiltros"
+          >
+            LIMPIAR FILTROS
+          </button>
         </div>
       </div>
 
-      <div class="sistpec-search-actions sistpec-search-actions-bottom">
-        <button
-          type="button"
-          class="sistpec-btn-primary"
-          @click="buscarUpps"
-        >
-          BUSCAR
-        </button>
-        <button
-          type="button"
-          class="sistpec-btn-secondary"
-          @click="limpiarFiltros"
-        >
-          LIMPIAR FILTROS
-        </button>
-      </div>
-
-      <!-- Tabla con opción de desactivar / reactivar -->
-      <div class="sistpec-table-wrapper">
+      <!-- Resultados con botón ELIMINAR -->
+      <div class="sistpec-table-wrapper" v-if="seBusco">
         <table class="sistpec-table">
           <thead>
             <tr>
               <th>Clave UPP</th>
+              <th>Nombre UPP</th>
               <th>Propietario</th>
               <th>Municipio</th>
               <th>Localidad</th>
-              <th>Estrato</th>
               <th>Estatus</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="u in uppFiltradas" :key="u.id">
-              <td>{{ u.upp }}</td>
+              <td>{{ u.clave_upp }}</td>
+              <td>{{ u.nombre_upp }}</td>
               <td>{{ u.propietario }}</td>
               <td>{{ u.municipio }}</td>
               <td>{{ u.localidad }}</td>
-              <td>{{ u.estrato || '-' }}</td>
               <td>
                 <span
                   class="badge"
-                  :class="u.activo ? 'badge--activo' : 'badge--inactivo'"
+                  :class="u.estatus === 'ACTIVA' ? 'badge--activo' : 'badge--inactivo'"
                 >
-                  {{ u.activo ? 'ACTIVA' : 'INACTIVA' }}
+                  {{ u.estatus }}
                 </span>
               </td>
               <td>
-                <!-- Botón DESACTIVAR -->
                 <button
                   type="button"
                   class="sistpec-btn-danger sistpec-btn-sm"
-                  :disabled="!u.activo"
-                  @click="desactivarUpp(u)"
+                  :disabled="u.estatus === 'BAJA'"
+                  @click="bajaUpp(u)"
                 >
-                  DESACTIVAR
-                </button>
-
-                <!-- Botón REACTIVAR -->
-                <button
-                  type="button"
-                  class="sistpec-btn-secondary sistpec-btn-sm"
-                  :disabled="u.activo"
-                  @click="reactivarUpp(u)"
-                  style="margin-left: 6px;"
-                >
-                  REACTIVAR
+                  DAR DE BAJA
                 </button>
               </td>
             </tr>
@@ -273,172 +269,173 @@
           </tbody>
         </table>
       </div>
+
+      <div v-else class="sin-resultados sin-busqueda">
+        Capture al menos un filtro y presione <strong>BUSCAR</strong> para mostrar las UPP.
+      </div>
     </div>
 
-    <!-- ================= Fallback (no debería ocurrir) ================= -->
+    <!-- Fallback -->
     <div v-else>
-      <h3 class="subtitulo">
-        Acción no disponible
-      </h3>
-      <p>
-        El contenido para esta acción aún está en desarrollo.
-      </p>
+      <h3 class="subtitulo">Acción no disponible</h3>
+      <p>El contenido para esta acción aún está en desarrollo.</p>
     </div>
   </section>
 </template>
 
 <script setup>
-import { computed, ref, watch, nextTick } from 'vue';
+import { computed, ref } from 'vue';
 
 defineProps({
   codigo: { type: String, required: true },
-  rol:    { type: String, required: true }
+  rol: { type: String, required: true }
 });
 
-// Referencia para hacer scroll al contenido del módulo
-const moduloContenidoRef = ref(null);
+const errores = ref([]);
+const mensajeExito = ref('');
+const seBusco = ref(false);
 
-function scrollAlContenido() {
-  nextTick(() => {
-    if (!moduloContenidoRef.value) return;
-    const rect = moduloContenidoRef.value.getBoundingClientRect();
-    const offset = 90; // compensa la barra roja fija
-    const top = rect.top + window.scrollY - offset;
-    window.scrollTo({ top, behavior: 'smooth' });
-  });
-}
-
-// Acciones disponibles (solo consulta y eliminación)
+// Acciones disponibles
 const accionesUpp = [
   { id: 'consultar', label: 'CONSULTAR UPP' },
-  { id: 'eliminar',  label: 'ELIMINAR UPP' }
+  { id: 'eliminar', label: 'ELIMINAR UPP' }
 ];
 
 const selectedAction = ref('consultar');
 
-const errores      = ref([]);
-const mensajeExito = ref('');
-
-// Helper para cambiar de acción + scroll
-function cambiarAccion(accionId) {
-  selectedAction.value = accionId;
-  scrollAlContenido();
-}
-
-// Descripciones según acción
 const descripcionAccionActual = computed(() => {
   switch (selectedAction.value) {
     case 'consultar':
-      return 'Consulta el catálogo de Unidades de Producción Pecuaria registradas en SISTPEC.';
+      return 'Consulta las Unidades de Producción Pecuaria (UPP) registradas en el sistema.';
     case 'eliminar':
-      return 'Realiza bajas lógicas de UPP que ya no deban estar activas en SISTPEC.';
+      return 'Permite dar de baja lógicamente una UPP que ya no debe considerarse activa.';
     default:
       return '';
   }
 });
 
-// Reset de mensajes al cambiar de acción
-watch(
-  () => selectedAction.value,
-  () => {
-    errores.value      = [];
-    mensajeExito.value = '';
-  }
-);
+// Filtros
+const filtros = ref({
+  clave_upp: '',
+  nombre_upp: '',
+  propietario: '',
+  municipio: '',
+  localidad: '',
+  estatus: ''
+});
 
-// ===== Datos demo para tabla (simula respuesta de backend) =====
+// Datos demo
 const uppDemoTabla = ref([
   {
     id: 1,
-    upp: 'VER-0001-2025',
-    propietario: 'José López Ramírez',
-    municipio: 'Xalapa',
-    localidad: 'El Castillo',
-    estrato: 'Pequeño productor',
-    activo: true
+    clave_upp: 'UPP-VER-001',
+    nombre_upp: 'Rancho San Gabriel',
+    propietario: 'Ganadera San Gabriel',
+    municipio: 'Tantoyuca',
+    localidad: 'San Gabriel',
+    estatus: 'ACTIVA'
   },
   {
     id: 2,
-    upp: 'VER-0020-2025',
-    propietario: 'María Hernández Torres',
+    clave_upp: 'UPP-VER-002',
+    nombre_upp: 'Rancho La Gloria',
+    propietario: 'Productores La Gloria',
     municipio: 'Perote',
     localidad: 'La Gloria',
-    estrato: 'Mediano productor',
-    activo: true
+    estatus: 'ACTIVA'
   },
   {
     id: 3,
-    upp: 'VER-0100-2025',
-    propietario: 'Carlos García Santos',
-    municipio: 'Isla',
-    localidad: 'Paso del Medio',
-    estrato: 'Pequeño productor',
-    activo: false
+    clave_upp: 'UPP-VER-003',
+    nombre_upp: 'Granja El Zapotal',
+    propietario: 'Productores Unidos',
+    municipio: 'Acajete',
+    localidad: 'El Zapotal',
+    estatus: 'BAJA'
   }
 ]);
 
-// Filtros
-const filtros = ref({
-  upp: '',
-  propietario: '',
-  municipio: '',
-  localidad: ''
-});
-
 const uppFiltradas = computed(() => {
-  const upp        = filtros.value.upp.trim().toLowerCase();
-  const prop       = filtros.value.propietario.trim().toLowerCase();
-  const municipio  = filtros.value.municipio.trim().toLowerCase();
-  const localidad  = filtros.value.localidad.trim().toLowerCase();
+  const f = filtros.value;
 
-  return uppDemoTabla.value.filter(u => {
-    const matchUpp = upp
-      ? (u.upp || '').toLowerCase().includes(upp)
-      : true;
-    const matchProp = prop
-      ? (u.propietario || '').toLowerCase().includes(prop)
-      : true;
-    const matchMunicipio = municipio
-      ? (u.municipio || '').toLowerCase().includes(municipio)
-      : true;
-    const matchLocalidad = localidad
-      ? (u.localidad || '').toLowerCase().includes(localidad)
-      : true;
-
-    return matchUpp && matchProp && matchMunicipio && matchLocalidad;
+  return uppDemoTabla.value.filter((u) => {
+    if (f.clave_upp && !u.clave_upp.toLowerCase().includes(f.clave_upp.toLowerCase())) {
+      return false;
+    }
+    if (f.nombre_upp && !u.nombre_upp.toLowerCase().includes(f.nombre_upp.toLowerCase())) {
+      return false;
+    }
+    if (f.propietario && !u.propietario.toLowerCase().includes(f.propietario.toLowerCase())) {
+      return false;
+    }
+    if (f.municipio && !u.municipio.toLowerCase().includes(f.municipio.toLowerCase())) {
+      return false;
+    }
+    if (f.localidad && !u.localidad.toLowerCase().includes(f.localidad.toLowerCase())) {
+      return false;
+    }
+    if (f.estatus && u.estatus !== f.estatus) {
+      return false;
+    }
+    return true;
   });
 });
 
-function buscarUpps() {
-  // La búsqueda es reactiva con los filtros;
-  // aquí podrías loggear o llamar a backend si lo requiere el CU.
+function hayAlgunFiltro() {
+  return Object.values(filtros.value).some((v) => String(v).trim() !== '');
+}
+
+function buscarUpp() {
+  errores.value = [];
+  mensajeExito.value = '';
+  seBusco.value = false;
+
+  // >>> AQUÍ ESTÁ LO QUE PEDISTE <<<
+  if (!hayAlgunFiltro()) {
+    errores.value.push(
+      'Debe capturar al menos un criterio de búsqueda para consultar UPP.'
+    );
+    return;
+  }
+
+  seBusco.value = true;
+
+  if (uppFiltradas.value.length) {
+    mensajeExito.value = `Se encontraron ${uppFiltradas.value.length} UPP que coinciden con la búsqueda.`;
+  } else {
+    mensajeExito.value = '';
+  }
 }
 
 function limpiarFiltros() {
   filtros.value = {
-    upp: '',
+    clave_upp: '',
+    nombre_upp: '',
     propietario: '',
     municipio: '',
-    localidad: ''
+    localidad: '',
+    estatus: ''
   };
+  errores.value = [];
+  mensajeExito.value = '';
+  seBusco.value = false;
 }
 
-// ===== Eliminar / desactivar UPP =====
-function desactivarUpp(u) {
-  errores.value      = [];
+function bajaUpp(u) {
+  errores.value = [];
   mensajeExito.value = '';
 
-  if (!u.activo) {
-    errores.value.push('La UPP ya se encuentra inactiva.');
+  if (u.estatus === 'BAJA') {
+    errores.value.push('La UPP ya se encuentra dada de baja.');
     return;
   }
 
   const ok = window.confirm(
-    `¿Desea desactivar la UPP "${u.upp}" del propietario "${u.propietario}"?`
+    `¿Desea dar de baja la UPP "${u.nombre_upp}" (${u.clave_upp})?`
   );
   if (!ok) return;
 
-  const idx = uppDemoTabla.value.findIndex(x => x.id === u.id);
+  const idx = uppDemoTabla.value.findIndex((x) => x.id === u.id);
   if (idx === -1) {
     errores.value.push('No se encontró la UPP en la lista.');
     return;
@@ -446,38 +443,10 @@ function desactivarUpp(u) {
 
   uppDemoTabla.value[idx] = {
     ...uppDemoTabla.value[idx],
-    activo: false
+    estatus: 'BAJA'
   };
 
-  mensajeExito.value = 'La UPP se ha desactivado correctamente.';
-}
-
-function reactivarUpp(u) {
-  errores.value      = [];
-  mensajeExito.value = '';
-
-  if (u.activo) {
-    errores.value.push('La UPP ya se encuentra activa.');
-    return;
-  }
-
-  const ok = window.confirm(
-    `¿Desea reactivar la UPP "${u.upp}" del propietario "${u.propietario}"?`
-  );
-  if (!ok) return;
-
-  const idx = uppDemoTabla.value.findIndex(x => x.id === u.id);
-  if (idx === -1) {
-    errores.value.push('No se encontró la UPP en la lista.');
-    return;
-  }
-
-  uppDemoTabla.value[idx] = {
-    ...uppDemoTabla.value[idx],
-    activo: true
-  };
-
-  mensajeExito.value = 'La UPP se ha reactivado correctamente.';
+  mensajeExito.value = 'La UPP se ha dado de baja correctamente.';
 }
 </script>
 
@@ -501,7 +470,6 @@ function reactivarUpp(u) {
   gap: 4px;
 }
 
-/* Botones de acción de módulo */
 .sistpec-btn-accion {
   border: none;
   padding: 8px 16px;
@@ -529,104 +497,6 @@ function reactivarUpp(u) {
   font-size: 18px;
   margin: 10px 0 15px;
   color: #333;
-}
-
-/* ---- Formulario / filtros SISTPEC ---- */
-.sistpec-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.sistpec-form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.sistpec-form-group label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #444;
-}
-
-.sistpec-form-group input,
-.sistpec-form-group select {
-  padding: 8px 10px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-  outline: none;
-}
-
-.sistpec-form-group input:focus,
-.sistpec-form-group select:focus {
-  border-color: #2f6b32;
-  box-shadow: 0 0 0 1px rgba(47, 107, 50, 0.15);
-}
-
-/* Botones de acción del form */
-.sistpec-form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-/* Botones */
-.sistpec-btn-primary {
-  background-color: #2f6b32;
-  color: #ffffff;
-  border: none;
-  padding: 8px 18px;
-  border-radius: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.sistpec-btn-primary:hover {
-  background-color: #244e26;
-}
-
-.sistpec-btn-secondary {
-  background-color: #e0e0e0;
-  color: #333;
-  border: none;
-  padding: 8px 18px;
-  border-radius: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.sistpec-btn-secondary:hover {
-  background-color: #d0d0d0;
-}
-
-.sistpec-btn-sm {
-  padding: 4px 10px;
-  font-size: 11px;
-}
-
-/* Botón peligro (desactivar) */
-.sistpec-btn-danger {
-  background-color: #7a061e;
-  color: #ffffff;
-  border: none;
-  padding: 6px 14px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.sistpec-btn-danger:hover {
-  background-color: #5a0416;
-}
-
-.sistpec-btn-danger[disabled] {
-  opacity: 0.5;
-  cursor: default;
 }
 
 /* Info box verde claro */
@@ -664,7 +534,7 @@ function reactivarUpp(u) {
   color: #225522;
 }
 
-/* CONSULTAR / ELIMINAR: barra de filtros */
+/* Barra de filtros */
 .sistpec-search-bar {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -672,14 +542,94 @@ function reactivarUpp(u) {
   margin-bottom: 16px;
 }
 
+.sistpec-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sistpec-form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+}
+
+.sistpec-form-group input,
+.sistpec-form-group select {
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  outline: none;
+}
+
+.sistpec-form-group input:focus,
+.sistpec-form-group select:focus {
+  border-color: #2f6b32;
+  box-shadow: 0 0 0 1px rgba(47, 107, 50, 0.15);
+}
+
+/* Botones buscar/limpiar */
 .sistpec-search-actions {
   display: flex;
   align-items: flex-end;
   gap: 8px;
 }
 
-.sistpec-search-actions-bottom {
-  margin-bottom: 14px;
+.sistpec-btn-primary {
+  background-color: #2f6b32;
+  color: #ffffff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sistpec-btn-primary:hover {
+  background-color: #244e26;
+}
+
+.sistpec-btn-secondary {
+  background-color: #e0e0e0;
+  color: #333;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sistpec-btn-secondary:hover {
+  background-color: #d0d0d0;
+}
+
+.sistpec-btn-sm {
+  padding: 4px 10px;
+  font-size: 11px;
+}
+
+/* Botón peligro (baja) */
+.sistpec-btn-danger {
+  background-color: #7a061e;
+  color: #ffffff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sistpec-btn-danger:hover {
+  background-color: #5a0416;
+}
+
+.sistpec-btn-danger[disabled] {
+  opacity: 0.5;
+  cursor: default;
 }
 
 /* Tabla */
@@ -713,6 +663,11 @@ function reactivarUpp(u) {
 .sin-resultados {
   text-align: center;
   color: #777;
+  margin-top: 10px;
+}
+
+.sin-busqueda {
+  font-size: 13px;
 }
 
 /* badges */
