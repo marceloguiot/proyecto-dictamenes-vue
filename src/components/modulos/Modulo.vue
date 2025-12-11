@@ -34,9 +34,11 @@
 import { computed, defineProps, ref, watch, nextTick } from 'vue';
 
 // IMPORTAMOS LOS MÓDULOS
-import AdminUsuariosModulo from './AdminUsuariosModulo.vue';
-import AdminPropietariosModulo from './AdminPropietariosModulo.vue';
-import AdminUppModulo from './AdminUppModulo.vue';
+import AdminUsuariosModulo from './ModulosAdministrador/AdminUsuariosModulo.vue';
+import AdminPropietariosModulo from './ModulosAdministrador/AdminPropietariosModulo.vue';
+import AdminUppModulo from './ModulosAdministrador/AdminUppModulo.vue';
+import AdminMuestrasModulo from './ModulosAdministrador/AdminMuestrasModulo.vue';
+
 // Más adelante podrás importar otros módulos:
 // import AdminUppModulo from './AdminUppModulo.vue';
 // import AdminMuestrasModulo from './AdminMuestrasModulo.vue';
@@ -53,8 +55,8 @@ const componentMap = {
   adminAdministrarUsuarios: AdminUsuariosModulo,
   adminAdministrarPropietarios: AdminPropietariosModulo,
   adminAdministrarUPP: AdminUppModulo,
-  // adminAdministrarMuestras: AdminMuestrasModulo,
-  // ...
+  adminAdministrarMuestras: AdminMuestrasModulo,
+  
 };
 
 // Componente actual según el código recibido desde el navbar/panel
