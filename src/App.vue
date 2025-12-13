@@ -70,12 +70,13 @@ const menusPorRol = {
     { texto: 'Cerrar Sesión', modulo: 'cerrarSesion', especial: true }
   ],
   coordinador: [
-    { texto: 'Administrar UPP', modulo: 'coordAdminUpp' },
-    { texto: 'Administrar Resultados', modulo: 'coordAdminResultados' },
-    { texto: 'Administrar Hoja de reporte', modulo: 'coordAdminHojaReporte' },
-    { texto: 'Administrar Actividad de campo', modulo: 'coordAdminActividadCamp' },
-    { texto: 'Cerrar Sesión', modulo: 'cerrarSesion', especial: true }
+  { texto: 'Administrar UPP', modulo: 'coordAdministrarUPP' },
+  { texto: 'Administrar Resultados', modulo: 'coordAdministrarResultados' },
+  { texto: 'Administrar Hoja de reporte', modulo: 'coordAdministrarHojaReporte' },
+  { texto: 'Administrar Actividad de campo', modulo: 'coordAdministrarActividadCampo' },
+  { texto: 'Cerrar Sesión', modulo: 'cerrarSesion', especial: true }
   ],
+
   mvzAutorizado: [
     { texto: 'Administrar hoja de reporte', modulo: 'mvzAdminHojaReporte' },
     { texto: 'Administrar Propietario', modulo: 'mvzAdminPropietario' },
