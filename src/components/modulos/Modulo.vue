@@ -33,16 +33,23 @@
 <script setup>
 import { computed, defineProps, ref, watch, nextTick } from 'vue';
 
+// =======================
 // IMPORTAMOS LOS MÓDULOS
+// =======================
+
+// --- ADMINISTRADOR ---
 import AdminUsuariosModulo from './ModulosAdministrador/AdminUsuariosModulo.vue';
 import AdminPropietariosModulo from './ModulosAdministrador/AdminPropietariosModulo.vue';
 import AdminUppModulo from './ModulosAdministrador/AdminUppModulo.vue';
 import AdminMuestrasModulo from './ModulosAdministrador/AdminMuestrasModulo.vue';
 import AdminResultadosModulo from './ModulosAdministrador/AdminResultadosModulo.vue';
-// Más adelante podrás importar otros módulos:
-// import AdminUppModulo from './AdminUppModulo.vue';
-// import AdminMuestrasModulo from './AdminMuestrasModulo.vue';
-// etc.
+
+// --- COORDINADOR ---
+// Ajusta los nombres si tus archivos se llaman diferente.
+import CoordUppModulo from './ModulosCoordinador/CoordUppModulo.vue';
+import CoordResultadosModulo from './ModulosCoordinador/CoordResultadosModulo.vue';
+import CoordHojaReporteModulo from './ModulosCoordinador/CoordHojaReporteModulo.vue';
+import CoordActividadCampoModulo from './ModulosCoordinador/CoordActividadCampoModulo.vue';
 
 const props = defineProps({
   titulo: { type: String, required: true },
@@ -52,11 +59,19 @@ const props = defineProps({
 
 // Mapa: código de módulo -> componente Vue
 const componentMap = {
+  // ===== ADMINISTRADOR =====
   adminAdministrarUsuarios: AdminUsuariosModulo,
   adminAdministrarPropietarios: AdminPropietariosModulo,
   adminAdministrarUPP: AdminUppModulo,
   adminAdministrarMuestras: AdminMuestrasModulo,
   adminAdministrarResultados: AdminResultadosModulo,
+
+  // ===== COORDINADOR =====
+  // Estos códigos deben coincidir con los que envía tu navbar del coordinador
+  coordAdministrarUPP: CoordUppModulo,
+  coordAdministrarResultados: CoordResultadosModulo,
+  coordAdministrarHojaReporte: CoordHojaReporteModulo,
+  coordAdministrarActividadCampo: CoordActividadCampoModulo,
 };
 
 // Componente actual según el código recibido desde el navbar/panel
