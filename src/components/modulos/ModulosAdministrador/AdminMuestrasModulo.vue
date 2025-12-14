@@ -137,6 +137,7 @@
               <th>Fecha recepción</th>
               <th>Estatus</th>
               <th>Resultado</th>
+              <th>Comentarios</th>
             </tr>
           </thead>
           <tbody>
@@ -156,9 +157,11 @@
                 </span>
               </td>
               <td>{{ m.resultado || '-' }}</td>
+              <td>{{ m.comentarios || '-' }}</td>
             </tr>
+
             <tr v-if="muestrasFiltradas.length === 0">
-              <td colspan="8" class="sin-resultados">
+              <td colspan="9" class="sin-resultados">
                 No se encontraron muestras con los criterios de búsqueda.
               </td>
             </tr>
@@ -246,7 +249,8 @@ const muestrasDemoTabla = ref([
     tipo_muestra: 'Suero sanguíneo',
     fecha_recepcion: '2025-03-10',
     estatus: 'Concluido',
-    resultado: 'Negativo'
+    resultado: 'Negativo',
+    comentarios: 'Muestra en condiciones adecuadas.'
   },
   {
     id: 2,
@@ -257,7 +261,8 @@ const muestrasDemoTabla = ref([
     tipo_muestra: 'Suero sanguíneo',
     fecha_recepcion: '2025-03-12',
     estatus: 'En proceso',
-    resultado: ''
+    resultado: '',
+    comentarios: 'Pendiente de análisis serológico.'
   },
   {
     id: 3,
@@ -268,7 +273,8 @@ const muestrasDemoTabla = ref([
     tipo_muestra: 'Suero sanguíneo',
     fecha_recepcion: '2025-03-05',
     estatus: 'Rechazado',
-    resultado: 'Muestra hemolizada'
+    resultado: 'No aplica',
+    comentarios: 'Muestra coagulada, no viable para análisis.'
   }
 ]);
 
@@ -318,7 +324,7 @@ const muestrasFiltradas = computed(() => {
 
 function buscarMuestras() {
   // La búsqueda es reactiva con los filtros;
-  // aquí se puede llamar a backend si lo requiere el CU.
+  // aquí se puede llamar a backend si lo requiere.
 }
 
 function limpiarFiltros() {
@@ -559,6 +565,15 @@ function badgeEstatusClase(estatus) {
 .badge--proceso {
   background-color: #fff4e5;
   color: #b26a00;
+}
+
+/* ✅ Comentarios (evita que rompa la tabla) */
+.sistpec-table td:last-child {
+  max-width: 260px;
+  white-space: normal;
+  word-break: break-word;
+  font-size: 12px;
+  color: #444;
 }
 
 /* Responsive */
