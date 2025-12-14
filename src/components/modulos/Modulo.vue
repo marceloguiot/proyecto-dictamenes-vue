@@ -31,7 +31,7 @@
 </template>
 
 <script setup>
-import { computed, defineProps, ref, watch, nextTick } from 'vue';
+import { computed, defineProps, ref, watch, nextTick, onMounted } from 'vue';
 
 // =======================
 // IMPORTAR LOS MÓDULOS
@@ -45,7 +45,6 @@ import AdminMuestrasModulo from './ModulosAdministrador/AdminMuestrasModulo.vue'
 import AdminResultadosModulo from './ModulosAdministrador/AdminResultadosModulo.vue';
 
 // --- COORDINADOR ---
-
 import CoordUppModulo from './ModulosCoordinador/CoordUppModulo.vue';
 import CoordResultadosModulo from './ModulosCoordinador/CoordResultadosModulo.vue';
 import CoordHojaReporteModulo from './ModulosCoordinador/CoordHojaReporteModulo.vue';
@@ -67,7 +66,6 @@ const componentMap = {
   adminAdministrarResultados: AdminResultadosModulo,
 
   // ===== COORDINADOR =====
-  
   coordAdministrarUPP: CoordUppModulo,
   coordAdministrarResultados: CoordResultadosModulo,
   coordAdministrarHojaReporte: CoordHojaReporteModulo,
@@ -80,18 +78,11 @@ const currentComponent = computed(() => componentMap[props.codigo] || null);
 // Referencia al panel para hacer scroll automático
 const moduloPanelRef = ref(null);
 
-/**
- * Cuando cambia el código del módulo (cuando se hace clic en la barra de navegación), 
- * se hace scroll suave hasta este panel.
- */
-watch(
-  () => props.codigo,
-  async () => {
-    await nextTick(); // se espera a  que el DOM se actualice
-
+function scrollAlPanel() {
+  nextTick(() => {
     if (!moduloPanelRef.value) return;
 
-    const navbarOffset = 80; // altura aproximada de la barra superior
+    const navbarOffset = 80; // altura aproximada de la barra superior fija
     const y =
       moduloPanelRef.value.getBoundingClientRect().top +
       window.scrollY -
@@ -101,6 +92,25 @@ watch(
       top: y,
       behavior: 'smooth'
     });
+  });
+}
+
+
+onMounted(() => {
+  scrollAlPanel();
+});
+
+watch(
+  () => props.codigo,
+  () => {
+    scrollAlPanel();
+  }
+);
+
+watch(
+  () => currentComponent.value,
+  () => {
+    scrollAlPanel();
   }
 );
 </script>
@@ -153,3 +163,4 @@ watch(
   }
 }
 </style>
+
