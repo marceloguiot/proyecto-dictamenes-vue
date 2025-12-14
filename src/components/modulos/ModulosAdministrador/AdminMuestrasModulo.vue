@@ -1,28 +1,6 @@
 <template>
-  <!-- Barra de acciones (solo Consultar Muestras) -->
-  <section class="modulo-acciones">
-    <span class="modulo-acciones-titulo">Acciones disponibles</span>
-
-    <div class="modulo-acciones-botones">
-      <button
-        v-for="accion in accionesMuestras"
-        :key="accion.id"
-        type="button"
-        class="sistpec-btn-accion"
-        :class="{ active: selectedAction === accion.id }"
-        @click="cambiarAccion(accion.id)"
-      >
-        {{ accion.label }}
-      </button>
-    </div>
-
-    <!-- Mensaje que cambia según la acción -->
-    <div class="sistpec-info-box">
-      <p class="sistpec-info-text">
-        {{ descripcionAccionActual }}
-      </p>
-    </div>
-  </section>
+  
+ 
 
   <section class="modulo-contenido" ref="moduloContenidoRef">
     <!-- ALERTAS DE ERRORES -->
@@ -45,9 +23,21 @@
       {{ mensajeExito }}
     </div>
 
+
+
     <!-- ================= CONSULTAR MUESTRAS ================= -->
     <div v-if="selectedAction === 'consultar'">
       <h3 class="subtitulo">Consultar muestras</h3>
+
+
+      <div class="sistpec-info-box">
+      <p class="sistpec-info-text">
+        Para realizar la consulta de muestras, es obligatorio capturar
+        <strong>al menos un criterio de búsqueda</strong>.
+      </p>
+    </div>
+
+      <div style="height: 40px;"></div>
 
       <!-- Barra de filtros -->
       <div class="sistpec-search-bar">
@@ -506,6 +496,21 @@ function badgeEstatusClase(estatus) {
 .modulo-alert--success {
   background-color: #e1f3e1;
   border: 1px solid #c3e6c3;
+  color: #225522;
+}
+
+/* Info box verde claro */
+.sistpec-info-box {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 4px;
+  background-color: #e1f3e1;
+  border: 1px solid #c3e6c3;
+}
+
+.sistpec-info-text {
+  margin: 0;
+  font-size: 13px;
   color: #225522;
 }
 
