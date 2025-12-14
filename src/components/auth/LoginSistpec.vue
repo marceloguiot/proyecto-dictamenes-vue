@@ -2,7 +2,7 @@
   <main id="loginMain">
     <section id="login">
       <div class="titulo-sistema">
-        <h1>C.E.F.P.P</h1>
+        <h1>CEFPP</h1>
         <h2>VERACRUZ</h2>
       </div>
 
