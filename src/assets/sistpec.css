@@ -252,16 +252,16 @@ body {
 
 /* ÉXITO (VERDE CLARO, texto verde oscuro) */
 .modulo-alert--success {
-  background-color: #e5f7ea;      /* verde muy claro */
-  border-left-color: #2e7d32;     /* verde oscuro */
-  color: #1b5e20;                 /* texto verde más profundo */
+  background-color: #e5f7ea;     
+  border-left-color: #2e7d32;    
+  color: #1b5e20;                 
 }
 
-/* ERROR (ROSA CLARO, borde guinda SISTPEC) */
+/* ERROR (ROSA CLARO, borde guinda) */
 .modulo-alert--error {
-  background-color: #fbe9eb;      /* rojito muy suave */
-  border-left-color: #7a061e;     /* guinda institucional */
-  color: #7a061e;                 /* mismo guinda para el texto */
+  background-color: #fbe9eb;      
+  border-left-color: #7a061e;   
+  color: #7a061e;                
 }
 
 .modulo-alert ul {
