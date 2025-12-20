@@ -1,7 +1,7 @@
 <template>
   <!-- Barra de acciones -->
   <section class="modulo-acciones">
-    <span class="modulo-acciones-titulo">Responsable de Laboratorio · Administrar Resultados</span>
+    <span class="modulo-acciones-titulo">Acciones disponibles</span>
 
     <div class="modulo-acciones-botones">
       <button
@@ -35,7 +35,7 @@
 
     <!-- ====================== 1) REGISTRAR RESULTADOS ====================== -->
     <div v-if="selectedAction === 'registrar'">
-      <h3 class="subtitulo">Registrar resultados por muestra</h3>
+      <h3 class="subtitulo">Registrar</h3>
 
       <div v-if="mostrarAlertaRegistrar" class="modulo-alert modulo-alert--error">
         Debe capturar <strong>al menos un criterio</strong> para buscar.
@@ -190,7 +190,7 @@
 
     <!-- ====================== 2) CONSULTAR RESULTADOS ====================== -->
     <div v-else-if="selectedAction === 'consultar'">
-      <h3 class="subtitulo">Consultar resultados capturados</h3>
+      <h3 class="subtitulo">Consultar</h3>
 
       <div v-if="mostrarAlertaConsultar" class="modulo-alert modulo-alert--error">
         Debe capturar <strong>al menos un criterio</strong> para realizar la consulta.
@@ -291,7 +291,7 @@
 
     <!-- ====================== 3) EDITAR (SOLO PENDIENTE) ====================== -->
     <div v-else-if="selectedAction === 'editar'">
-      <h3 class="subtitulo">Editar resultados (estatus: Pendiente)</h3>
+      <h3 class="subtitulo">Editar</h3>
 
       <div v-if="mostrarAlertaEditar" class="modulo-alert modulo-alert--error">
         Debe capturar <strong>al menos un criterio</strong> para buscar.
@@ -390,7 +390,7 @@
 
     <!-- ====================== 4) ELIMINAR (SOLO PENDIENTE) ====================== -->
     <div v-else-if="selectedAction === 'eliminar'">
-      <h3 class="subtitulo">Eliminar resultados (estatus: Pendiente)</h3>
+      <h3 class="subtitulo">Eliminar</h3>
 
       <div v-if="mostrarAlertaEliminar" class="modulo-alert modulo-alert--error">
         Debe capturar <strong>al menos un criterio</strong> para buscar.

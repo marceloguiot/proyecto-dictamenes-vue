@@ -31,7 +31,7 @@
 
     <!-- ASIGNAR -->
     <div v-if="selectedAction === 'asignar'">
-      <h3 class="subtitulo">Asignar número de caso</h3>
+      <h3 class="subtitulo">Asignar</h3>
 
       <form class="sistpec-form" @submit.prevent="asignarCaso">
         <!-- PIVOTE: FOLIO HOJA DE CONTROL -->
@@ -112,7 +112,7 @@
     <!-- CONSULTAR -->
     <div v-else-if="selectedAction === 'consultar'">
       <header class="modulo-header">
-        <h3 class="subtitulo">Consultar números de caso</h3>
+        <h3 class="subtitulo">Consultar</h3>
         <p class="modulo-subtitle">Capture al menos un criterio de búsqueda.</p>
       </header>
 

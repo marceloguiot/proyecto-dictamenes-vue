@@ -35,7 +35,7 @@
 
     <!-- ================= CARGAR HOJA (PDF) ================= -->
     <div v-if="selectedAction === 'cargar'">
-      <h3 class="subtitulo">Cargar hoja de resultados (PDF)</h3>
+      <h3 class="subtitulo">Cargar</h3>
 
       <div class="sistpec-form-grid">
         <div class="sistpec-form-group">
@@ -132,7 +132,7 @@
 
     <!-- ================= ELIMINAR HOJA ================= -->
     <div v-else-if="selectedAction === 'eliminar'">
-      <h3 class="subtitulo">Eliminar hoja de resultados</h3>
+      <h3 class="subtitulo">Eliminar</h3>
 
       <div v-if="mostrarAlerta" class="modulo-alert modulo-alert--error">
         Debe capturar <strong>al menos un criterio</strong> para realizar la consulta.

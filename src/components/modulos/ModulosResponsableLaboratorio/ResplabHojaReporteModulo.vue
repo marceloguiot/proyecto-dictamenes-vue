@@ -4,6 +4,7 @@
       <h3 class="subtitulo">Consultar</h3>
     </header>
 
+      
     <!-- ALERTA: mínimo un filtro -->
     <div v-if="mostrarAlertaFiltros" class="modulo-alert modulo-alert--error">
       Debe capturar <strong>al menos un criterio de búsqueda</strong> para realizar la consulta.
