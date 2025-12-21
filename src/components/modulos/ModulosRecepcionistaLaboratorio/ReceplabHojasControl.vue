@@ -174,7 +174,7 @@ const filtros = ref({
 });
 
 /** ===================== DEMO DATA =====================
- * Reemplaza esto con tu llamada al backend.
+ * Reemplaza esto con la llamada al backend.
  * pdf_url puede ser: /uploads/hojas/HCC-2025-010.pdf o una URL absoluta.
  */
 const hojasDemo = ref([
@@ -329,10 +329,39 @@ function badgeClase(estatus) {
   display:grid; grid-template-columns: repeat(4, minmax(0, 1fr));
   gap:12px; margin-bottom:16px;
 }
-.fechas-bar{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.sistpec-search-actions{
-  display:flex; align-items:flex-end; gap:8px; justify-content:flex-end;
+/* filtros grid */
+.sistpec-search-bar{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap:12px;
+  margin-bottom:16px;
+  align-items:end;
 }
+
+/* esta barra es de 2 columnas */
+.fechas-bar{
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items:end;
+}
+
+/* BOTONES: derecha + abajo + en columna */
+.sistpec-search-actions{
+  grid-column: 2 / 3;       
+  justify-self: end;        
+  align-self: end;          
+  margin-top: 14px;        
+
+  display:flex;
+  flex-direction: column;   
+  gap: 10px;                
+}
+
+/* ancho uniforme */
+.sistpec-search-actions .sistpec-btn-primary,
+.sistpec-search-actions .sistpec-btn-secondary{
+  width: 220px;            
+}
+
 
 /* botones */
 .sistpec-btn-primary{

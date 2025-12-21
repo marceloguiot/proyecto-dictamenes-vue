@@ -24,11 +24,11 @@
     <section class="modulo-contenido">
       <!-- ASIGNAR -->
       <div v-if="selectedAction === 'asignar'">
-        <h3 class="subtitulo">Asignar número de caso</h3>
+        <h3 class="subtitulo">Asignar</h3>
 
         <div class="sistpec-search-bar">
           <div class="sistpec-form-group">
-            <label>Folio hoja control de campo</label>
+            <label>Folio hoja control</label>
             <input v-model="form.hoja" type="text" placeholder="Ej. HCC-2025-001" />
           </div>
 
@@ -59,7 +59,7 @@
 
       <!-- CONSULTAR -->
       <div v-else>
-        <h3 class="subtitulo">Consultar números de caso</h3>
+        <h3 class="subtitulo">Consultar</h3>
 
         <div v-if="mostrarAlerta" class="modulo-alert modulo-alert--error">
           Debe capturar <strong>al menos un criterio de búsqueda</strong>.

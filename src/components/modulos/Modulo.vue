@@ -31,7 +31,7 @@
 </template>
 
 <script setup>
-import { computed, defineProps, ref, watch, nextTick } from 'vue';
+import { computed, ref, watch, nextTick, onMounted } from 'vue';
 
 // --- ADMINISTRADOR ---
 import AdminUsuariosModulo from './ModulosAdministrador/AdminUsuariosModulo.vue';
@@ -51,12 +51,29 @@ import ResplabNumCasoModulo from './ModulosResponsableLaboratorio/ResplabNumCaso
 import ResplabMuestrasModulo from './ModulosResponsableLaboratorio/ResplabMuestrasModulo.vue';
 import ResplabResultadosModulo from './ModulosResponsableLaboratorio/ResplabResultadosModulo.vue';
 import ResplabHojasResultadosModulo from './ModulosResponsableLaboratorio/ResplabHojasResultadosModulo.vue';
-import ResplabHojaReporteModulo from './ModulosResponsableLaboratorio/ResplabHojaReporteModulo.vue'; // ✅ FALTABA
+import ResplabHojaReporteModulo from './ModulosResponsableLaboratorio/ResplabHojaReporteModulo.vue';
 
-const props = defineProps({
+// --- RECEPCIONISTA ----
+import ReceplabHojasControl from './ModulosRecepcionistaLaboratorio/ReceplabHojasControl.vue';
+import ReceplabHojasdeResultados from './ModulosRecepcionistaLaboratorio/ReceplabHojasdeResultados.vue';
+import ReceplabMuestrasModulo from './ModulosRecepcionistaLaboratorio/ReceplabMuestrasModulo.vue';
+import ReceplabNumcasoModulo from './ModulosRecepcionistaLaboratorio/ReceplabNumcasoModulo.vue';
+import ReceplabResultadosModulo from './ModulosRecepcionistaLaboratorio/ReceplabResultadosModulo.vue';
+
+// ---MVZ ---
+import MvzHojasResultadosModulo from './ModulosMVZ/MvzHojasResultadosModulo.vue';
+import MvzNumerosCasoModulo from './ModulosMVZ/MvzNumerosCasoModulo.vue';
+import MvzPropietariosModulo from './ModulosMVZ/MvzPropietariosModulo.vue';
+import MvzReportesCampoModulo from './ModulosMVZ/MvzReportesCampoModulo.vue';
+import MvzUppModulo from './ModulosMVZ/MvzUppModulo.vue';
+
+/**
+ * Aquí se destruyen los props para que en el template existan: titulo, codigo, rol
+ */
+const { titulo, codigo, rol } = defineProps({
   titulo: { type: String, required: true },
   codigo: { type: String, required: true },
-  rol:    { type: String, required: true }
+  rol: { type: String, required: true }
 });
 
 const componentMap = {
@@ -73,30 +90,65 @@ const componentMap = {
   coordAdministrarHojaReporte: CoordHojaReporteModulo,
   coordAdministrarActividadCampo: CoordActividadCampoModulo,
 
-  // ===== RESPONSABLE LAB =====
+  // ========= RESPONSABLE LAB ========
   resplabAdminNumdeCaso: ResplabNumCasoModulo,
   resplabAdminMuestra: ResplabMuestrasModulo,
   resplabAdminResultados: ResplabResultadosModulo,
   resplabAdminHojaResultados: ResplabHojasResultadosModulo,
-  resplabAdminHojaReporte: ResplabHojaReporteModulo, 
+  resplabAdminHojaReporte: ResplabHojaReporteModulo,
+
+  //========== RECEPCIONISTA =========
+  recepAdminNumCaso: ReceplabNumcasoModulo,
+  recepAdminMuestras: ReceplabMuestrasModulo,
+  recepAdminResultados: ReceplabResultadosModulo,
+  recepAdminHojasResultados: ReceplabHojasdeResultados,
+  recepAdminHojaReporte: ReceplabHojasControl,
+
+  //========== MVZ ===========
+  mvzAdministrarResultados: MvzHojasResultadosModulo,
+  mvzAdminNumCaso: MvzNumerosCasoModulo,
+  mvzAdminPropietario: MvzPropietariosModulo,
+  mvzAdminHojaReporte: MvzReportesCampoModulo,
+  mvzAdminUpp: MvzUppModulo
 };
 
-const currentComponent = computed(() => componentMap[props.codigo] || null);
+const currentComponent = computed(() => componentMap[codigo] || null);
 const moduloPanelRef = ref(null);
 
+/** Scroll global (para todos los roles/módulos) */
+function hacerScrollAlModulo() {
+  if (!moduloPanelRef.value) return;
+
+  const navbarOffset = 90; 
+  const y =
+    moduloPanelRef.value.getBoundingClientRect().top +
+    window.scrollY -
+    navbarOffset;
+
+  window.scrollTo({ top: y, behavior: 'smooth' });
+}
+
+/** Scroll al montar */
+onMounted(async () => {
+  await nextTick();
+  hacerScrollAlModulo();
+});
+
+/** Scroll cuando cambia el código (cambio de módulo desde App.vue / menú) */
 watch(
-  () => props.codigo,
+  () => codigo,
   async () => {
     await nextTick();
-    if (!moduloPanelRef.value) return;
+    hacerScrollAlModulo();
+  }
+);
 
-    const navbarOffset = 80;
-    const y =
-      moduloPanelRef.value.getBoundingClientRect().top +
-      window.scrollY -
-      navbarOffset;
-
-    window.scrollTo({ top: y, behavior: 'smooth' });
+/** ✅ Scroll cuando cambia el componente dinámico (Vue lo reemplaza internamente) */
+watch(
+  () => currentComponent.value,
+  async () => {
+    await nextTick();
+    hacerScrollAlModulo();
   }
 );
 </script>
@@ -149,3 +201,5 @@ watch(
   }
 }
 </style>
+
+

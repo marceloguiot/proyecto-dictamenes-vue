@@ -35,7 +35,7 @@
 
     <!-- ===================== CARGAR PDF ===================== -->
     <div v-if="selectedAction === 'cargar'">
-      <h3 class="subtitulo">Cargar hoja de resultados (PDF)</h3>
+      <h3 class="subtitulo">Cargar PDF</h3>
 
       <div class="sistpec-search-bar">
         <div class="sistpec-form-group">
@@ -54,7 +54,7 @@
         </div>
 
         <div class="sistpec-form-group">
-          <label>Fecha de carga (demo)</label>
+          <label>Fecha de carga</label>
           <input v-model="form.fecha_carga" type="date" />
         </div>
       </div>
@@ -110,7 +110,7 @@
             </tr>
 
             <tr v-if="hojasDemo.length === 0">
-              <td colspan="7" class="sin-resultados">Sin registros (demo).</td>
+              <td colspan="7" class="sin-resultados">Sin registros.</td>
             </tr>
           </tbody>
         </table>
@@ -120,7 +120,7 @@
     <!-- ===================== CONSULTAR ===================== -->
     <div v-else-if="selectedAction === 'consultar'">
       <header class="modulo-header">
-        <h3 class="subtitulo">Consultar hojas de resultados</h3>
+        <h3 class="subtitulo">Consultar</h3>
         <p class="modulo-subtitle">Capture al menos un criterio de búsqueda.</p>
       </header>
 
@@ -213,7 +213,7 @@
 
     <!-- ===================== ELIMINAR ===================== -->
     <div v-else-if="selectedAction === 'eliminar'">
-      <h3 class="subtitulo">Eliminar hoja de resultados</h3>
+      <h3 class="subtitulo">Eliminar</h3>
 
       <div class="sistpec-search-bar">
         <div class="sistpec-form-group">
@@ -284,12 +284,9 @@
     <!-- Modal simple (demo) -->
     <div v-if="modal.abierto" class="modal-backdrop" @click.self="cerrarModal">
       <div class="modal">
-        <h4 class="modal-title">Vista previa (demo)</h4>
+        <h4 class="modal-title">Vista previa</h4>
         <p class="modal-text">
           Archivo: <strong>{{ modal.archivo }}</strong>
-        </p>
-        <p class="modal-text">
-          En esta versión demo no se renderiza el PDF; después lo conectamos al backend/almacenamiento.
         </p>
         <div class="modal-actions">
           <button class="sistpec-btn-secondary" type="button" @click="cerrarModal">
@@ -338,9 +335,9 @@ function cambiarAccion(id) {
 
 const descripcionAccionActual = computed(() => {
   switch (selectedAction.value) {
-    case 'cargar': return 'Carga una hoja de resultados en PDF para que el MVZ la consulte (demo).';
-    case 'consultar': return 'Consulta hojas de resultados (requiere al menos un criterio).';
-    case 'eliminar': return 'Elimina hojas de resultados (con confirmación).';
+    case 'cargar': return 'Carga una hoja de resultados en PDF para que el MVZ la consulte.';
+    case 'consultar': return 'Consulta hojas de resultados.';
+    case 'eliminar': return 'Elimina hojas de resultados.';
     default: return '';
   }
 });

@@ -64,7 +64,7 @@ const menusPorRol = {
   recepcionista: [
     { texto: 'Administrar número de caso', modulo: 'recepAdminNumCaso' },
     { texto: 'Administrar Muestras', modulo: 'recepAdminMuestras' },
-    { texto: 'Administrar Resultados', modulo: 'receAdminResultados' },
+    { texto: 'Administrar Resultados', modulo: 'recepAdminResultados' },
     { texto: 'Administrar hojas de resultados', modulo: 'recepAdminHojasResultados' },
     { texto: 'Administrar Hoja de reporte', modulo: 'recepAdminHojaReporte' },
     { texto: 'Cerrar Sesión', modulo: 'cerrarSesion', especial: true }

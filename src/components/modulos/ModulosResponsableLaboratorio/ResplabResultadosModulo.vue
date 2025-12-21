@@ -1,18 +1,19 @@
 <template>
-  <!-- Barra de acciones -->
+
+  <!-- ===================== ACCIONES Modulo ResplabResultadosModulo ===================== -->
   <section class="modulo-acciones">
     <span class="modulo-acciones-titulo">Acciones disponibles</span>
 
     <div class="modulo-acciones-botones">
       <button
-        v-for="accion in acciones"
-        :key="accion.id"
+        v-for="a in acciones"
+        :key="a.id"
         type="button"
         class="sistpec-btn-accion"
-        :class="{ active: selectedAction === accion.id }"
-        @click="cambiarAccion(accion.id)"
+        :class="{ active: selectedAction === a.id }"
+        @click="cambiarAccion(a.id)"
       >
-        {{ accion.label }}
+        {{ a.label }}
       </button>
     </div>
 
@@ -25,7 +26,7 @@
     <!-- ALERTAS -->
     <div v-if="errores.length" class="modulo-alert modulo-alert--error">
       <ul>
-        <li v-for="(err, i) in errores" :key="i">{{ err }}</li>
+        <li v-for="(e, i) in errores" :key="i">{{ e }}</li>
       </ul>
     </div>
 
@@ -33,456 +34,482 @@
       {{ mensajeExito }}
     </div>
 
-    <!-- ====================== 1) REGISTRAR RESULTADOS ====================== -->
+    <!-- ===================== 1) REGISTRAR ===================== -->
     <div v-if="selectedAction === 'registrar'">
-      <h3 class="subtitulo">Registrar</h3>
+      <h3 class="subtitulo">Registrar/Capturar</h3>
 
-      <div v-if="mostrarAlertaRegistrar" class="modulo-alert modulo-alert--error">
-        Debe capturar <strong>al menos un criterio</strong> para buscar.
-      </div>
-
-      <!-- filtros de búsqueda de caso -->
+      <!-- FILTROS / BÚSQUEDA -->
       <div class="sistpec-search-bar">
         <div class="sistpec-form-group">
+          <label>Hoja de control (CC No.)</label>
+          <input v-model="filtros.cc_no" type="text" placeholder="Ej. 5409818" />
+        </div>
+
+        <div class="sistpec-form-group">
           <label>Número de caso</label>
-          <input v-model="filtrosRegistrar.numero_caso" type="text" placeholder="Ej. BR25-001" />
+          <input v-model="filtros.caso" type="text" placeholder="Ej. BR25-001" />
         </div>
 
         <div class="sistpec-form-group">
-          <label>Hoja control campo</label>
-          <input v-model="filtrosRegistrar.hoja_control_campo" type="text" placeholder="Ej. HCC-2025-020" />
+          <label>Tarjeta</label>
+          <input v-model="filtros.tarjeta" type="text" placeholder="Ej. 1" />
         </div>
 
-        <div class="sistpec-form-group">
-          <label>UPP</label>
-          <input v-model="filtrosRegistrar.upp" type="text" placeholder="Ej. 30-025-2000-001" />
-        </div>
-
-        <div class="sistpec-form-group sistpec-search-actions">
-          <button type="button" class="sistpec-btn-primary" @click="buscarCasosRegistrar">
-            BUSCAR
-          </button>
-          <button type="button" class="sistpec-btn-secondary" @click="limpiarRegistrar">
-            LIMPIAR
-          </button>
+        <div class="sistpec-form-group sistpec-search-actions right">
+          <div class="acciones-vertical">
+            <button class="sistpec-btn-primary" type="button" @click="buscarParaCaptura">
+              BUSCAR
+            </button>
+            <button class="sistpec-btn-secondary" type="button" @click="limpiarFiltros">
+              LIMPIAR
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- tabla casos -->
-      <div v-if="buscadoRegistrar" class="sistpec-table-wrapper">
+      <div v-if="cabeceraEncontrada" class="cabecera-info">
+        <div><strong>CC No.:</strong> {{ cabecera.cc_no }}</div>
+        <div><strong>Caso:</strong> {{ cabecera.caso }}</div>
+        <div><strong>UPP:</strong> {{ cabecera.upp }}</div>
+        <div><strong>MVZ:</strong> {{ cabecera.mvz }}</div>
+        <div><strong>Fecha:</strong> {{ cabecera.fecha || '-' }}</div>
+      </div>
+
+      <!-- TABLA -->
+      <div v-if="muestrasCaptura.length" class="sistpec-table-wrapper">
         <table class="sistpec-table">
           <thead>
             <tr>
-              <th>Número de caso</th>
-              <th>Fecha recepción</th>
-              <th>MVZ</th>
-              <th>UPP</th>
-              <th>Hoja campo</th>
+              <th>#</th>
+              <th>SNIIGA (Arete)</th>
               <th>Especie</th>
-              <th>Total muestras</th>
-              <th>Estatus resultados</th>
-              <th>Acciones</th>
+              <th>Edad (meses)</th>
+              <th>Raza</th>
+              <th>Sexo</th>
+              <th>Fierro</th>
+
+              <th>Tarjeta</th>
+              <th>Resultado</th>
+              <th>Tubo</th>
+              <th>Estado</th>
+              <th>Fecha captura</th>
+              <th>Observaciones</th>
             </tr>
           </thead>
 
           <tbody>
-            <tr v-for="c in casosRegistrarFiltrados" :key="c.id">
-              <td><strong>{{ c.numero_caso }}</strong></td>
-              <td>{{ c.fecha_recepcion }}</td>
-              <td>{{ c.mvz }}</td>
-              <td>{{ c.upp }}</td>
-              <td>{{ c.hoja_control_campo }}</td>
-              <td>{{ c.especie }}</td>
-              <td>{{ c.muestras.length }}</td>
-              <td>
-                <span class="badge" :class="badgeEstatusClase(c.estatus_resultados)">
-                  {{ c.estatus_resultados }}
-                </span>
-              </td>
-              <td>
-                <button
-                  type="button"
-                  class="sistpec-btn-secondary sistpec-btn-sm"
-                  @click="seleccionarCasoParaCaptura(c)"
-                >
-                  CAPTURAR
-                </button>
-              </td>
-            </tr>
+            <tr v-for="(m, idx) in muestrasCaptura" :key="m.id">
+              <td>{{ idx + 1 }}</td>
+              <td>{{ m.arete }}</td>
+              <td>{{ m.especie }}</td>
+              <td>{{ m.edad_meses }}</td>
+              <td>{{ m.raza }}</td>
+              <td>{{ m.sexo }}</td>
+              <td>{{ m.fierro }}</td>
 
-            <tr v-if="casosRegistrarFiltrados.length === 0">
-              <td colspan="9" class="sin-resultados">
-                No se encontraron casos con esos criterios.
+              <td>{{ m.tarjeta }}</td>
+
+              <td>
+                <select v-model="m.resultado_tarjeta" class="input-mini">
+                  <option value="">-</option>
+                  <option value="N">N</option>
+                  <option value="P">P</option>
+                  <option value="E">E</option>
+                </select>
+              </td>
+
+              <td>
+                <input v-model="m.tubo" type="text" class="input-mini" placeholder="Ej. 1" />
+              </td>
+
+              <td>
+                <select v-model="m.estado" class="input-mini">
+                  <option value="Pendiente">Pendiente</option>
+                  <option value="Entregado">Entregado</option>
+                </select>
+              </td>
+
+              <td>
+                <input v-model="m.fecha_captura" type="date" class="input-mini" />
+              </td>
+
+              <td class="obs-cell">
+                <input v-model="m.observaciones" type="text" class="input-obs" placeholder="Opcional" />
               </td>
             </tr>
           </tbody>
         </table>
+
+        <div class="acciones-inferiores">
+          <button class="sistpec-btn-primary" type="button" @click="guardarResultados">
+            GUARDAR
+          </button>
+
+          <button
+            class="sistpec-btn-secondary"
+            type="button"
+            :disabled="!puedeImprimir(muestrasCaptura)"
+            @click="imprimirPDF('captura')"
+          >
+            IMPRIMIR / PDF
+          </button>
+        </div>
+
+        <p v-if="!puedeImprimir(muestrasCaptura)" class="ayuda">
+          Para imprimir, primero asegúrate de que cada fila tenga Resultado + Tubo + Fecha + Estado.
+        </p>
       </div>
 
-      <!-- panel captura -->
-      <div v-if="casoSeleccionado" class="sistpec-edit-panel">
-        <h4 class="subtitulo-secundario">
-          Capturando resultados: <strong>{{ casoSeleccionado.numero_caso }}</strong> · {{ casoSeleccionado.upp }}
-        </h4>
-
-        <div class="sistpec-info-box">
-          <p class="sistpec-info-text">
-            Total de muestras en hoja: <strong>{{ casoSeleccionado.muestras.length }}</strong>
-          </p>
-        </div>
-
-        <div class="sistpec-table-wrapper">
-          <table class="sistpec-table">
-            <thead>
-              <tr>
-                <th>Folio muestra</th>
-                <th>Arete</th>
-                <th>Resultado</th>
-                <th>Observaciones</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr v-for="(m, idx) in casoSeleccionado.muestras" :key="m.id">
-                <td>{{ m.folio_muestra }}</td>
-                <td>{{ m.arete || '-' }}</td>
-                <td>
-                  <select v-model="casoSeleccionado.muestras[idx].resultado" class="input-inline">
-                    <option value="">Seleccione</option>
-                    <option value="Negativo">Negativo</option>
-                    <option value="Positivo">Positivo</option>
-                    <option value="Inconcluso">Inconcluso</option>
-                    <option value="Rechazado">Rechazado</option>
-                  </select>
-                </td>
-                <td>
-                  <input
-                    v-model="casoSeleccionado.muestras[idx].observaciones"
-                    type="text"
-                    class="input-inline"
-                    placeholder="Ej. Muestra hemolizada / sin identificación / etc."
-                  />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="sistpec-form-actions">
-          <button type="button" class="sistpec-btn-secondary" @click="guardarResultadosPendiente">
-            GUARDAR (PENDIENTE)
-          </button>
-
-          <button type="button" class="sistpec-btn-primary" @click="emitirEImprimirResultados">
-            EMITIR + IMPRIMIR
-          </button>
-
-          <button type="button" class="sistpec-btn-secondary" @click="cancelarCaptura">
-            CANCELAR
-          </button>
-        </div>
-
-        <small class="ayuda">
-          “Guardar (Pendiente)” permite editar/eliminar después. “Emitir + Imprimir” bloquea edición (estatus Emitido).
-        </small>
+      <div v-else-if="buscadoCaptura" class="modulo-alert modulo-alert--error">
+        No se encontraron muestras para los criterios capturados.
       </div>
     </div>
 
-    <!-- ====================== 2) CONSULTAR RESULTADOS ====================== -->
+    <!-- ===================== 2) CONSULTAR ===================== -->
     <div v-else-if="selectedAction === 'consultar'">
       <h3 class="subtitulo">Consultar</h3>
 
-      <div v-if="mostrarAlertaConsultar" class="modulo-alert modulo-alert--error">
-        Debe capturar <strong>al menos un criterio</strong> para realizar la consulta.
-      </div>
-
       <div class="sistpec-search-bar">
         <div class="sistpec-form-group">
+          <label>CC No.</label>
+          <input v-model="filtros.cc_no" type="text" placeholder="Ej. 5409818" />
+        </div>
+
+        <div class="sistpec-form-group">
           <label>Número de caso</label>
-          <input v-model="filtrosConsultar.numero_caso" type="text" placeholder="Ej. BR25-001" />
+          <input v-model="filtros.caso" type="text" placeholder="Ej. BR25-001" />
         </div>
 
         <div class="sistpec-form-group">
-          <label>UPP</label>
-          <input v-model="filtrosConsultar.upp" type="text" placeholder="Ej. 30-025-2000-001" />
+          <label>Tarjeta</label>
+          <input v-model="filtros.tarjeta" type="text" placeholder="Ej. 1" />
         </div>
 
-        <div class="sistpec-form-group">
-          <label>Resultado</label>
-          <select v-model="filtrosConsultar.resultado">
-            <option value="">Todos</option>
-            <option value="Negativo">Negativo</option>
-            <option value="Positivo">Positivo</option>
-            <option value="Inconcluso">Inconcluso</option>
-            <option value="Rechazado">Rechazado</option>
-          </select>
-        </div>
-
-        <div class="sistpec-form-group">
-          <label>Estatus</label>
-          <select v-model="filtrosConsultar.estatus">
-            <option value="">Todos</option>
-            <option value="Pendiente">Pendiente</option>
-            <option value="Emitido">Emitido</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="sistpec-search-bar fechas-bar">
-        <div class="sistpec-form-group sistpec-form-group-inline">
-          <label>Fecha de captura</label>
-          <div class="sistpec-form-inline-inputs">
-            <input v-model="filtrosConsultar.fecha_inicio" type="date" />
-            <span class="vigencia-sep">a</span>
-            <input v-model="filtrosConsultar.fecha_fin" type="date" />
+        <div class="sistpec-form-group sistpec-search-actions right">
+          <div class="acciones-vertical">
+            <button class="sistpec-btn-primary" type="button" @click="consultarResultados">
+              BUSCAR
+            </button>
+            <button class="sistpec-btn-secondary" type="button" @click="limpiarFiltros">
+              LIMPIAR
+            </button>
           </div>
         </div>
-
-        <div class="sistpec-form-group sistpec-search-actions">
-          <button type="button" class="sistpec-btn-primary" @click="buscarConsultar">
-            BUSCAR
-          </button>
-          <button type="button" class="sistpec-btn-secondary" @click="limpiarConsultar">
-            LIMPIAR
-          </button>
-        </div>
       </div>
 
-      <div class="sistpec-table-wrapper">
+      <div v-if="resultadosConsulta.length" class="sistpec-table-wrapper">
+        <div class="acciones-inferiores">
+          <button class="sistpec-btn-secondary" type="button" @click="imprimirPDF('consulta')">
+            IMPRIMIR / PDF
+          </button>
+        </div>
+
         <table class="sistpec-table">
           <thead>
             <tr>
-              <th>Número de caso</th>
-              <th>Folio muestra</th>
+              <th>Caso</th>
+              <th>CC No.</th>
+              <th>Tarjeta</th>
               <th>Arete</th>
               <th>Resultado</th>
-              <th>Fecha captura</th>
-              <th>Estatus</th>
-              <th>Comentarios</th>
+              <th>Tubo</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th>Observaciones</th>
             </tr>
           </thead>
 
           <tbody>
-            <tr v-for="r in resultadosConsultadosFiltrados" :key="r.id">
-              <td><strong>{{ r.numero_caso }}</strong></td>
-              <td>{{ r.folio_muestra }}</td>
-              <td>{{ r.arete || '-' }}</td>
+            <tr v-for="r in resultadosConsulta" :key="'c-' + r.id">
+              <td>{{ r.caso }}</td>
+              <td>{{ r.cc_no }}</td>
+              <td>{{ r.tarjeta }}</td>
+              <td>{{ r.arete }}</td>
+              <td>{{ r.resultado_tarjeta || '-' }}</td>
+              <td>{{ r.tubo || '-' }}</td>
+              <td>{{ r.fecha_captura || '-' }}</td>
               <td>
-                <span class="badge" :class="badgeResultado(r.resultado)">
-                  {{ r.resultado }}
-                </span>
-              </td>
-              <td>{{ r.fecha_captura }}</td>
-              <td>
-                <span class="badge" :class="badgeEstatusClase(r.estatus)">
-                  {{ r.estatus }}
+                <span class="badge" :class="r.estado === 'Pendiente' ? 'badge--proceso' : 'badge--activo'">
+                  {{ r.estado }}
                 </span>
               </td>
               <td>{{ r.observaciones?.trim() ? r.observaciones : '-' }}</td>
             </tr>
 
-            <tr v-if="resultadosConsultadosFiltrados.length === 0">
-              <td colspan="7" class="sin-resultados">Sin resultados con esos filtros.</td>
+            <tr v-if="resultadosConsulta.length === 0">
+              <td colspan="9" class="sin-resultados">Sin coincidencias.</td>
             </tr>
           </tbody>
         </table>
       </div>
+
+      <div v-else-if="buscadoConsulta" class="modulo-alert modulo-alert--error">
+        No se encontraron resultados.
+      </div>
     </div>
 
-    <!-- ====================== 3) EDITAR (SOLO PENDIENTE) ====================== -->
+    <!-- ===================== 3) EDITAR (Pendiente) ===================== -->
     <div v-else-if="selectedAction === 'editar'">
       <h3 class="subtitulo">Editar</h3>
 
-      <div v-if="mostrarAlertaEditar" class="modulo-alert modulo-alert--error">
-        Debe capturar <strong>al menos un criterio</strong> para buscar.
-      </div>
-
       <div class="sistpec-search-bar">
         <div class="sistpec-form-group">
-          <label>Número de caso</label>
-          <input v-model="filtrosEditar.numero_caso" type="text" placeholder="Ej. BR25-001" />
+          <label>CC No.</label>
+          <input v-model="filtros.cc_no" type="text" placeholder="Ej. 5409818" />
         </div>
 
         <div class="sistpec-form-group">
-          <label>Folio muestra</label>
-          <input v-model="filtrosEditar.folio_muestra" type="text" placeholder="Ej. M-0001-2025" />
+          <label>Número de caso</label>
+          <input v-model="filtros.caso" type="text" placeholder="Ej. BR25-001" />
         </div>
 
-        <div class="sistpec-form-group sistpec-search-actions">
-          <button type="button" class="sistpec-btn-primary" @click="buscarEditar">
-            BUSCAR
-          </button>
-          <button type="button" class="sistpec-btn-secondary" @click="limpiarEditar">
-            LIMPIAR
-          </button>
+        <div class="sistpec-form-group">
+          <label>Tarjeta</label>
+          <input v-model="filtros.tarjeta" type="text" placeholder="Ej. 1" />
+        </div>
+
+        <div class="sistpec-form-group sistpec-search-actions right">
+          <div class="acciones-vertical">
+            <button class="sistpec-btn-primary" type="button" @click="cargarPendientesParaEditar">
+              BUSCAR
+            </button>
+            <button class="sistpec-btn-secondary" type="button" @click="limpiarFiltros">
+              LIMPIAR
+            </button>
+          </div>
         </div>
       </div>
 
-      <div v-if="buscadoEditar" class="sistpec-table-wrapper">
+      <div v-if="resultadosEditar.length" class="sistpec-table-wrapper">
         <table class="sistpec-table">
           <thead>
             <tr>
-              <th>Número de caso</th>
-              <th>Folio muestra</th>
+              <th>Caso</th>
+              <th>CC No.</th>
+              <th>Tarjeta</th>
+              <th>Arete</th>
               <th>Resultado</th>
-              <th>Fecha captura</th>
-              <th>Estatus</th>
-              <th>Comentarios</th>
+              <th>Tubo</th>
+              <th>Estado</th>
+              <th>Fecha</th>
+              <th>Observaciones</th>
               <th>Acción</th>
             </tr>
           </thead>
 
           <tbody>
-            <tr v-for="r in resultadosEditarFiltrados" :key="r.id">
-              <td><strong>{{ r.numero_caso }}</strong></td>
-              <td>{{ r.folio_muestra }}</td>
-              <td>{{ r.resultado }}</td>
-              <td>{{ r.fecha_captura }}</td>
-              <td><span class="badge badge--proceso">Pendiente</span></td>
-              <td>{{ r.observaciones?.trim() ? r.observaciones : '-' }}</td>
+            <tr v-for="r in resultadosEditar" :key="'e-' + r.id">
+              <td>{{ r.caso }}</td>
+              <td>{{ r.cc_no }}</td>
+              <td>{{ r.tarjeta }}</td>
+              <td>{{ r.arete }}</td>
+
               <td>
-                <button type="button" class="sistpec-btn-secondary sistpec-btn-sm" @click="seleccionarResultadoEdicion(r)">
-                  EDITAR
+                <select v-model="r.resultado_tarjeta" class="input-mini">
+                  <option value="">-</option>
+                  <option value="N">N</option>
+                  <option value="P">P</option>
+                  <option value="E">E</option>
+                </select>
+              </td>
+
+              <td><input v-model="r.tubo" type="text" class="input-mini" /></td>
+
+              <td>
+                <select v-model="r.estado" class="input-mini">
+                  <option value="Pendiente">Pendiente</option>
+                  <option value="Entregado">Entregado</option>
+                </select>
+              </td>
+
+              <td><input v-model="r.fecha_captura" type="date" class="input-mini" /></td>
+
+              <td class="obs-cell">
+                <input v-model="r.observaciones" type="text" class="input-obs" />
+              </td>
+
+              <td>
+                <button class="sistpec-btn-primary sistpec-btn-sm" type="button" @click="guardarEdicion(r)">
+                  GUARDAR
                 </button>
               </td>
             </tr>
 
-            <tr v-if="resultadosEditarFiltrados.length === 0">
-              <td colspan="7" class="sin-resultados">No hay resultados pendientes con esos criterios.</td>
+            <tr v-if="resultadosEditar.length === 0">
+              <td colspan="10" class="sin-resultados">No hay resultados pendientes con esos criterios.</td>
             </tr>
           </tbody>
         </table>
+
+        <small class="ayuda">
+          Solo se permite editar cuando el estado es <strong>Pendiente</strong>. Si está <strong>Entregado</strong>, ya no se puede editar.:contentReference[oaicite:3]{index=3}
+        </small>
       </div>
 
-      <div v-if="resultadoEditando" class="sistpec-edit-panel">
-        <h4 class="subtitulo-secundario">
-          Editando: {{ resultadoEditando.numero_caso }} · {{ resultadoEditando.folio_muestra }}
-        </h4>
-
-        <div class="sistpec-form-grid">
-          <div class="sistpec-form-group">
-            <label>Resultado</label>
-            <select v-model="resultadoEditando.resultado">
-              <option value="">Seleccione</option>
-              <option value="Negativo">Negativo</option>
-              <option value="Positivo">Positivo</option>
-              <option value="Inconcluso">Inconcluso</option>
-              <option value="Rechazado">Rechazado</option>
-            </select>
-          </div>
-
-          <div class="sistpec-form-group sistpec-form-group-full">
-            <label>Comentarios</label>
-            <input v-model="resultadoEditando.observaciones" type="text" placeholder="Ej. hemolizada, rechazada, sin arete, etc." />
-          </div>
-        </div>
-
-        <div class="sistpec-form-actions">
-          <button type="button" class="sistpec-btn-primary" @click="guardarEdicionResultado">
-            GUARDAR CAMBIOS
-          </button>
-          <button type="button" class="sistpec-btn-secondary" @click="cancelarEdicionResultado">
-            CANCELAR
-          </button>
-        </div>
+      <div v-else-if="buscadoEditar" class="modulo-alert modulo-alert--error">
+        No hay resultados Pendientes para editar con esos criterios.
       </div>
     </div>
 
-    <!-- ====================== 4) ELIMINAR (SOLO PENDIENTE) ====================== -->
+    <!-- ===================== 4) ELIMINAR (Pendiente) ===================== -->
     <div v-else-if="selectedAction === 'eliminar'">
       <h3 class="subtitulo">Eliminar</h3>
 
-      <div v-if="mostrarAlertaEliminar" class="modulo-alert modulo-alert--error">
-        Debe capturar <strong>al menos un criterio</strong> para buscar.
-      </div>
-
       <div class="sistpec-search-bar">
         <div class="sistpec-form-group">
-          <label>Número de caso</label>
-          <input v-model="filtrosEliminar.numero_caso" type="text" placeholder="Ej. BR25-001" />
+          <label>CC No.</label>
+          <input v-model="filtros.cc_no" type="text" placeholder="Ej. 5409818" />
         </div>
 
         <div class="sistpec-form-group">
-          <label>Folio muestra</label>
-          <input v-model="filtrosEliminar.folio_muestra" type="text" placeholder="Ej. M-0001-2025" />
+          <label>Número de caso</label>
+          <input v-model="filtros.caso" type="text" placeholder="Ej. BR25-001" />
         </div>
 
-        <div class="sistpec-form-group sistpec-search-actions">
-          <button type="button" class="sistpec-btn-primary" @click="buscarEliminar">
-            BUSCAR
-          </button>
-          <button type="button" class="sistpec-btn-secondary" @click="limpiarEliminar">
-            LIMPIAR
-          </button>
+        <div class="sistpec-form-group">
+          <label>Tarjeta</label>
+          <input v-model="filtros.tarjeta" type="text" placeholder="Ej. 1" />
+        </div>
+
+        <div class="sistpec-form-group sistpec-search-actions right">
+          <div class="acciones-vertical">
+            <button class="sistpec-btn-primary" type="button" @click="cargarPendientesParaEliminar">
+              BUSCAR
+            </button>
+            <button class="sistpec-btn-secondary" type="button" @click="limpiarFiltros">
+              LIMPIAR
+            </button>
+          </div>
         </div>
       </div>
 
-      <div v-if="buscadoEliminar" class="sistpec-table-wrapper">
+      <div v-if="resultadosEliminar.length" class="sistpec-table-wrapper">
         <table class="sistpec-table">
           <thead>
             <tr>
-              <th>Número de caso</th>
-              <th>Folio muestra</th>
+              <th>Caso</th>
+              <th>CC No.</th>
+              <th>Tarjeta</th>
+              <th>Arete</th>
               <th>Resultado</th>
-              <th>Fecha captura</th>
-              <th>Estatus</th>
-              <th>Comentarios</th>
+              <th>Tubo</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th>Observaciones</th>
               <th>Acción</th>
             </tr>
           </thead>
 
           <tbody>
-            <tr v-for="r in resultadosEliminarFiltrados" :key="r.id">
-              <td><strong>{{ r.numero_caso }}</strong></td>
-              <td>{{ r.folio_muestra }}</td>
-              <td>{{ r.resultado }}</td>
-              <td>{{ r.fecha_captura }}</td>
+            <tr v-for="r in resultadosEliminar" :key="'d-' + r.id">
+              <td>{{ r.caso }}</td>
+              <td>{{ r.cc_no }}</td>
+              <td>{{ r.tarjeta }}</td>
+              <td>{{ r.arete }}</td>
+              <td>{{ r.resultado_tarjeta || '-' }}</td>
+              <td>{{ r.tubo || '-' }}</td>
+              <td>{{ r.fecha_captura || '-' }}</td>
               <td><span class="badge badge--proceso">Pendiente</span></td>
               <td>{{ r.observaciones?.trim() ? r.observaciones : '-' }}</td>
               <td>
-                <button type="button" class="sistpec-btn-danger sistpec-btn-sm" @click="eliminarResultado(r)">
+                <button class="sistpec-btn-danger sistpec-btn-sm" type="button" @click="eliminarResultado(r)">
                   ELIMINAR
                 </button>
               </td>
             </tr>
 
-            <tr v-if="resultadosEliminarFiltrados.length === 0">
-              <td colspan="7" class="sin-resultados">No hay resultados pendientes con esos criterios.</td>
+            <tr v-if="resultadosEliminar.length === 0">
+              <td colspan="10" class="sin-resultados">No hay resultados pendientes con esos criterios.</td>
             </tr>
           </tbody>
         </table>
+
+        <small class="ayuda">
+          El sistema solo permite eliminar si el resultado está <strong>Pendiente</strong> y debe guardar registro de quién lo hizo.:contentReference[oaicite:4]{index=4}
+        </small>
+      </div>
+
+      <div v-else-if="buscadoEliminar" class="modulo-alert modulo-alert--error">
+        No hay resultados Pendientes para eliminar con esos criterios.
       </div>
     </div>
 
-    <!-- fallback -->
-    <div v-else>
-      <h3 class="subtitulo">Acción no disponible</h3>
-      <p>El contenido para esta acción aún está en desarrollo.</p>
+    <!-- ===================== PRINT AREA ===================== -->
+    <div ref="printAreaRef" class="print-area">
+      <div class="print-header">
+        <div class="print-title">SISTPEC - Resultados Brucelosis</div>
+
+        <div class="print-sub">
+          <div><strong>CC No.:</strong> {{ cabecera.cc_no || '-' }}</div>
+          <div><strong>Caso:</strong> {{ cabecera.caso || '-' }}</div>
+          <div><strong>UPP:</strong> {{ cabecera.upp || '-' }}</div>
+          <div><strong>MVZ:</strong> {{ cabecera.mvz || '-' }}</div>
+          <div><strong>Fecha:</strong> {{ cabecera.fecha || '-' }}</div>
+        </div>
+      </div>
+
+      <table class="print-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Arete</th>
+            <th>Especie</th>
+            <th>Edad</th>
+            <th>Raza</th>
+            <th>Sexo</th>
+            <th>Fierro</th>
+            <th>Tarjeta</th>
+            <th>Resultado</th>
+            <th>Tubo</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th>Observaciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr v-for="(m, i) in printRows" :key="'p-' + m.id">
+            <td>{{ i + 1 }}</td>
+            <td>{{ m.arete }}</td>
+            <td>{{ m.especie }}</td>
+            <td>{{ m.edad_meses }}</td>
+            <td>{{ m.raza }}</td>
+            <td>{{ m.sexo }}</td>
+            <td>{{ m.fierro }}</td>
+            <td>{{ m.tarjeta }}</td>
+            <td>{{ m.resultado_tarjeta || '-' }}</td>
+            <td>{{ m.tubo || '-' }}</td>
+            <td>{{ m.estado || '-' }}</td>
+            <td>{{ m.fecha_captura || '-' }}</td>
+            <td>{{ m.observaciones || '-' }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="print-footer">
+        <div>Generado desde SISTPEC</div>
+      </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 
-defineProps({
-  codigo: { type: String, required: false, default: '' },
-  rol: { type: String, required: false, default: 'RESP_LAB' }
-});
 
-// Scroll al contenido
 const moduloContenidoRef = ref(null);
+const printAreaRef = ref(null);
+
 function scrollAlContenido() {
   nextTick(() => {
     if (!moduloContenidoRef.value) return;
     const rect = moduloContenidoRef.value.getBoundingClientRect();
     const offset = 90;
-    const top = rect.top + window.scrollY - offset;
-    window.scrollTo({ top, behavior: 'smooth' });
+    window.scrollTo({ top: rect.top + window.scrollY - offset, behavior: 'smooth' });
   });
 }
 
-// Acciones
+/* Acciones */
 const acciones = [
   { id: 'registrar', label: 'REGISTRAR' },
   { id: 'consultar', label: 'CONSULTAR' },
@@ -496,710 +523,407 @@ const mensajeExito = ref('');
 
 function cambiarAccion(id) {
   selectedAction.value = id;
+  errores.value = [];
+  mensajeExito.value = '';
   scrollAlContenido();
 }
 
+/* Descripción por acción */
 const descripcionAccionActual = computed(() => {
   switch (selectedAction.value) {
     case 'registrar':
-      return 'Capture resultados por muestra y emita la hoja de resultados.';
+      return 'Busque por CC No., Número de caso o Tarjeta.';
     case 'consultar':
-      return 'Consulte resultados capturados por filtros.';
+      return 'Consulte resultados.';
     case 'editar':
-      return 'Edite resultados únicamente si el estatus es Pendiente.';
+      return 'Edite únicamente resultados con estado Pendiente.';
     case 'eliminar':
-      return 'Elimine resultados únicamente si el estatus es Pendiente.';
+      return 'Elimine únicamente resultados con estado Pendiente.';
     default:
       return '';
   }
 });
 
-// Reset mensajes al cambiar acción
-watch(
-  () => selectedAction.value,
-  () => {
-    errores.value = [];
-    mensajeExito.value = '';
-    // no borro filtros para no frustrar, solo paneles
-    casoSeleccionado.value = null;
-    resultadoEditando.value = null;
-  }
-);
+/* Filtros */
+const filtros = ref({ cc_no: '', caso: '', tarjeta: '' });
+function limpiarFiltros() {
+  filtros.value = { cc_no: '', caso: '', tarjeta: '' };
+  errores.value = [];
+  mensajeExito.value = '';
+  buscadoCaptura.value = false;
+  buscadoConsulta.value = false;
+  buscadoEditar.value = false;
+  buscadoEliminar.value = false;
+  muestrasCaptura.value = [];
+  resultadosConsulta.value = [];
+  resultadosEditar.value = [];
+  resultadosEliminar.value = [];
+  cabeceraEncontrada.value = false;
+  cabecera.value = { cc_no: '', caso: '', upp: '', mvz: '', fecha: '' };
+}
 
-/* ===================== DEMO DATA ===================== */
-const casosDemo = ref([
+/* Cabecera (para impresión) */
+const cabeceraEncontrada = ref(false);
+const cabecera = ref({ cc_no: '', caso: '', upp: '', mvz: '', fecha: '' });
+
+/* ========= DEMO "BASE" =========
+   Esto simula lo que vendrá de BD:
+   - datos precargados por MVZ (arete/especie/edad/raza/sexo/fierro)
+   - y campos de resultados que capturan recepción/lab.
+*/
+function hoyISO() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+/* Simula registros existentes (muestras ya recepcionadas / cotejadas) */
+const dbResultados = ref([
   {
     id: 1,
-    numero_caso: 'BR25-001',
-    fecha_recepcion: '2025-12-15',
-    mvz: 'MVZ Juan Pérez',
-    upp: '30-025-2000-001',
-    hoja_control_campo: 'HCC-2025-020',
-    especie: 'Bovino',
-    estatus_resultados: 'Pendiente', // Pendiente | Emitido
-    muestras: [
-      { id: 11, folio_muestra: 'M-0001-2025', arete: '301152010', resultado: '', observaciones: '' },
-      { id: 12, folio_muestra: 'M-0002-2025', arete: '301152011', resultado: '', observaciones: '' }
-    ]
+    cc_no: '5409818',
+    caso: 'BR25-001',
+    upp: '30-025-1055-001',
+    mvz: 'Jacinto Anastasio Cortés',
+    fecha: hoyISO(),
+
+    // precargado (campo)
+    arete: '3064155716',
+    especie: 'Bov',
+    edad_meses: 127,
+    raza: 'HF',
+    sexo: 'H',
+    fierro: 'AA',
+
+    // identificación de laboratorio / hoja
+    tarjeta: '1',
+
+    // captura resultados
+    resultado_tarjeta: '',
+    tubo: '',
+    estado: 'Pendiente',
+    fecha_captura: hoyISO(),
+    observaciones: ''
   },
   {
     id: 2,
-    numero_caso: 'BR25-002',
-    fecha_recepcion: '2025-12-16',
-    mvz: 'MVZ Ana López',
-    upp: '30-025-2000-010',
-    hoja_control_campo: 'HCC-2025-021',
-    especie: 'Bovino',
-    estatus_resultados: 'Pendiente',
-    muestras: [
-      { id: 21, folio_muestra: 'M-0100-2025', arete: '301152111', resultado: '', observaciones: '' }
-    ]
+    cc_no: '5409818',
+    caso: 'BR25-001',
+    upp: '30-025-1055-001',
+    mvz: 'Jacinto Anastasio Cortés',
+    fecha: hoyISO(),
+
+    arete: '3075424421',
+    especie: 'Bov',
+    edad_meses: 32,
+    raza: 'HF',
+    sexo: 'H',
+    fierro: 'ADA',
+
+    tarjeta: '2',
+
+    resultado_tarjeta: '',
+    tubo: '',
+    estado: 'Pendiente',
+    fecha_captura: hoyISO(),
+    observaciones: ''
   },
   {
     id: 3,
-    numero_caso: 'BR25-003',
-    fecha_recepcion: '2025-12-17',
-    mvz: 'MVZ Roberto Ruiz',
-    upp: '30-025-2000-099',
-    hoja_control_campo: 'HCC-2025-030',
-    especie: 'Caprino',
-    estatus_resultados: 'Emitido',
-    muestras: [
-      { id: 31, folio_muestra: 'M-0200-2025', arete: '900001', resultado: 'Negativo', observaciones: '' },
-      { id: 32, folio_muestra: 'M-0201-2025', arete: '900002', resultado: 'Positivo', observaciones: 'Repetir prueba' }
-    ]
+    cc_no: '2369449',
+    caso: 'BR25-010',
+    upp: '30-010-0001-001',
+    mvz: 'MVZ Ejemplo',
+    fecha: hoyISO(),
+
+    arete: '3011111111',
+    especie: 'Bov',
+    edad_meses: 24,
+    raza: 'CB',
+    sexo: 'H',
+    fierro: '—',
+
+    tarjeta: '1',
+
+    resultado_tarjeta: 'N',
+    tubo: '1',
+    estado: 'Entregado',
+    fecha_captura: hoyISO(),
+    observaciones: 'Entregado al MVZ.'
   }
 ]);
 
-/**
- * RESULTADOS capturados (normalizados por muestra) para consulta/editar/eliminar.
- * En producción, esto sería una tabla: resultados_muestras
- */
-const resultadosDemo = ref([
-  { id: 9001, numero_caso: 'BR25-003', folio_muestra: 'M-0200-2025', arete: '900001', resultado: 'Negativo', observaciones: '', fecha_captura: '2025-12-17', estatus: 'Emitido' },
-  { id: 9002, numero_caso: 'BR25-003', folio_muestra: 'M-0201-2025', arete: '900002', resultado: 'Positivo', observaciones: 'Repetir prueba', fecha_captura: '2025-12-17', estatus: 'Emitido' }
-]);
-
-function hoyISO() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-/* ===================== 1) REGISTRAR ===================== */
-const filtrosRegistrar = ref({ numero_caso: '', hoja_control_campo: '', upp: '' });
-const buscadoRegistrar = ref(false);
-const mostrarAlertaRegistrar = ref(false);
-
-function hayAlMenosUnFiltroRegistrar() {
-  const f = filtrosRegistrar.value;
-  return f.numero_caso.trim() || f.hoja_control_campo.trim() || f.upp.trim();
-}
-
-function buscarCasosRegistrar() {
-  errores.value = [];
-  mensajeExito.value = '';
-  casoSeleccionado.value = null;
-
-  mostrarAlertaRegistrar.value = false;
-  if (!hayAlMenosUnFiltroRegistrar()) {
-    buscadoRegistrar.value = false;
-    mostrarAlertaRegistrar.value = true;
-    return;
-  }
-  buscadoRegistrar.value = true;
-}
-
-function limpiarRegistrar() {
-  filtrosRegistrar.value = { numero_caso: '', hoja_control_campo: '', upp: '' };
-  buscadoRegistrar.value = false;
-  mostrarAlertaRegistrar.value = false;
-  casoSeleccionado.value = null;
-  errores.value = [];
-  mensajeExito.value = '';
-}
-
-const casosRegistrarFiltrados = computed(() => {
-  if (!buscadoRegistrar.value) return [];
-  const f = filtrosRegistrar.value;
-  const num = f.numero_caso.trim().toLowerCase();
-  const hoja = f.hoja_control_campo.trim().toLowerCase();
-  const upp = f.upp.trim().toLowerCase();
-
-  return casosDemo.value.filter(c => {
-    const okNum = num ? (c.numero_caso || '').toLowerCase().includes(num) : true;
-    const okHoja = hoja ? (c.hoja_control_campo || '').toLowerCase().includes(hoja) : true;
-    const okUpp = upp ? (c.upp || '').toLowerCase().includes(upp) : true;
-    return okNum && okHoja && okUpp;
-  });
-});
-
-const casoSeleccionado = ref(null);
-
-function seleccionarCasoParaCaptura(caso) {
-  errores.value = [];
-  mensajeExito.value = '';
-
-  if (caso.estatus_resultados === 'Emitido') {
-    errores.value.push('Este caso ya tiene resultados Emitidos. No se permite recaptura desde este módulo.');
-    return;
-  }
-
-  casoSeleccionado.value = JSON.parse(JSON.stringify(caso));
-}
-
-function cancelarCaptura() {
-  casoSeleccionado.value = null;
-}
-
-function validarResultadosCaptura() {
-  const errs = [];
-  if (!casoSeleccionado.value) {
-    errs.push('No hay caso seleccionado para capturar.');
-    return errs;
-  }
-  const sinResultado = casoSeleccionado.value.muestras.some(m => !String(m.resultado || '').trim());
-  if (sinResultado) errs.push('Hay muestras sin resultado. Capture el resultado de todas las muestras.');
-  return errs;
-}
-
-function upsertResultadosDesdeCaso({ estatus }) {
-  const fecha = hoyISO();
-  const caso = casoSeleccionado.value;
-
-  caso.muestras.forEach(m => {
-    const keyNumeroCaso = caso.numero_caso;
-    const keyFolio = m.folio_muestra;
-
-    const idx = resultadosDemo.value.findIndex(r => r.numero_caso === keyNumeroCaso && r.folio_muestra === keyFolio);
-    const payload = {
-      numero_caso: keyNumeroCaso,
-      folio_muestra: keyFolio,
-      arete: m.arete || '',
-      resultado: m.resultado,
-      observaciones: m.observaciones || '',
-      fecha_captura: fecha,
-      estatus
-    };
-
-    if (idx === -1) {
-      const newId = resultadosDemo.value.length ? Math.max(...resultadosDemo.value.map(x => x.id)) + 1 : 1;
-      resultadosDemo.value.unshift({ id: newId, ...payload });
-    } else {
-      resultadosDemo.value[idx] = { ...resultadosDemo.value[idx], ...payload };
-    }
-  });
-
-  const idxCaso = casosDemo.value.findIndex(c => c.id === caso.id);
-  if (idxCaso !== -1) {
-    casosDemo.value[idxCaso] = {
-      ...casosDemo.value[idxCaso],
-      estatus_resultados: estatus,
-      muestras: JSON.parse(JSON.stringify(caso.muestras))
-    };
-  }
-}
-
-function guardarResultadosPendiente() {
-  errores.value = [];
-  mensajeExito.value = '';
-
-  const errs = validarResultadosCaptura();
-  if (errs.length) {
-    errores.value = errs;
-    return;
-  }
-
-  upsertResultadosDesdeCaso({ estatus: 'Pendiente' });
-  mensajeExito.value = 'Resultados guardados en estatus Pendiente.';
-}
-
-function emitirEImprimirResultados() {
-  errores.value = [];
-  mensajeExito.value = '';
-
-  const errs = validarResultadosCaptura();
-  if (errs.length) {
-    errores.value = errs;
-    return;
-  }
-
-  upsertResultadosDesdeCaso({ estatus: 'Emitido' });
-
-  const idxCaso = casosDemo.value.findIndex(c => c.id === casoSeleccionado.value.id);
-  if (idxCaso !== -1) casosDemo.value[idxCaso].estatus_resultados = 'Emitido';
-
-  imprimirHojaResultados(casoSeleccionado.value);
-
-  mensajeExito.value = 'Resultados Emitidos. Hoja enviada a impresión.';
-  casoSeleccionado.value = null;
-}
-
-/* ===================== IMPRESIÓN ===================== */
-function escapeHtml(str) {
-  return String(str ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
-}
-
-function imprimirHojaResultados(caso) {
-  const w = window.open('', '_blank', 'width=900,height=720');
-  if (!w) return;
-
-  const filas = (caso.muestras || []).map((m, i) => `
-    <tr>
-      <td style="text-align:center;">${i + 1}</td>
-      <td>${escapeHtml(m.folio_muestra)}</td>
-      <td>${escapeHtml(m.arete || '-')}</td>
-      <td><strong>${escapeHtml(m.resultado)}</strong></td>
-      <td>${escapeHtml(m.observaciones || '')}</td>
-    </tr>
-  `).join('');
-
-  w.document.write(`
-    <html>
-      <head>
-        <title>Hoja de Resultados · ${escapeHtml(caso.numero_caso)}</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 18px; color:#111; }
-          h2 { margin: 0 0 8px; }
-          .meta { font-size: 13px; margin-bottom: 10px; display:grid; grid-template-columns: 1fr 1fr; gap:6px 12px; }
-          .meta div { padding:4px 0; }
-          .lbl { font-weight: 700; }
-          table { width:100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-          th, td { border:1px solid #ccc; padding:8px; vertical-align: top; }
-          th { background:#7a061e; color:#fff; text-align:left; }
-          .foot { margin-top: 14px; font-size: 12px; color:#333; }
-          @media print { .no-print { display:none; } }
-        </style>
-      </head>
-      <body>
-        <div class="no-print" style="margin-bottom:10px;">
-          <button onclick="window.print()" style="padding:8px 14px; font-weight:700; cursor:pointer;">Imprimir</button>
-        </div>
-
-        <h2>Hoja de Resultados</h2>
-        <div class="meta">
-          <div><span class="lbl">Número de caso:</span> ${escapeHtml(caso.numero_caso)}</div>
-          <div><span class="lbl">Fecha recepción:</span> ${escapeHtml(caso.fecha_recepcion)}</div>
-          <div><span class="lbl">MVZ:</span> ${escapeHtml(caso.mvz)}</div>
-          <div><span class="lbl">UPP:</span> ${escapeHtml(caso.upp)}</div>
-          <div><span class="lbl">Hoja control campo:</span> ${escapeHtml(caso.hoja_control_campo)}</div>
-          <div><span class="lbl">Especie:</span> ${escapeHtml(caso.especie)}</div>
-          <div><span class="lbl">Total muestras:</span> ${escapeHtml((caso.muestras || []).length)}</div>
-          <div><span class="lbl">Fecha emisión:</span> ${escapeHtml(hoyISO())}</div>
-        </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th style="width:50px;">#</th>
-              <th style="width:140px;">Folio muestra</th>
-              <th style="width:160px;">Arete</th>
-              <th style="width:130px;">Resultado</th>
-              <th>Observaciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${filas}
-          </tbody>
-        </table>
-
-        <div class="foot">
-          <div><strong>Nota:</strong> Esta hoja se imprime para firma/sello y posterior digitalización (PDF).</div>
-        </div>
-      </body>
-    </html>
-  `);
-
-  w.document.close();
-  w.onload = () => {
-    w.focus();
-    w.print();
+/* Helpers */
+function normalizarFiltros() {
+  return {
+    cc: String(filtros.value.cc_no || '').trim(),
+    cs: String(filtros.value.caso || '').trim().toUpperCase(),
+    tj: String(filtros.value.tarjeta || '').trim()
   };
 }
 
-/* ===================== 2) CONSULTAR ===================== */
-const filtrosConsultar = ref({
-  numero_caso: '',
-  upp: '',
-  resultado: '',
-  estatus: '',
-  fecha_inicio: '',
-  fecha_fin: ''
-});
+function filtrarBase({ soloPendiente = false } = {}) {
+  const { cc, cs, tj } = normalizarFiltros();
 
-const buscadoConsultar = ref(false);
-const mostrarAlertaConsultar = ref(false);
+  if (!cc && !cs && !tj) return [];
 
-function hayAlMenosUnFiltroConsultar() {
-  const f = filtrosConsultar.value;
-  return (
-    f.numero_caso.trim() ||
-    f.upp.trim() ||
-    f.resultado ||
-    f.estatus ||
-    f.fecha_inicio ||
-    f.fecha_fin
-  );
+  return dbResultados.value.filter(x => {
+    const okCC = cc ? x.cc_no === cc : true;
+    const okCS = cs ? x.caso === cs : true;
+    const okTJ = tj ? String(x.tarjeta) === tj : true;
+    const okPend = soloPendiente ? x.estado === 'Pendiente' : true;
+    return okCC && okCS && okTJ && okPend;
+  });
 }
 
-function buscarConsultar() {
+function setCabeceraDesde(rows) {
+  if (!rows.length) return;
+  cabecera.value = {
+    cc_no: rows[0].cc_no,
+    caso: rows[0].caso,
+    upp: rows[0].upp,
+    mvz: rows[0].mvz,
+    fecha: rows[0].fecha || hoyISO()
+  };
+  cabeceraEncontrada.value = true;
+}
+
+/* ===================== REGISTRAR ===================== */
+const buscadoCaptura = ref(false);
+const muestrasCaptura = ref([]);
+
+async function buscarParaCaptura() {
+  errores.value = [];
+  mensajeExito.value = '';
+  cabeceraEncontrada.value = false;
+  buscadoCaptura.value = false;
+  muestrasCaptura.value = [];
+
+  const rows = filtrarBase({ soloPendiente: false });
+  buscadoCaptura.value = true;
+
+  if (!rows.length) return;
+
+  setCabeceraDesde(rows);
+
+  // Copia editable para capturar 
+  muestrasCaptura.value = rows.map(r => ({ ...r }));
+  mensajeExito.value = `Se cargaron ${muestrasCaptura.value.length} registros.`;
+  scrollAlContenido();
+}
+
+function validarCaptura(rows) {
+  const faltantes = [];
+  rows.forEach((m, i) => {
+    const fila = i + 1;
+    if (!String(m.resultado_tarjeta || '').trim()) faltantes.push(`Fila ${fila}: falta Resultado (Tarjeta).`);
+    if (!String(m.tubo || '').trim()) faltantes.push(`Fila ${fila}: falta Tubo.`);
+    if (!String(m.fecha_captura || '').trim()) faltantes.push(`Fila ${fila}: falta Fecha de captura.`);
+    if (!String(m.estado || '').trim()) faltantes.push(`Fila ${fila}: falta Estado.`);
+  });
+  return faltantes;
+}
+
+function puedeImprimir(rows) {
+  if (!rows || !rows.length) return false;
+  return validarCaptura(rows).length === 0;
+}
+
+async function guardarResultados() {
   errores.value = [];
   mensajeExito.value = '';
 
-  mostrarAlertaConsultar.value = false;
-
-  if (!hayAlMenosUnFiltroConsultar()) {
-    buscadoConsultar.value = false;
-    mostrarAlertaConsultar.value = true;
+  if (!muestrasCaptura.value.length) {
+    errores.value.push('Primero cargue registros con la búsqueda.');
     return;
   }
 
-  buscadoConsultar.value = true;
-}
+  const faltantes = validarCaptura(muestrasCaptura.value);
+  if (faltantes.length) {
+    errores.value = faltantes;
+    return;
+  }
 
-function limpiarConsultar() {
-  filtrosConsultar.value = {
-    numero_caso: '',
-    upp: '',
-    resultado: '',
-    estatus: '',
-    fecha_inicio: '',
-    fecha_fin: ''
-  };
+  // TODO API:
+  // POST /api/brucelosis/resultados/guardar  body: { cc_no, caso, resultados: [...] }
 
-  buscadoConsultar.value = false;
-  mostrarAlertaConsultar.value = false;
-}
-
-const resultadosConsultadosFiltrados = computed(() => {
-  if (!buscadoConsultar.value) return [];
-
-  const f = filtrosConsultar.value;
-  const num = f.numero_caso.trim().toLowerCase();
-  const upp = f.upp.trim().toLowerCase();
-  const res = f.resultado;
-  const est = f.estatus;
-  const ini = f.fecha_inicio;
-  const fin = f.fecha_fin;
-
-  return resultadosDemo.value.filter(r => {
-    const okNum = num ? (r.numero_caso || '').toLowerCase().includes(num) : true;
-    const okUpp = upp ? buscarUppPorCaso(r.numero_caso).toLowerCase().includes(upp) : true;
-    const okRes = res ? r.resultado === res : true;
-    const okEst = est ? r.estatus === est : true;
-
-    let okFecha = true;
-    if (ini) okFecha = okFecha && r.fecha_captura >= ini;
-    if (fin) okFecha = okFecha && r.fecha_captura <= fin;
-
-    return okNum && okUpp && okRes && okEst && okFecha;
+  // DEMO: “persistir” en la base simulada
+  muestrasCaptura.value.forEach(editRow => {
+    const idx = dbResultados.value.findIndex(x => x.id === editRow.id);
+    if (idx >= 0) dbResultados.value[idx] = { ...dbResultados.value[idx], ...editRow };
   });
-});
 
-function buscarUppPorCaso(numeroCaso) {
-  const c = casosDemo.value.find(x => x.numero_caso === numeroCaso);
-  return c?.upp || '';
+  mensajeExito.value = 'Resultados guardados correctamente.';
 }
 
-/* ===================== 3) EDITAR (PENDIENTE) ===================== */
-const filtrosEditar = ref({ numero_caso: '', folio_muestra: '' });
+/* ===================== CONSULTAR ===================== */
+const buscadoConsulta = ref(false);
+const resultadosConsulta = ref([]);
+
+async function consultarResultados() {
+  errores.value = [];
+  mensajeExito.value = '';
+  cabeceraEncontrada.value = false;
+  buscadoConsulta.value = false;
+  resultadosConsulta.value = [];
+
+  const rows = filtrarBase({ soloPendiente: false });
+  buscadoConsulta.value = true;
+
+  if (!rows.length) return;
+
+  setCabeceraDesde(rows);
+  resultadosConsulta.value = rows.map(r => ({ ...r }));
+  mensajeExito.value = `Se cargaron ${resultadosConsulta.value.length} resultados.`;
+  scrollAlContenido();
+}
+
+/* ===================== EDITAR (Pendiente) ===================== */
 const buscadoEditar = ref(false);
-const mostrarAlertaEditar = ref(false);
-const resultadoEditando = ref(null);
+const resultadosEditar = ref([]);
 
-function hayAlMenosUnFiltroEditar() {
-  const f = filtrosEditar.value;
-  return f.numero_caso.trim() || f.folio_muestra.trim();
-}
-
-function buscarEditar() {
+async function cargarPendientesParaEditar() {
   errores.value = [];
   mensajeExito.value = '';
-  resultadoEditando.value = null;
-
-  mostrarAlertaEditar.value = false;
-  if (!hayAlMenosUnFiltroEditar()) {
-    buscadoEditar.value = false;
-    mostrarAlertaEditar.value = true;
-    return;
-  }
-  buscadoEditar.value = true;
-}
-
-function limpiarEditar() {
-  filtrosEditar.value = { numero_caso: '', folio_muestra: '' };
   buscadoEditar.value = false;
-  mostrarAlertaEditar.value = false;
-  resultadoEditando.value = null;
+  resultadosEditar.value = [];
+
+  const rows = filtrarBase({ soloPendiente: true });
+  buscadoEditar.value = true;
+
+  if (!rows.length) return;
+
+  // Editable
+  resultadosEditar.value = rows.map(r => ({ ...r }));
+  mensajeExito.value = `Se cargaron ${resultadosEditar.value.length} resultados Pendientes.`;
+  scrollAlContenido();
 }
 
-const resultadosEditarFiltrados = computed(() => {
-  if (!buscadoEditar.value) return [];
-  const f = filtrosEditar.value;
-  const num = f.numero_caso.trim().toLowerCase();
-  const fol = f.folio_muestra.trim().toLowerCase();
-
-  return resultadosDemo.value.filter(r => {
-    if (r.estatus !== 'Pendiente') return false;
-    const okNum = num ? (r.numero_caso || '').toLowerCase().includes(num) : true;
-    const okFol = fol ? (r.folio_muestra || '').toLowerCase().includes(fol) : true;
-    return okNum && okFol;
-  });
-});
-
-function seleccionarResultadoEdicion(r) {
-  errores.value = [];
-  mensajeExito.value = '';
-  resultadoEditando.value = { ...r };
-}
-
-function cancelarEdicionResultado() {
-  resultadoEditando.value = null;
-}
-
-function guardarEdicionResultado() {
+async function guardarEdicion(r) {
   errores.value = [];
   mensajeExito.value = '';
 
-  if (!resultadoEditando.value) {
-    errores.value.push('No hay resultado seleccionado para editar.');
-    return;
-  }
-  if (!String(resultadoEditando.value.resultado || '').trim()) {
-    errores.value.push('Seleccione un resultado.');
+  if (r.estado !== 'Pendiente' && r.estado !== 'Entregado') {
+    errores.value.push('Estado inválido.');
     return;
   }
 
-  const idx = resultadosDemo.value.findIndex(x => x.id === resultadoEditando.value.id);
-  if (idx === -1) {
-    errores.value.push('No se encontró el resultado.');
+  // Validación mínima (mismos campos de captura)
+  const faltantes = validarCaptura([r]);
+  if (faltantes.length) {
+    errores.value = faltantes;
     return;
   }
 
-  if (resultadosDemo.value[idx].estatus !== 'Pendiente') {
-    errores.value.push('Solo se puede editar si el estatus es Pendiente.');
-    return;
-  }
+  // TODO API:
+  // PUT /api/brucelosis/resultados/:id
 
-  resultadosDemo.value[idx] = { ...resultadosDemo.value[idx], ...resultadoEditando.value };
+  // DEMO persist
+  const idx = dbResultados.value.findIndex(x => x.id === r.id);
+  if (idx >= 0) dbResultados.value[idx] = { ...dbResultados.value[idx], ...r };
 
-  const caso = casosDemo.value.find(c => c.numero_caso === resultadoEditando.value.numero_caso);
-  if (caso) {
-    const m = caso.muestras.find(mm => mm.folio_muestra === resultadoEditando.value.folio_muestra);
-    if (m) {
-      m.resultado = resultadoEditando.value.resultado;
-      m.observaciones = resultadoEditando.value.observaciones || '';
-    }
-  }
-
-  mensajeExito.value = 'Resultado actualizado.';
-  resultadoEditando.value = null;
+  mensajeExito.value = 'Edición guardada correctamente.';
 }
 
-/* ===================== 4) ELIMINAR (PENDIENTE) ===================== */
-const filtrosEliminar = ref({ numero_caso: '', folio_muestra: '' });
+/* ===================== ELIMINAR (Pendiente) ===================== */
 const buscadoEliminar = ref(false);
-const mostrarAlertaEliminar = ref(false);
+const resultadosEliminar = ref([]);
 
-function hayAlMenosUnFiltroEliminar() {
-  const f = filtrosEliminar.value;
-  return f.numero_caso.trim() || f.folio_muestra.trim();
-}
-
-function buscarEliminar() {
+async function cargarPendientesParaEliminar() {
   errores.value = [];
   mensajeExito.value = '';
-
-  mostrarAlertaEliminar.value = false;
-  if (!hayAlMenosUnFiltroEliminar()) {
-    buscadoEliminar.value = false;
-    mostrarAlertaEliminar.value = true;
-    return;
-  }
-  buscadoEliminar.value = true;
-}
-
-function limpiarEliminar() {
-  filtrosEliminar.value = { numero_caso: '', folio_muestra: '' };
   buscadoEliminar.value = false;
-  mostrarAlertaEliminar.value = false;
+  resultadosEliminar.value = [];
+
+  const rows = filtrarBase({ soloPendiente: true });
+  buscadoEliminar.value = true;
+
+  if (!rows.length) return;
+
+  resultadosEliminar.value = rows.map(r => ({ ...r }));
+  mensajeExito.value = `Se cargaron ${resultadosEliminar.value.length} resultados Pendientes.`;
+  scrollAlContenido();
 }
 
-const resultadosEliminarFiltrados = computed(() => {
-  if (!buscadoEliminar.value) return [];
-  const f = filtrosEliminar.value;
-  const num = f.numero_caso.trim().toLowerCase();
-  const fol = f.folio_muestra.trim().toLowerCase();
-
-  return resultadosDemo.value.filter(r => {
-    if (r.estatus !== 'Pendiente') return false;
-    const okNum = num ? (r.numero_caso || '').toLowerCase().includes(num) : true;
-    const okFol = fol ? (r.folio_muestra || '').toLowerCase().includes(fol) : true;
-    return okNum && okFol;
-  });
-});
-
-function eliminarResultado(r) {
+async function eliminarResultado(r) {
   errores.value = [];
   mensajeExito.value = '';
 
-  const idx = resultadosDemo.value.findIndex(x => x.id === r.id);
-  if (idx === -1) {
-    errores.value.push('No se encontró el resultado.');
-    return;
-  }
-  if (resultadosDemo.value[idx].estatus !== 'Pendiente') {
-    errores.value.push('Solo se puede eliminar si el estatus es Pendiente.');
+  if (r.estado !== 'Pendiente') {
+    errores.value.push('Solo se puede eliminar si el estado es Pendiente.');
     return;
   }
 
-  const ok = window.confirm(`¿Desea eliminar el resultado de "${r.numero_caso} · ${r.folio_muestra}"?`);
+  const ok = window.confirm(
+    `¿Seguro que deseas eliminar este resultado?\n\nCaso: ${r.caso}\nCC No.: ${r.cc_no}\nTarjeta: ${r.tarjeta}\nArete: ${r.arete}`
+  );
   if (!ok) return;
 
-  resultadosDemo.value.splice(idx, 1);
+  // TODO API:
+  // DELETE /api/brucelosis/resultados/:id  (y registrar auditoría quién lo hizo)
 
-  const caso = casosDemo.value.find(c => c.numero_caso === r.numero_caso);
-  if (caso) {
-    const m = caso.muestras.find(mm => mm.folio_muestra === r.folio_muestra);
-    if (m) {
-      m.resultado = '';
-      m.observaciones = '';
-    }
-    caso.estatus_resultados = 'Pendiente';
-  }
+  // DEMO delete
+  dbResultados.value = dbResultados.value.filter(x => x.id !== r.id);
 
-  mensajeExito.value = 'Resultado eliminado.';
+  // refresca vista eliminar
+  resultadosEliminar.value = resultadosEliminar.value.filter(x => x.id !== r.id);
+
+  mensajeExito.value = 'Resultado eliminado correctamente.';
 }
 
-/* ===================== helpers UI ===================== */
-function badgeEstatusClase(estatus) {
-  if (estatus === 'Emitido') return 'badge--activo';
-  if (estatus === 'Pendiente') return 'badge--proceso';
-  return 'badge--proceso';
-}
+/* ===================== IMPRESIÓN / PDF ===================== */
+const printRows = ref([]);
 
-function badgeResultado(res) {
-  if (res === 'Positivo') return 'badge--inactivo';
-  if (res === 'Negativo') return 'badge--activo';
-  return 'badge--proceso';
+function imprimirPDF(origen) {
+  // arma filas a imprimir dependiendo de vista
+  if (origen === 'captura') printRows.value = muestrasCaptura.value.map(x => ({ ...x }));
+  else if (origen === 'consulta') printRows.value = resultadosConsulta.value.map(x => ({ ...x }));
+  else printRows.value = [];
+
+  // fuerza arriba para impresión limpia
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  nextTick(() => window.print());
 }
 </script>
 
 <style scoped>
-/* Acciones */
-.modulo-acciones { margin-bottom: 20px; }
-.modulo-acciones-titulo { display:block; font-size:14px; margin-bottom:8px; color:#333; font-weight:900; }
+/* ====== Acciones ====== */
+.modulo-acciones { margin-bottom: 18px; }
+.modulo-acciones-titulo { display:block; font-size:14px; margin-bottom:8px; color:#333; font-weight:600; }
 .modulo-acciones-botones { display:flex; flex-wrap:wrap; gap:6px; }
-
-/* Botón acción */
-.sistpec-btn-accion{
-  border:none; padding:8px 14px; font-size:12px; font-weight:900;
-  text-transform:uppercase; border-radius:4px; cursor:pointer;
-  background:#2f6b32; color:#fff; letter-spacing:0.4px;
+.sistpec-btn-accion {
+  border:none; padding:8px 16px; font-size:12px; font-weight:700;
+  text-transform:uppercase; border-radius:3px; cursor:pointer;
+  background:#2f6b32; color:#fff; letter-spacing:.5px;
 }
-.sistpec-btn-accion.active{ background:#244e26; }
+.sistpec-btn-accion.active { background:#244e26; }
+.sistpec-info-box { margin-top:10px; padding:10px 14px; border-radius:4px; background:#e1f3e1; border:1px solid #c3e6c3; }
+.sistpec-info-text { margin:0; font-size:13px; color:#225522; }
 
-/* Contenido */
-.modulo-contenido { margin-top: 10px; }
+/* ====== Layout ====== */
+.modulo-contenido { margin-top:10px; }
 .subtitulo { font-size:18px; margin:10px 0 15px; color:#333; }
-.subtitulo-secundario { font-size:16px; margin:16px 0 10px; color:#333; }
+.ayuda { font-size: 12px; color:#666; margin-top:8px; }
 
-/* Info */
-.sistpec-info-box{
-  margin-top:10px; padding:10px 14px; border-radius:4px;
-  background:#e1f3e1; border:1px solid #c3e6c3;
-}
-.sistpec-info-text{ margin:0; font-size:13px; color:#225522; }
+.modulo-alert { margin-bottom: 12px; padding: 10px 14px; border-radius: 4px; font-size: 13px; }
+.modulo-alert--error { background:#fbeaea; border:1px solid #f5c2c2; color:#7a1f1f; }
+.modulo-alert--success { background:#e1f3e1; border:1px solid #c3e6c3; color:#225522; }
 
-/* Alertas */
-.modulo-alert{ margin-bottom:12px; padding:10px 14px; border-radius:4px; font-size:13px; }
-.modulo-alert--error{ background:#fbeaea; border:1px solid #f5c2c2; color:#7a1f1f; }
-.modulo-alert--success{ background:#e1f3e1; border:1px solid #c3e6c3; color:#225522; }
-
-.ayuda { color:#666; font-size:12px; margin-top:6px; display:block; }
-
-/* Form / filtros */
-.sistpec-form-grid {
+/* ====== Filtros (botones a la derecha y uno debajo del otro) ====== */
+.sistpec-search-bar {
   display:grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap:12px;
-  margin: 10px 0 14px;
+  margin-bottom:16px;
+  align-items:end;
 }
+.sistpec-form-group { display:flex; flex-direction:column; gap:4px; }
+.sistpec-form-group label { font-size:13px; font-weight:700; color:#444; }
 
-.sistpec-form-group{ display:flex; flex-direction:column; gap:4px; }
-.sistpec-form-group label{ font-size:13px; font-weight:900; color:#444; }
 .sistpec-form-group input,
-.sistpec-form-group select{
-  padding:8px 10px; border-radius:4px; border:1px solid #ccc;
-  font-size:14px; outline:none;
-}
-.sistpec-form-group input:focus,
-.sistpec-form-group select:focus{
-  border-color:#2f6b32;
-  box-shadow:0 0 0 1px rgba(47, 107, 50, 0.15);
-}
-
-.sistpec-form-actions{
-  display:flex; justify-content:flex-end; gap:8px;
-}
-
-/* botones */
-.sistpec-btn-primary{
-  background:#2f6b32; color:#fff; border:none;
-  padding:8px 18px; border-radius:4px;
-  font-size:13px; font-weight:900; cursor:pointer;
-}
-.sistpec-btn-primary:hover{ background:#244e26; }
-
-.sistpec-btn-secondary{
-  background:#e0e0e0; color:#333; border:none;
-  padding:8px 18px; border-radius:4px;
-  font-size:13px; font-weight:900; cursor:pointer;
-}
-.sistpec-btn-secondary:hover{ background:#d0d0d0; }
-
-.sistpec-btn-danger{
-  background:#7a061e; color:#fff; border:none;
-  padding:6px 14px; border-radius:4px;
-  font-size:12px; font-weight:900; cursor:pointer;
-}
-.sistpec-btn-danger:hover{ background:#5a0416; }
-
-.sistpec-btn-sm{ padding:5px 10px; font-size:11px; }
-
-/* filtros grid */
-.sistpec-search-bar{
-  display:grid; grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap:12px; margin-bottom:16px;
-}
-.fechas-bar{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.sistpec-search-actions{
-  display:flex; align-items:flex-end; gap:8px; justify-content:flex-end;
-}
-
-/* tabla */
-.sistpec-table-wrapper{ width:100%; overflow-x:auto; }
-.sistpec-table{ width:100%; border-collapse:collapse; font-size:13px; }
-.sistpec-table thead{ background:#7a061e; color:#fff; }
-.sistpec-table th, .sistpec-table td{ padding:8px 10px; border:1px solid #ddd; text-align:left; }
-.sistpec-table tbody tr:nth-child(even){ background:#fafafa; }
-.sin-resultados{ text-align:center; color:#777; }
-
-.sistpec-edit-panel{
-  margin-top:20px; padding-top:10px; border-top:1px dashed #ccc;
-}
-
-/* badges */
-.badge{ display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:900; }
-.badge--activo{ background:#e1f3e1; color:#225522; border:1px solid #c3e6c3; }
-.badge--inactivo{ background:#fbeaea; color:#7a1f1f; border:1px solid #f5c2c2; }
-.badge--proceso{ background:#fff4e5; color:#b26a00; border:1px solid #ffd7a3; }
-
-.input-inline{
-  width:100%;
+.sistpec-form-group select {
   padding:8px 10px;
   border-radius:4px;
   border:1px solid #ccc;
@@ -1207,11 +931,106 @@ function badgeResultado(res) {
   outline:none;
 }
 
-/* responsive */
-@media (max-width: 768px) {
+.sistpec-search-actions.right {
+  display:flex;
+  justify-content:flex-end;
+}
+.acciones-vertical{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top: 10px; /* los baja un poco */
+}
+
+.sistpec-btn-primary {
+  background:#2f6b32; color:#fff; border:none;
+  padding:8px 18px; border-radius:4px;
+  font-size:13px; font-weight:800; cursor:pointer;
+}
+.sistpec-btn-primary:hover { background:#244e26; }
+
+.sistpec-btn-secondary {
+  background:#e0e0e0; color:#333; border:none;
+  padding:8px 18px; border-radius:4px;
+  font-size:13px; font-weight:800; cursor:pointer;
+}
+.sistpec-btn-secondary:hover { background:#d0d0d0; }
+.sistpec-btn-secondary:disabled { opacity:.6; cursor:default; }
+
+.sistpec-btn-sm { padding:6px 10px; font-size:12px; border-radius:4px; }
+.sistpec-btn-danger {
+  background:#a51d2d; color:#fff; border:none;
+  padding:8px 14px; border-radius:4px;
+  font-size:13px; font-weight:800; cursor:pointer;
+}
+.sistpec-btn-danger:hover { background:#861823; }
+
+/* ====== Cabecera ====== */
+.cabecera-info {
+  display:grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap:10px;
+  padding:10px 12px;
+  background:#f7f7f7;
+  border:1px solid #e2e2e2;
+  border-radius:6px;
+  margin: 0 0 12px 0;
+  font-size: 13px;
+}
+
+/* ====== Tabla ====== */
+.sistpec-table-wrapper { width:100%; overflow-x:auto; }
+.sistpec-table { width:100%; border-collapse:collapse; font-size:13px; }
+.sistpec-table thead { background:#7a061e; color:#fff; }
+.sistpec-table th, .sistpec-table td {
+  padding:8px 10px; border:1px solid #ddd; text-align:left; vertical-align:top;
+}
+.sistpec-table tbody tr:nth-child(even) { background:#fafafa; }
+
+.input-mini { width: 100%; min-width: 90px; padding: 6px 8px; border:1px solid #cfcfcf; border-radius:4px; }
+.obs-cell { min-width: 240px; }
+.input-obs { width: 100%; padding: 6px 8px; border:1px solid #cfcfcf; border-radius:4px; }
+
+.acciones-inferiores {
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin: 12px 0;
+}
+
+.sin-resultados { text-align:center; color:#777; }
+
+/* ====== Badges ====== */
+.badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:900; }
+.badge--proceso { background:#fff4e5; color:#b26a00; border:1px solid #ffd7a3; }
+.badge--activo { background:#e1f3e1; color:#225522; border:1px solid #c3e6c3; }
+
+/* ===================== PRINT ===================== */
+.print-area { display: none; }
+
+@media print {
+  .modulo-acciones, .modulo-contenido > *:not(.print-area) { display: none !important; }
+  .print-area { display: block !important; }
+
+  .print-header { margin-bottom: 12px; }
+  .print-title { font-size: 16px; font-weight: 900; margin-bottom: 6px; }
+  .print-sub { display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; font-size: 12px; }
+
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  .print-table th, .print-table td {
+    border: 1px solid #000;
+    padding: 4px 6px;
+  }
+
+  .print-footer { margin-top: 10px; font-size: 11px; }
+}
+
+@media (max-width: 900px) {
   .sistpec-search-bar { grid-template-columns: 1fr; }
-  .fechas-bar { grid-template-columns: 1fr; }
-  .sistpec-form-grid { grid-template-columns: 1fr; }
-  .sistpec-form-actions { flex-direction:column; align-items:stretch; }
+  .cabecera-info { grid-template-columns: 1fr; }
 }
 </style>

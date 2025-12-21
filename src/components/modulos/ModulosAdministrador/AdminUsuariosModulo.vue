@@ -1,7 +1,7 @@
 <template>
   <!-- CONTENEDOR DEL MÓDULO PARA HACER SCROLL AUTOMÁTICO -->
   <div ref="moduloRoot">
-    <!-- Barra de acciones (botones Registrar / Consultar / Editar / Eliminar) -->
+    <!-- Barra de acciones -->
     <section class="modulo-acciones">
       <span class="modulo-acciones-titulo">Acciones disponibles</span>
 
@@ -18,7 +18,6 @@
         </button>
       </div>
 
-      <!-- Mensaje que cambia según la acción -->
       <div class="sistpec-info-box">
         <p class="sistpec-info-text">
           {{ descripcionAccionActual }}
@@ -28,10 +27,7 @@
 
     <section class="modulo-contenido">
       <!-- ALERTAS DE ERRORES -->
-      <div
-        v-if="errores.length"
-        class="modulo-alert modulo-alert--error"
-      >
+      <div v-if="errores.length" class="modulo-alert modulo-alert--error">
         <ul>
           <li v-for="(err, index) in errores" :key="index">
             {{ err }}
@@ -40,10 +36,7 @@
       </div>
 
       <!-- ALERTA DE ÉXITO -->
-      <div
-        v-if="mensajeExito"
-        class="modulo-alert modulo-alert--success"
-      >
+      <div v-if="mensajeExito" class="modulo-alert modulo-alert--success">
         {{ mensajeExito }}
       </div>
 
@@ -70,22 +63,14 @@
 
             <div class="sistpec-form-group">
               <label>Nombre de usuario</label>
-              <input
-                v-model="nuevoUsuario.nombre_usuario"
-                type="text"
-                required
-              />
+              <input v-model="nuevoUsuario.nombre_usuario" type="text" required />
             </div>
           </div>
 
           <div class="sistpec-form-row">
             <div class="sistpec-form-group">
               <label>Correo electrónico</label>
-              <input
-                v-model="nuevoUsuario.correo"
-                type="email"
-                required
-              />
+              <input v-model="nuevoUsuario.correo" type="email" required />
             </div>
 
             <div class="sistpec-form-group">
@@ -104,20 +89,12 @@
           <div class="sistpec-form-row">
             <div class="sistpec-form-group">
               <label>Contraseña</label>
-              <input
-                v-model="nuevoUsuario.password"
-                type="password"
-                required
-              />
+              <input v-model="nuevoUsuario.password" type="password" required />
             </div>
 
             <div class="sistpec-form-group">
               <label>Confirmar contraseña</label>
-              <input
-                v-model="nuevoUsuario.confirmPassword"
-                type="password"
-                required
-              />
+              <input v-model="nuevoUsuario.confirmPassword" type="password" required />
             </div>
           </div>
 
@@ -134,40 +111,23 @@
             <div class="sistpec-form-group sistpec-form-group-inline">
               <label>Vigencia</label>
               <div class="sistpec-form-inline-inputs">
-                <input
-                  v-model="nuevoUsuario.vigencia_inicio"
-                  type="date"
-                  required
-                />
+                <input v-model="nuevoUsuario.vigencia_inicio" type="date" required />
                 <span class="vigencia-sep">a</span>
-                <input
-                  v-model="nuevoUsuario.vigencia_fin"
-                  type="date"
-                  required
-                />
+                <input v-model="nuevoUsuario.vigencia_fin" type="date" required />
               </div>
             </div>
           </div>
 
           <div class="sistpec-form-row sistpec-form-row-end">
             <label class="sistpec-checkbox">
-              <input
-                v-model="nuevoUsuario.activo"
-                type="checkbox"
-              />
+              <input v-model="nuevoUsuario.activo" type="checkbox" />
               <span>Usuario activo</span>
             </label>
           </div>
 
           <div class="sistpec-form-actions">
-            <button type="submit" class="sistpec-btn-primary">
-              GUARDAR
-            </button>
-            <button
-              type="button"
-              class="sistpec-btn-secondary"
-              @click="limpiarFormulario"
-            >
+            <button type="submit" class="sistpec-btn-primary">GUARDAR</button>
+            <button type="button" class="sistpec-btn-secondary" @click="limpiarFormulario">
               LIMPIAR
             </button>
           </div>
@@ -178,54 +138,32 @@
       <div v-else-if="selectedAction === 'consultar'">
         <h3 class="subtitulo">Consultar usuarios</h3>
 
-        <!-- Barra de filtros -->
         <div class="sistpec-search-bar">
           <div class="sistpec-form-group">
             <label>Nombre de usuario</label>
-            <input
-              v-model="filtros.nombre_usuario"
-              type="text"
-              placeholder="Ej. admin01"
-            />
+            <input v-model="filtros.nombre_usuario" type="text" placeholder="Ej. admin01" />
           </div>
 
           <div class="sistpec-form-group">
             <label>Clave de rumiantes</label>
-            <input
-              v-model="filtros.clave_de_rumiantes"
-              type="text"
-              placeholder="Ej. VER-001-2025"
-            />
+            <input v-model="filtros.clave_de_rumiantes" type="text" placeholder="Ej. VER-001-2025" />
           </div>
 
           <div class="sistpec-form-group">
             <label>Correo electrónico</label>
-            <input
-              v-model="filtros.correo"
-              type="email"
-              placeholder="usuario@ejemplo.com"
-            />
+            <input v-model="filtros.correo" type="email" placeholder="usuario@ejemplo.com" />
           </div>
 
           <div class="sistpec-form-group sistpec-search-actions">
-            <button
-              type="button"
-              class="sistpec-btn-primary"
-              @click="buscarUsuarios"
-            >
+            <button type="button" class="sistpec-btn-primary" @click="buscarUsuarios">
               BUSCAR
             </button>
-            <button
-              type="button"
-              class="sistpec-btn-secondary"
-              @click="limpiarFiltros"
-            >
+            <button type="button" class="sistpec-btn-secondary" @click="limpiarFiltros">
               LIMPIAR FILTROS
             </button>
           </div>
         </div>
 
-        <!-- Tabla de resultados -->
         <div class="sistpec-table-wrapper">
           <table class="sistpec-table">
             <thead>
@@ -248,10 +186,7 @@
                 <td>{{ u.clave_de_rumiantes || '-' }}</td>
                 <td>{{ u.vigencia_inicio }} a {{ u.vigencia_fin }}</td>
                 <td>
-                  <span
-                    class="badge"
-                    :class="u.activo ? 'badge--activo' : 'badge--inactivo'"
-                  >
+                  <span class="badge" :class="u.activo ? 'badge--activo' : 'badge--inactivo'">
                     {{ u.activo ? 'ACTIVO' : 'INACTIVO' }}
                   </span>
                 </td>
@@ -270,54 +205,32 @@
       <div v-else-if="selectedAction === 'editar'">
         <h3 class="subtitulo">Editar usuarios</h3>
 
-        <!-- Filtros reutilizados -->
         <div class="sistpec-search-bar">
           <div class="sistpec-form-group">
             <label>Nombre de usuario</label>
-            <input
-              v-model="filtros.nombre_usuario"
-              type="text"
-              placeholder="Ej. admin01"
-            />
+            <input v-model="filtros.nombre_usuario" type="text" placeholder="Ej. admin01" />
           </div>
 
           <div class="sistpec-form-group">
             <label>Clave de rumiantes</label>
-            <input
-              v-model="filtros.clave_de_rumiantes"
-              type="text"
-              placeholder="Ej. VER-001-2025"
-            />
+            <input v-model="filtros.clave_de_rumiantes" type="text" placeholder="Ej. VER-001-2025" />
           </div>
 
           <div class="sistpec-form-group">
             <label>Correo electrónico</label>
-            <input
-              v-model="filtros.correo"
-              type="email"
-              placeholder="usuario@ejemplo.com"
-            />
+            <input v-model="filtros.correo" type="email" placeholder="usuario@ejemplo.com" />
           </div>
 
           <div class="sistpec-form-group sistpec-search-actions">
-            <button
-              type="button"
-              class="sistpec-btn-primary"
-              @click="buscarUsuarios"
-            >
+            <button type="button" class="sistpec-btn-primary" @click="buscarUsuarios">
               BUSCAR
             </button>
-            <button
-              type="button"
-              class="sistpec-btn-secondary"
-              @click="limpiarFiltros"
-            >
+            <button type="button" class="sistpec-btn-secondary" @click="limpiarFiltros">
               LIMPIAR FILTROS
             </button>
           </div>
         </div>
 
-        <!-- Tabla con botón Editar -->
         <div class="sistpec-table-wrapper">
           <table class="sistpec-table">
             <thead>
@@ -341,10 +254,7 @@
                 <td>{{ u.clave_de_rumiantes || '-' }}</td>
                 <td>{{ u.vigencia_inicio }} a {{ u.vigencia_fin }}</td>
                 <td>
-                  <span
-                    class="badge"
-                    :class="u.activo ? 'badge--activo' : 'badge--inactivo'"
-                  >
+                  <span class="badge" :class="u.activo ? 'badge--activo' : 'badge--inactivo'">
                     {{ u.activo ? 'ACTIVO' : 'INACTIVO' }}
                   </span>
                 </td>
@@ -367,11 +277,8 @@
           </table>
         </div>
 
-        <!-- Formulario de edición -->
         <div v-if="usuarioEditando" class="sistpec-edit-panel">
-          <h4 class="subtitulo-secundario">
-            Editando: {{ usuarioEditando.nombre_usuario }}
-          </h4>
+          <h4 class="subtitulo-secundario">Editando: {{ usuarioEditando.nombre_usuario }}</h4>
 
           <form class="sistpec-form" @submit.prevent="guardarCambiosUsuario">
             <div class="sistpec-form-row">
@@ -392,22 +299,14 @@
 
               <div class="sistpec-form-group">
                 <label>Nombre de usuario</label>
-                <input
-                  v-model="usuarioEditando.nombre_usuario"
-                  type="text"
-                  required
-                />
+                <input v-model="usuarioEditando.nombre_usuario" type="text" required />
               </div>
             </div>
 
             <div class="sistpec-form-row">
               <div class="sistpec-form-group">
                 <label>Correo electrónico</label>
-                <input
-                  v-model="usuarioEditando.correo"
-                  type="email"
-                  required
-                />
+                <input v-model="usuarioEditando.correo" type="email" required />
               </div>
 
               <div class="sistpec-form-group">
@@ -446,49 +345,29 @@
             <div class="sistpec-form-row">
               <div class="sistpec-form-group">
                 <label>Clave de rumiantes (si aplica)</label>
-                <input
-                  v-model="usuarioEditando.clave_de_rumiantes"
-                  type="text"
-                />
+                <input v-model="usuarioEditando.clave_de_rumiantes" type="text" />
               </div>
 
               <div class="sistpec-form-group sistpec-form-group-inline">
                 <label>Vigencia</label>
                 <div class="sistpec-form-inline-inputs">
-                  <input
-                    v-model="usuarioEditando.vigencia_inicio"
-                    type="date"
-                    required
-                  />
+                  <input v-model="usuarioEditando.vigencia_inicio" type="date" required />
                   <span class="vigencia-sep">a</span>
-                  <input
-                    v-model="usuarioEditando.vigencia_fin"
-                    type="date"
-                    required
-                  />
+                  <input v-model="usuarioEditando.vigencia_fin" type="date" required />
                 </div>
               </div>
             </div>
 
             <div class="sistpec-form-row sistpec-form-row-end">
               <label class="sistpec-checkbox">
-                <input
-                  v-model="usuarioEditando.activo"
-                  type="checkbox"
-                />
+                <input v-model="usuarioEditando.activo" type="checkbox" />
                 <span>Usuario activo</span>
               </label>
             </div>
 
             <div class="sistpec-form-actions">
-              <button type="submit" class="sistpec-btn-primary">
-                GUARDAR CAMBIOS
-              </button>
-              <button
-                type="button"
-                class="sistpec-btn-secondary"
-                @click="cancelarEdicion"
-              >
+              <button type="submit" class="sistpec-btn-primary">GUARDAR CAMBIOS</button>
+              <button type="button" class="sistpec-btn-secondary" @click="cancelarEdicion">
                 CANCELAR
               </button>
             </div>
@@ -496,65 +375,37 @@
         </div>
       </div>
 
-      <!-- ================= ELIMINAR / DESACTIVAR USUARIOS ================= -->
+      <!-- ================= ELIMINAR / DESACTIVAR ================= -->
       <div v-else-if="selectedAction === 'eliminar'">
-        <h3 class="subtitulo">Eliminar (desactivar) usuarios</h3>
+        <h3 class="subtitulo">Editar Estatus</h3>
 
-        <div class="sistpec-info-box">
-          <p class="sistpec-info-text">
-            La eliminación se realiza como baja lógica: el usuario se marca como
-            <strong>INACTIVO</strong> y deja de tener acceso al sistema SISTPEC.
-          </p>
-        </div>
 
-        <!-- Filtros -->
         <div class="sistpec-search-bar">
           <div class="sistpec-form-group">
             <label>Nombre de usuario</label>
-            <input
-              v-model="filtros.nombre_usuario"
-              type="text"
-              placeholder="Ej. admin01"
-            />
+            <input v-model="filtros.nombre_usuario" type="text" placeholder="Ej. admin01" />
           </div>
 
           <div class="sistpec-form-group">
             <label>Clave de rumiantes</label>
-            <input
-              v-model="filtros.clave_de_rumiantes"
-              type="text"
-              placeholder="Ej. VER-001-2025"
-            />
+            <input v-model="filtros.clave_de_rumiantes" type="text" placeholder="Ej. VER-001-2025" />
           </div>
 
           <div class="sistpec-form-group">
             <label>Correo electrónico</label>
-            <input
-              v-model="filtros.correo"
-              type="email"
-              placeholder="usuario@ejemplo.com"
-            />
+            <input v-model="filtros.correo" type="email" placeholder="usuario@ejemplo.com" />
           </div>
 
           <div class="sistpec-form-group sistpec-search-actions">
-            <button
-              type="button"
-              class="sistpec-btn-primary"
-              @click="buscarUsuarios"
-            >
+            <button type="button" class="sistpec-btn-primary" @click="buscarUsuarios">
               BUSCAR
             </button>
-            <button
-              type="button"
-              class="sistpec-btn-secondary"
-              @click="limpiarFiltros"
-            >
+            <button type="button" class="sistpec-btn-secondary" @click="limpiarFiltros">
               LIMPIAR FILTROS
             </button>
           </div>
         </div>
 
-        <!-- Tabla con opción de desactivar -->
         <div class="sistpec-table-wrapper">
           <table class="sistpec-table">
             <thead>
@@ -578,15 +429,11 @@
                 <td>{{ u.clave_de_rumiantes || '-' }}</td>
                 <td>{{ u.vigencia_inicio }} a {{ u.vigencia_fin }}</td>
                 <td>
-                  <span
-                    class="badge"
-                    :class="u.activo ? 'badge--activo' : 'badge--inactivo'"
-                  >
+                  <span class="badge" :class="u.activo ? 'badge--activo' : 'badge--inactivo'">
                     {{ u.activo ? 'ACTIVO' : 'INACTIVO' }}
                   </span>
                 </td>
                 <td>
-                  <!-- Botón DESACTIVAR -->
                   <button
                     type="button"
                     class="sistpec-btn-danger sistpec-btn-sm"
@@ -596,7 +443,6 @@
                     DESACTIVAR
                   </button>
 
-                  <!-- Botón REACTIVAR -->
                   <button
                     type="button"
                     class="sistpec-btn-secondary sistpec-btn-sm"
@@ -618,14 +464,92 @@
         </div>
       </div>
 
-      <!-- ================= Fallback (no debería ocurrir) ================= -->
+      <!-- ================= BITÁCORA DE CAMBIOS ================= -->
+      <div v-else-if="selectedAction === 'bitacora'">
+        <h3 class="subtitulo">Bitácora</h3>
+
+
+        <div class="sistpec-search-bar">
+          <div class="sistpec-form-group">
+            <label>Usuario que realizó el cambio</label>
+            <input v-model="filtrosBitacora.actor" type="text" placeholder="Ej. admin" />
+          </div>
+
+          <div class="sistpec-form-group">
+            <label>Usuario afectado</label>
+            <input v-model="filtrosBitacora.objetivo" type="text" placeholder="Ej. resplab01" />
+          </div>
+
+          <div class="sistpec-form-group">
+            <label>Acción</label>
+            <select v-model="filtrosBitacora.accion">
+              <option value="">Todas</option>
+              <option value="REGISTRAR">REGISTRAR</option>
+              <option value="EDITAR">EDITAR</option>
+              <option value="DESACTIVAR">DESACTIVAR</option>
+              <option value="REACTIVAR">REACTIVAR</option>
+            </select>
+          </div>
+
+          <div class="sistpec-form-group sistpec-search-actions">
+            <button type="button" class="sistpec-btn-primary" @click="cargarBitacora">
+              ACTUALIZAR
+            </button>
+            <button type="button" class="sistpec-btn-secondary" @click="limpiarFiltrosBitacora">
+              LIMPIAR FILTROS
+            </button>
+          </div>
+        </div>
+
+        <div class="sistpec-search-bar">
+          <div class="sistpec-form-group sistpec-form-group-inline">
+            <label>Rango de fecha</label>
+            <div class="sistpec-form-inline-inputs">
+              <input v-model="filtrosBitacora.fecha_inicio" type="date" />
+              <span class="vigencia-sep">a</span>
+              <input v-model="filtrosBitacora.fecha_fin" type="date" />
+            </div>
+          </div>
+        </div>
+
+        <div class="sistpec-table-wrapper">
+          <table class="sistpec-table">
+            <thead>
+              <tr>
+                <th>Fecha y hora</th>
+                <th>Acción</th>
+                <th>Realizó</th>
+                <th>Afectó a</th>
+                <th>Detalle</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(r, idx) in bitacoraFiltrada" :key="idx">
+                <td>{{ r.fecha_hora }}</td>
+                <td>
+                  <span class="badge" :class="badgeAccionClase(r.accion)">
+                    {{ r.accion }}
+                  </span>
+                </td>
+                <td>{{ r.actor }}</td>
+                <td>{{ r.objetivo }}</td>
+                <td>{{ r.detalle }}</td>
+              </tr>
+
+              <tr v-if="bitacoraFiltrada.length === 0">
+                <td colspan="5" class="sin-resultados">
+                  No hay registros en bitácora con los filtros actuales.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ================= Fallback ================= -->
       <div v-else>
-        <h3 class="subtitulo">
-          {{ tituloAccionActual || 'Acción no disponible' }}
-        </h3>
-        <p>
-          El contenido para esta acción aún está en desarrollo.
-        </p>
+        <h3 class="subtitulo">{{ tituloAccionActual || 'Acción no disponible' }}</h3>
+        <p>El contenido para esta acción aún está en desarrollo.</p>
       </div>
     </section>
   </div>
@@ -634,12 +558,12 @@
 <script setup>
 import { computed, ref, watch, onMounted, nextTick } from 'vue';
 
-defineProps({
-  codigo: { type: String, required: true },
-  rol:    { type: String, required: true }
+const props = defineProps({
+  codigo: { type: String, required: true }, 
+  rol: { type: String, required: true }
 });
 
-// ====== REFERENCIA AL CONTENEDOR PARA SCROLL ======
+// ====== SCROLL ======
 const moduloRoot = ref(null);
 
 function desplazarAlModulo() {
@@ -647,18 +571,14 @@ function desplazarAlModulo() {
     if (!moduloRoot.value) return;
 
     const rect = moduloRoot.value.getBoundingClientRect();
-    const offsetTop = rect.top + window.scrollY - 120; // ajustar según altura navbar
-
-    window.scrollTo({
-      top: offsetTop,
-      behavior: 'smooth'
-    });
+    const offsetTop = rect.top + window.scrollY - 120;
+    window.scrollTo({ top: offsetTop, behavior: 'smooth' });
   });
 }
 
-// Al montar el componente, desplaza la pantalla al módulo
 onMounted(() => {
   desplazarAlModulo();
+  cargarBitacora(); // precarga demo
 });
 
 // Catálogo de roles
@@ -670,7 +590,109 @@ const rolesCatalog = {
   5: 'MVZ autorizado'
 };
 
-// Estado: registro de usuario
+const errores = ref([]);
+const mensajeExito = ref('');
+
+const soloLetrasRegex = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]+$/;
+const passwordMinLength = 8;
+
+// Acciones disponibles
+const accionesUsuarios = [
+  { id: 'registrar', label: 'REGISTRAR' },
+  { id: 'consultar', label: 'CONSULTAR' },
+  { id: 'editar', label: 'EDITAR' },
+  { id: 'eliminar', label: 'CAMBIAR ESTATUS' },
+  { id: 'bitacora', label: 'BITÁCORA' } 
+];
+
+const selectedAction = ref('registrar');
+const usuarioEditando = ref(null);
+
+// ===== BITÁCORA (DEMO) =====
+const bitacoraCambios = ref([
+  {
+    fecha_hora: '2025-12-19 09:10:22',
+    accion: 'EDITAR',
+    actor: 'admin',
+    objetivo: 'resplab01',
+    detalle: 'Actualizó correo y vigencia.'
+  }
+]);
+
+const filtrosBitacora = ref({
+  actor: '',
+  objetivo: '',
+  accion: '',
+  fecha_inicio: '',
+  fecha_fin: ''
+});
+
+function formatoFechaHoraLocal(d = new Date()) {
+  const pad = (n) => String(n).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const mm = pad(d.getMonth() + 1);
+  const dd = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const mi = pad(d.getMinutes());
+  const ss = pad(d.getSeconds());
+  return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+}
+
+function registrarCambio({ accion, objetivo, detalle }) {
+  // En producción: POST a API (bitacora_cambios)
+  bitacoraCambios.value.unshift({
+    fecha_hora: formatoFechaHoraLocal(),
+    accion,
+    actor: props.codigo || 'USUARIO_ACTUAL',
+    objetivo,
+    detalle
+  });
+}
+
+function cargarBitacora() {
+  // En producción: GET a API con filtros/paginación
+  // Aquí solo existe el arreglo demo; se deja para estandarizar la integración.
+}
+
+function limpiarFiltrosBitacora() {
+  filtrosBitacora.value = {
+    actor: '',
+    objetivo: '',
+    accion: '',
+    fecha_inicio: '',
+    fecha_fin: ''
+  };
+}
+
+const bitacoraFiltrada = computed(() => {
+  const a = filtrosBitacora.value.actor.trim().toLowerCase();
+  const o = filtrosBitacora.value.objetivo.trim().toLowerCase();
+  const ac = filtrosBitacora.value.accion;
+  const fi = filtrosBitacora.value.fecha_inicio;
+  const ff = filtrosBitacora.value.fecha_fin;
+
+  return bitacoraCambios.value.filter(r => {
+    const okActor = a ? r.actor.toLowerCase().includes(a) : true;
+    const okObj = o ? r.objetivo.toLowerCase().includes(o) : true;
+    const okAcc = ac ? r.accion === ac : true;
+
+    let okFecha = true;
+    if (fi) okFecha = okFecha && r.fecha_hora.slice(0, 10) >= fi;
+    if (ff) okFecha = okFecha && r.fecha_hora.slice(0, 10) <= ff;
+
+    return okActor && okObj && okAcc && okFecha;
+  });
+});
+
+function badgeAccionClase(accion) {
+  if (accion === 'REGISTRAR') return 'badge--activo';
+  if (accion === 'EDITAR') return 'badge--proceso';
+  if (accion === 'DESACTIVAR') return 'badge--inactivo';
+  if (accion === 'REACTIVAR') return 'badge--activo';
+  return 'badge--proceso';
+}
+
+// ===== Registro de usuario =====
 const nuevoUsuario = ref({
   nombre: '',
   apellido_paterno: '',
@@ -687,48 +709,26 @@ const nuevoUsuario = ref({
   activo: true
 });
 
-const errores      = ref([]);
-const mensajeExito = ref('');
-
-const soloLetrasRegex    = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]+$/;
-const passwordMinLength  = 8;
-
-// Acciones disponibles
-const accionesUsuarios = [
-  { id: 'registrar', label: 'REGISTRAR' },
-  { id: 'consultar', label: 'CONSULTAR' },
-  { id: 'editar',    label: 'EDITAR' },
-  { id: 'eliminar',  label: 'ELIMINAR' }
-];
-
-const selectedAction   = ref('registrar');
-const usuarioEditando  = ref(null);
-
-// Nombre completo automático
 watch(
-  () => [
-    nuevoUsuario.value.nombre,
-    nuevoUsuario.value.apellido_paterno,
-    nuevoUsuario.value.apellido_materno
-  ],
+  () => [nuevoUsuario.value.nombre, nuevoUsuario.value.apellido_paterno, nuevoUsuario.value.apellido_materno],
   () => {
     const { nombre, apellido_paterno, apellido_materno } = nuevoUsuario.value;
-    nuevoUsuario.value.nombre_completo =
-      `${nombre} ${apellido_paterno} ${apellido_materno}`.trim();
+    nuevoUsuario.value.nombre_completo = `${nombre} ${apellido_paterno} ${apellido_materno}`.trim();
   }
 );
 
-// Descripciones según acción
 const descripcionAccionActual = computed(() => {
   switch (selectedAction.value) {
     case 'registrar':
-      return 'Registra nuevos usuarios del sistema SISTPEC, asignando rol, vigencia y datos de contacto.';
+      return 'Registra nuevos usuarios del sistema SISTPEC.';
     case 'consultar':
-      return 'Consulta el listado de usuarios registrados en SISTPEC, con filtros y opciones de exportación.';
+      return 'Consulta el listado de usuarios registrados en SISTPEC, con filtros.';
     case 'editar':
       return 'Edita los datos generales, roles y vigencia de los usuarios existentes.';
     case 'eliminar':
-      return 'Desactiva usuarios que ya no deban tener acceso al sistema SISTPEC.';
+      return 'Desactiva o reactiva usuarios del sistema.';
+    case 'bitacora':
+      return 'Monitorea y consulta los cambios realizados por usuario.';
     default:
       return '';
   }
@@ -739,17 +739,16 @@ const tituloAccionActual = computed(() => {
   return accion ? accion.label : '';
 });
 
-// Reset de mensajes al cambiar de acción
 watch(
   () => selectedAction.value,
   () => {
-    errores.value      = [];
+    errores.value = [];
     mensajeExito.value = '';
     usuarioEditando.value = null;
   }
 );
 
-// Datos demo para tabla
+// ===== Datos demo para tabla =====
 const usuariosDemoTabla = ref([
   {
     id: 1,
@@ -805,43 +804,29 @@ const filtros = ref({
 });
 
 const usuariosFiltrados = computed(() => {
-  const nom   = filtros.value.nombre_usuario.trim().toLowerCase();
+  const nom = filtros.value.nombre_usuario.trim().toLowerCase();
   const clave = filtros.value.clave_de_rumiantes.trim().toLowerCase();
-  const mail  = filtros.value.correo.trim().toLowerCase();
+  const mail = filtros.value.correo.trim().toLowerCase();
 
   return usuariosDemoTabla.value.filter(u => {
-    const matchNombre = nom
-      ? u.nombre_usuario.toLowerCase().includes(nom)
-      : true;
-    const matchClave = clave
-      ? (u.clave_de_rumiantes || '').toLowerCase().includes(clave)
-      : true;
-    const matchCorreo = mail
-      ? u.correo.toLowerCase().includes(mail)
-      : true;
-
+    const matchNombre = nom ? u.nombre_usuario.toLowerCase().includes(nom) : true;
+    const matchClave = clave ? (u.clave_de_rumiantes || '').toLowerCase().includes(clave) : true;
+    const matchCorreo = mail ? u.correo.toLowerCase().includes(mail) : true;
     return matchNombre && matchClave && matchCorreo;
   });
 });
 
 function buscarUsuarios() {
-  // La búsqueda es reactiva con los filtros;
-  // aquí se loggea o llamar a backend si se requiere.
+  // búsqueda reactiva (en backend sería un GET)
 }
 
 function limpiarFiltros() {
-  filtros.value = {
-    nombre_usuario: '',
-    clave_de_rumiantes: '',
-    correo: ''
-  };
+  filtros.value = { nombre_usuario: '', clave_de_rumiantes: '', correo: '' };
 }
 
-// ===== Registrar usuario =====
+// ===== Registrar =====
 function limpiarFormulario() {
-  const ok = window.confirm(
-    '¿Desea limpiar el formulario? Los datos capturados se perderán.'
-  );
+  const ok = window.confirm('¿Desea limpiar el formulario? Los datos capturados se perderán.');
   if (!ok) return;
 
   nuevoUsuario.value = {
@@ -859,57 +844,33 @@ function limpiarFormulario() {
     vigencia_fin: '',
     activo: true
   };
-  errores.value      = [];
+  errores.value = [];
   mensajeExito.value = '';
 }
 
 function validarFormularioRegistro() {
   errores.value = [];
 
-  // Nombre y apellidos
-  if (!nuevoUsuario.value.nombre) {
-    errores.value.push('El campo Nombre es obligatorio.');
-  } else if (!soloLetrasRegex.test(nuevoUsuario.value.nombre)) {
-    errores.value.push('El campo Nombre solo debe contener letras.');
-  }
+  if (!nuevoUsuario.value.nombre) errores.value.push('El campo Nombre es obligatorio.');
+  else if (!soloLetrasRegex.test(nuevoUsuario.value.nombre)) errores.value.push('El campo Nombre solo debe contener letras.');
 
-  if (!nuevoUsuario.value.apellido_paterno) {
-    errores.value.push('El campo Apellido paterno es obligatorio.');
-  } else if (!soloLetrasRegex.test(nuevoUsuario.value.apellido_paterno)) {
-    errores.value.push('El campo Apellido paterno solo debe contener letras.');
-  }
+  if (!nuevoUsuario.value.apellido_paterno) errores.value.push('El campo Apellido paterno es obligatorio.');
+  else if (!soloLetrasRegex.test(nuevoUsuario.value.apellido_paterno)) errores.value.push('El campo Apellido paterno solo debe contener letras.');
 
-  if (
-    nuevoUsuario.value.apellido_materno &&
-    !soloLetrasRegex.test(nuevoUsuario.value.apellido_materno)
-  ) {
+  if (nuevoUsuario.value.apellido_materno && !soloLetrasRegex.test(nuevoUsuario.value.apellido_materno)) {
     errores.value.push('El campo Apellido materno solo debe contener letras.');
   }
 
-  // Usuario y correo
-  if (!nuevoUsuario.value.nombre_usuario) {
-    errores.value.push('Debe capturar el Nombre de usuario.');
-  }
-  if (!nuevoUsuario.value.correo) {
-    errores.value.push('Debe capturar el correo electrónico.');
-  }
+  if (!nuevoUsuario.value.nombre_usuario) errores.value.push('Debe capturar el Nombre de usuario.');
+  if (!nuevoUsuario.value.correo) errores.value.push('Debe capturar el correo electrónico.');
 
-  // Contraseña
-  if (!nuevoUsuario.value.password) {
-    errores.value.push('La contraseña es obligatoria.');
-  } else {
+  if (!nuevoUsuario.value.password) errores.value.push('La contraseña es obligatoria.');
+  else {
     if (nuevoUsuario.value.password.length < passwordMinLength) {
-      errores.value.push(
-        `La contraseña debe tener al menos ${passwordMinLength} caracteres.`
-      );
+      errores.value.push(`La contraseña debe tener al menos ${passwordMinLength} caracteres.`);
     }
-    if (
-      !/[A-Za-z]/.test(nuevoUsuario.value.password) ||
-      !/\d/.test(nuevoUsuario.value.password)
-    ) {
-      errores.value.push(
-        'La contraseña debe contener letras y números.'
-      );
+    if (!/[A-Za-z]/.test(nuevoUsuario.value.password) || !/\d/.test(nuevoUsuario.value.password)) {
+      errores.value.push('La contraseña debe contener letras y números.');
     }
   }
 
@@ -917,15 +878,12 @@ function validarFormularioRegistro() {
     errores.value.push('La confirmación de contraseña no coincide.');
   }
 
-  // Vigencia
   if (
     nuevoUsuario.value.vigencia_inicio &&
     nuevoUsuario.value.vigencia_fin &&
     nuevoUsuario.value.vigencia_fin < nuevoUsuario.value.vigencia_inicio
   ) {
-    errores.value.push(
-      'La fecha de fin de vigencia no puede ser menor que la fecha de inicio.'
-    );
+    errores.value.push('La fecha de fin de vigencia no puede ser menor que la fecha de inicio.');
   }
 
   return errores.value.length === 0;
@@ -937,19 +895,17 @@ function guardarUsuario() {
   const esValido = validarFormularioRegistro();
   if (!esValido) return;
 
-  const ok = window.confirm(
-    '¿Desea guardar el usuario con los datos capturados?'
-  );
+  const ok = window.confirm('¿Desea guardar el usuario con los datos capturados?');
   if (!ok) return;
 
   const newId = usuariosDemoTabla.value.length
     ? Math.max(...usuariosDemoTabla.value.map(u => u.id)) + 1
     : 1;
 
-  const rolNum      = Number(nuevoUsuario.value.tipo_usuario);
+  const rolNum = Number(nuevoUsuario.value.tipo_usuario);
   const rolEtiqueta = rolesCatalog[rolNum] || 'Sin rol';
 
-  usuariosDemoTabla.value.push({
+  const usuarioCreado = {
     id: newId,
     nombre: nuevoUsuario.value.nombre,
     apellido_paterno: nuevoUsuario.value.apellido_paterno,
@@ -963,14 +919,23 @@ function guardarUsuario() {
     vigencia_inicio: nuevoUsuario.value.vigencia_inicio,
     vigencia_fin: nuevoUsuario.value.vigencia_fin,
     activo: nuevoUsuario.value.activo
+  };
+
+  usuariosDemoTabla.value.push(usuarioCreado);
+
+  //  BITÁCORA
+  registrarCambio({
+    accion: 'REGISTRAR',
+    objetivo: usuarioCreado.nombre_usuario,
+    detalle: `Registró usuario con rol: ${rolEtiqueta}, vigencia: ${usuarioCreado.vigencia_inicio} a ${usuarioCreado.vigencia_fin}.`
   });
 
   mensajeExito.value = 'El usuario ha sido registrado correctamente.';
 }
 
-// ===== Edición de usuarios =====
+// ===== Edición =====
 function seleccionarUsuario(u) {
-  errores.value      = [];
+  errores.value = [];
   mensajeExito.value = '';
 
   usuarioEditando.value = {
@@ -991,9 +956,7 @@ function seleccionarUsuario(u) {
 }
 
 function cancelarEdicion() {
-  const ok = window.confirm(
-    '¿Desea cancelar la edición? Los cambios no guardados se perderán.'
-  );
+  const ok = window.confirm('¿Desea cancelar la edición? Los cambios no guardados se perderán.');
   if (!ok) return;
   usuarioEditando.value = null;
 }
@@ -1008,57 +971,33 @@ function validarFormularioEdicion() {
 
   const u = usuarioEditando.value;
 
-  // Nombre y apellidos
-  if (!u.nombre) {
-    errores.value.push('El campo Nombre es obligatorio.');
-  } else if (!soloLetrasRegex.test(u.nombre)) {
-    errores.value.push('El campo Nombre solo debe contener letras.');
-  }
+  if (!u.nombre) errores.value.push('El campo Nombre es obligatorio.');
+  else if (!soloLetrasRegex.test(u.nombre)) errores.value.push('El campo Nombre solo debe contener letras.');
 
-  if (!u.apellido_paterno) {
-    errores.value.push('El campo Apellido paterno es obligatorio.');
-  } else if (!soloLetrasRegex.test(u.apellido_paterno)) {
-    errores.value.push('El campo Apellido paterno solo debe contener letras.');
-  }
+  if (!u.apellido_paterno) errores.value.push('El campo Apellido paterno es obligatorio.');
+  else if (!soloLetrasRegex.test(u.apellido_paterno)) errores.value.push('El campo Apellido paterno solo debe contener letras.');
 
   if (u.apellido_materno && !soloLetrasRegex.test(u.apellido_materno)) {
     errores.value.push('El campo Apellido materno solo debe contener letras.');
   }
 
-  // Usuario y correo
-  if (!u.nombre_usuario) {
-    errores.value.push('Debe capturar el Nombre de usuario.');
-  }
-  if (!u.correo) {
-    errores.value.push('Debe capturar el correo electrónico.');
-  }
+  if (!u.nombre_usuario) errores.value.push('Debe capturar el Nombre de usuario.');
+  if (!u.correo) errores.value.push('Debe capturar el correo electrónico.');
 
-  // Contraseña (solo si se cambia)
   if (u.password || u.confirmPassword) {
     if (u.password.length < passwordMinLength) {
-      errores.value.push(
-        `La nueva contraseña debe tener al menos ${passwordMinLength} caracteres.`
-      );
+      errores.value.push(`La nueva contraseña debe tener al menos ${passwordMinLength} caracteres.`);
     }
     if (!/[A-Za-z]/.test(u.password) || !/\d/.test(u.password)) {
-      errores.value.push(
-        'La nueva contraseña debe contener letras y números.'
-      );
+      errores.value.push('La nueva contraseña debe contener letras y números.');
     }
     if (u.password !== u.confirmPassword) {
       errores.value.push('La confirmación de la nueva contraseña no coincide.');
     }
   }
 
-  // Vigencia
-  if (
-    u.vigencia_inicio &&
-    u.vigencia_fin &&
-    u.vigencia_fin < u.vigencia_inicio
-  ) {
-    errores.value.push(
-      'La fecha de fin de vigencia no puede ser menor que la fecha de inicio.'
-    );
+  if (u.vigencia_inicio && u.vigencia_fin && u.vigencia_fin < u.vigencia_inicio) {
+    errores.value.push('La fecha de fin de vigencia no puede ser menor que la fecha de inicio.');
   }
 
   return errores.value.length === 0;
@@ -1070,20 +1009,21 @@ function guardarCambiosUsuario() {
   const esValido = validarFormularioEdicion();
   if (!esValido) return;
 
-  const ok = window.confirm(
-    '¿Desea guardar los cambios del usuario seleccionado?'
-  );
+  const ok = window.confirm('¿Desea guardar los cambios del usuario seleccionado?');
   if (!ok) return;
 
   const uEdit = usuarioEditando.value;
-  const idx   = usuariosDemoTabla.value.findIndex(u => u.id === uEdit.id);
+  const idx = usuariosDemoTabla.value.findIndex(u => u.id === uEdit.id);
 
   if (idx === -1) {
     errores.value.push('No se encontró el usuario en la lista.');
     return;
   }
 
-  const rolNum      = Number(uEdit.tipo_usuario);
+  // Snapshot previo para detalle
+  const previo = { ...usuariosDemoTabla.value[idx] };
+
+  const rolNum = Number(uEdit.tipo_usuario);
   const rolEtiqueta = rolesCatalog[rolNum] || 'Sin rol';
 
   usuariosDemoTabla.value[idx] = {
@@ -1102,12 +1042,29 @@ function guardarCambiosUsuario() {
     activo: uEdit.activo
   };
 
+  //  BITÁCORA (detalle resumido)
+  const cambios = [];
+  if (previo.correo !== uEdit.correo) cambios.push('correo');
+  if (previo.rol !== rolNum) cambios.push('rol');
+  if (previo.vigencia_inicio !== uEdit.vigencia_inicio || previo.vigencia_fin !== uEdit.vigencia_fin) cambios.push('vigencia');
+  if ((previo.clave_de_rumiantes || '') !== (uEdit.clave_de_rumiantes || '')) cambios.push('clave rumiantes');
+  if (previo.nombre_completo !== `${uEdit.nombre} ${uEdit.apellido_paterno} ${uEdit.apellido_materno}`.trim()) cambios.push('nombre');
+
+  registrarCambio({
+    accion: 'EDITAR',
+    objetivo: previo.nombre_usuario,
+    detalle: cambios.length
+      ? `Actualizó: ${cambios.join(', ')}.`
+      : 'Guardó cambios (sin diferencias detectadas).'
+  });
+
   mensajeExito.value = 'Los datos del usuario se han actualizado correctamente.';
+  usuarioEditando.value = null;
 }
 
-// ===== Eliminar / desactivar usuarios =====
+// ===== Desactivar / Reactivar =====
 function desactivarUsuario(u) {
-  errores.value      = [];
+  errores.value = [];
   mensajeExito.value = '';
 
   if (!u.activo) {
@@ -1115,9 +1072,7 @@ function desactivarUsuario(u) {
     return;
   }
 
-  const ok = window.confirm(
-    `¿Desea desactivar al usuario "${u.nombre_usuario}"?`
-  );
+  const ok = window.confirm(`¿Desea desactivar al usuario "${u.nombre_usuario}"?`);
   if (!ok) return;
 
   const idx = usuariosDemoTabla.value.findIndex(x => x.id === u.id);
@@ -1126,16 +1081,20 @@ function desactivarUsuario(u) {
     return;
   }
 
-  usuariosDemoTabla.value[idx] = {
-    ...usuariosDemoTabla.value[idx],
-    activo: false
-  };
+  usuariosDemoTabla.value[idx] = { ...usuariosDemoTabla.value[idx], activo: false };
+
+  // BITÁCORA
+  registrarCambio({
+    accion: 'DESACTIVAR',
+    objetivo: u.nombre_usuario,
+    detalle: 'Desactivó usuario (baja lógica).'
+  });
 
   mensajeExito.value = 'El usuario se ha desactivado correctamente.';
 }
 
 function reactivarUsuario(u) {
-  errores.value      = [];
+  errores.value = [];
   mensajeExito.value = '';
 
   if (u.activo) {
@@ -1143,9 +1102,7 @@ function reactivarUsuario(u) {
     return;
   }
 
-  const ok = window.confirm(
-    `¿Desea reactivar al usuario "${u.nombre_usuario}"?`
-  );
+  const ok = window.confirm(`¿Desea reactivar al usuario "${u.nombre_usuario}"?`);
   if (!ok) return;
 
   const idx = usuariosDemoTabla.value.findIndex(x => x.id === u.id);
@@ -1154,10 +1111,14 @@ function reactivarUsuario(u) {
     return;
   }
 
-  usuariosDemoTabla.value[idx] = {
-    ...usuariosDemoTabla.value[idx],
-    activo: true
-  };
+  usuariosDemoTabla.value[idx] = { ...usuariosDemoTabla.value[idx], activo: true };
+
+  //  BITÁCORA
+  registrarCambio({
+    accion: 'REACTIVAR',
+    objetivo: u.nombre_usuario,
+    detalle: 'Reactivó usuario.'
+  });
 
   mensajeExito.value = 'El usuario se ha reactivado correctamente.';
 }
@@ -1165,306 +1126,119 @@ function reactivarUsuario(u) {
 
 <style scoped>
 /* Acciones */
-.modulo-acciones {
-  margin-bottom: 20px;
-}
+.modulo-acciones { margin-bottom: 20px; }
+.modulo-acciones-titulo { display:block; font-size: 14px; margin-bottom: 8px; color:#333; font-weight: 600; }
+.modulo-acciones-botones { display:flex; flex-wrap:wrap; gap: 4px; }
 
-.modulo-acciones-titulo {
-  display: block;
-  font-size: 14px;
-  margin-bottom: 8px;
-  color: #333;
-  font-weight: 600;
+.sistpec-btn-accion{
+  border:none; padding:8px 16px; font-size:12px; font-weight:600;
+  text-transform:uppercase; border-radius:3px; cursor:pointer;
+  background-color:#2f6b32; color:#fff; letter-spacing:0.5px;
 }
+.sistpec-btn-accion.active{ background-color:#244e26; }
 
-.modulo-acciones-botones {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
+.modulo-contenido { margin-top: 10px; }
 
-/* Botones de acción de módulo */
-.sistpec-btn-accion {
-  border: none;
-  padding: 8px 16px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  border-radius: 3px;
-  cursor: pointer;
-  background-color: #2f6b32;
-  color: #ffffff;
-  letter-spacing: 0.5px;
-}
+.subtitulo { font-size:18px; margin:10px 0 15px; color:#333; }
+.subtitulo-secundario { font-size:16px; margin:16px 0 10px; color:#333; }
 
-.sistpec-btn-accion.active {
-  background-color: #244e26;
-}
+/* Form */
+.sistpec-form { display:flex; flex-direction:column; gap:16px; }
+.sistpec-form-row { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:16px; }
+.sistpec-form-row-end { justify-content:flex-end; display:flex; }
 
-/* Contenido */
-.modulo-contenido {
-  margin-top: 10px;
-}
-
-/* Subtítulos */
-.subtitulo {
-  font-size: 18px;
-  margin: 10px 0 15px;
-  color: #333;
-}
-
-.subtitulo-secundario {
-  font-size: 16px;
-  margin: 16px 0 10px;
-  color: #333;
-}
-
-/* ---- Formulario SISTPEC ---- */
-.sistpec-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.sistpec-form-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.sistpec-form-row-end {
-  justify-content: flex-end;
-  display: flex;
-}
-
-.sistpec-form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.sistpec-form-group label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #444;
-}
+.sistpec-form-group { display:flex; flex-direction:column; gap:4px; }
+.sistpec-form-group label { font-size:13px; font-weight:600; color:#444; }
 
 .sistpec-form-group input,
-.sistpec-form-group select {
-  padding: 8px 10px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-  outline: none;
+.sistpec-form-group select{
+  padding:8px 10px; border-radius:4px; border:1px solid #ccc;
+  font-size:14px; outline:none;
 }
 
 .sistpec-form-group input:focus,
-.sistpec-form-group select:focus {
-  border-color: #2f6b32;
-  box-shadow: 0 0 0 1px rgba(47, 107, 50, 0.15);
+.sistpec-form-group select:focus{
+  border-color:#2f6b32;
+  box-shadow:0 0 0 1px rgba(47, 107, 50, 0.15);
 }
 
-/* grupo inline para vigencia */
-.sistpec-form-group-inline .sistpec-form-inline-inputs {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.sistpec-form-group-inline .sistpec-form-inline-inputs{
+  display:flex; align-items:center; gap:6px;
 }
+.vigencia-sep{ font-size:14px; color:#666; }
 
-.vigencia-sep {
-  font-size: 14px;
-  color: #666;
-}
+.sistpec-checkbox{ display:inline-flex; align-items:center; gap:6px; font-size:14px; color:#444; }
 
-/* checkbox */
-.sistpec-checkbox {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: #444;
-}
-
-/* Botones de acción del form */
-.sistpec-form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
+.sistpec-form-actions{ display:flex; justify-content:flex-end; gap:8px; }
 
 /* Botones */
-.sistpec-btn-primary {
-  background-color: #2f6b32;
-  color: #ffffff;
-  border: none;
-  padding: 8px 18px;
-  border-radius: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
+.sistpec-btn-primary{
+  background-color:#2f6b32; color:#fff; border:none;
+  padding:8px 18px; border-radius:4px;
+  font-size:13px; font-weight:600; cursor:pointer;
 }
+.sistpec-btn-primary:hover{ background-color:#244e26; }
 
-.sistpec-btn-primary:hover {
-  background-color: #244e26;
+.sistpec-btn-secondary{
+  background-color:#e0e0e0; color:#333; border:none;
+  padding:8px 18px; border-radius:4px;
+  font-size:13px; font-weight:600; cursor:pointer;
 }
+.sistpec-btn-secondary:hover{ background-color:#d0d0d0; }
 
-.sistpec-btn-secondary {
-  background-color: #e0e0e0;
-  color: #333;
-  border: none;
-  padding: 8px 18px;
-  border-radius: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
+.sistpec-btn-sm{ padding:4px 10px; font-size:11px; }
+
+.sistpec-btn-danger{
+  background-color:#7a061e; color:#fff; border:none;
+  padding:6px 14px; border-radius:4px;
+  font-size:12px; font-weight:600; cursor:pointer;
 }
+.sistpec-btn-danger:hover{ background-color:#5a0416; }
+.sistpec-btn-danger[disabled]{ opacity:0.5; cursor:default; }
 
-.sistpec-btn-secondary:hover {
-  background-color: #d0d0d0;
-}
+/* Info */
+.sistpec-info-box{ margin-top:10px; padding:10px 14px; border-radius:4px; background-color:#e1f3e1; border:1px solid #c3e6c3; }
+.sistpec-info-text{ margin:0; font-size:13px; color:#225522; }
 
-.sistpec-btn-sm {
-  padding: 4px 10px;
-  font-size: 11px;
-}
+/* Alertas */
+.modulo-alert{ margin-bottom:12px; padding:10px 14px; border-radius:4px; font-size:13px; }
+.modulo-alert--error{ background-color:#fbeaea; border:1px solid #f5c2c2; color:#7a1f1f; }
+.modulo-alert--success{ background-color:#e1f3e1; border:1px solid #c3e6c3; color:#225522; }
 
-/* Botón peligro (desactivar) */
-.sistpec-btn-danger {
-  background-color: #7a061e;
-  color: #ffffff;
-  border: none;
-  padding: 6px 14px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.sistpec-btn-danger:hover {
-  background-color: #5a0416;
-}
-
-.sistpec-btn-danger[disabled] {
-  opacity: 0.5;
-  cursor: default;
-}
-
-/* Info box verde claro */
-.sistpec-info-box {
-  margin-top: 10px;
-  padding: 10px 14px;
-  border-radius: 4px;
-  background-color: #e1f3e1;
-  border: 1px solid #c3e6c3;
-}
-
-.sistpec-info-text {
-  margin: 0;
-  font-size: 13px;
-  color: #225522;
-}
-
-/* ALERTAS */
-.modulo-alert {
-  margin-bottom: 12px;
-  padding: 10px 14px;
-  border-radius: 4px;
-  font-size: 13px;
-}
-
-.modulo-alert--error {
-  background-color: #fbeaea;
-  border: 1px solid #f5c2c2;
-  color: #7a1f1f;
-}
-
-.modulo-alert--success {
-  background-color: #e1f3e1;
-  border: 1px solid #c3e6c3;
-  color: #225522;
-}
-
-/* CONSULTAR / EDITAR / ELIMINAR: barra de filtros */
-.sistpec-search-bar {
-  display: grid;
+/* Search bar */
+.sistpec-search-bar{
+  display:grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
+  gap:12px;
+  margin-bottom:16px;
 }
 
-.sistpec-search-actions {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
+.sistpec-search-actions{
+  display:flex;
+  align-items:flex-end;
+  gap:8px;
 }
 
 /* Tabla */
-.sistpec-table-wrapper {
-  width: 100%;
-  overflow-x: auto;
-}
+.sistpec-table-wrapper{ width:100%; overflow-x:auto; }
+.sistpec-table{ width:100%; border-collapse:collapse; font-size:13px; }
+.sistpec-table thead{ background-color:#7a061e; color:#fff; }
+.sistpec-table th, .sistpec-table td{ padding:8px 10px; border:1px solid #ddd; text-align:left; }
+.sistpec-table tbody tr:nth-child(even){ background-color:#fafafa; }
+.sin-resultados{ text-align:center; color:#777; }
 
-.sistpec-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
+/* Panel */
+.sistpec-edit-panel{ margin-top:20px; padding-top:10px; border-top:1px dashed #ccc; }
 
-.sistpec-table thead {
-  background-color: #7a061e;
-  color: #ffffff;
-}
-
-.sistpec-table th,
-.sistpec-table td {
-  padding: 8px 10px;
-  border: 1px solid #ddd;
-  text-align: left;
-}
-
-.sistpec-table tbody tr:nth-child(even) {
-  background-color: #fafafa;
-}
-
-.sin-resultados {
-  text-align: center;
-  color: #777;
-}
-
-/* Panel edición */
-.sistpec-edit-panel {
-  margin-top: 20px;
-  padding-top: 10px;
-  border-top: 1px dashed #ccc;
-}
-
-/* badges */
-.badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.badge--activo {
-  background-color: #e1f3e1;
-  color: #225522;
-}
-
-.badge--inactivo {
-  background-color: #fbeaea;
-  color: #7a1f1f;
-}
+/* Badges */
+.badge{ display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+.badge--activo{ background-color:#e1f3e1; color:#225522; }
+.badge--inactivo{ background-color:#fbeaea; color:#7a1f1f; }
+.badge--proceso{ background-color:#fff4e5; color:#b26a00; }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .sistpec-form-row {
-    grid-template-columns: 1fr;
-  }
-
-  .sistpec-search-bar {
-    grid-template-columns: 1fr;
-  }
+  .sistpec-form-row{ grid-template-columns: 1fr; }
+  .sistpec-search-bar{ grid-template-columns: 1fr; }
 }
 </style>
