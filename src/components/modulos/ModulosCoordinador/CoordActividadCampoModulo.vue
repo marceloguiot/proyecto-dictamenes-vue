@@ -37,7 +37,7 @@
 
     <!-- ================= CONSULTAR VISITAS ================= -->
     <div v-if="selectedAction === 'consultar'">
-      <h3 class="subtitulo">Consultar visitas</h3>
+      <h3 class="subtitulo">Consultar</h3>
 
       <!-- Filtros principales -->
       <div class="sistpec-search-bar">
@@ -167,7 +167,7 @@
 
     <!-- ================= PROGRAMAR VISITAS ================= -->
     <div v-else-if="selectedAction === 'programar'">
-      <h3 class="subtitulo">Programar visitas</h3>
+      <h3 class="subtitulo">Programar</h3>
 
       <form class="sistpec-form" @submit.prevent="guardarProgramacion">
         <div class="sistpec-form-row">
@@ -328,7 +328,7 @@ function cambiarAccion(accionId) {
 
 const descripcionAccionActual = computed(() => {
   if (selectedAction.value === 'consultar') {
-    return 'Consulta visitas programadas y realizadas; muestra georreferencia (lat/long) cuando el MVZ la registre.';
+    return 'Consulta visitas programadas y realizadas.';
   }
   if (selectedAction.value === 'programar') {
     return 'Asigna visitas de UPP a MVZ en un periodo determinado para dar seguimiento a actividades en campo.';
@@ -892,4 +892,31 @@ function badgePrioridadClase(p) {
     grid-template-columns: 1fr; 
   }
 }
+
+/* ====== FIX: fila de Programar (Periodo + Observaciones) ====== */
+
+
+.sistpec-form-row.programar-row-2{
+  grid-template-columns: 1fr 1fr;
+  align-items: end;
+}
+
+
+.sistpec-form-group-inline{
+  min-width: 0;
+}
+
+
+.sistpec-form-inline-inputs{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sistpec-form-inline-inputs input[type="date"]{
+  width: 100%;
+  min-width: 0;
+}
+
 </style>

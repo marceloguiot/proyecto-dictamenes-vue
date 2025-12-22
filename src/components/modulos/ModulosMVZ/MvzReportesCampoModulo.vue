@@ -1,7 +1,7 @@
 <template>
   <!-- Barra de acciones -->
   <section class="modulo-acciones">
-    <span class="modulo-acciones-titulo">Administrar Reportes de Campo (MVZ)</span>
+    <span class="modulo-acciones-titulo">Acciones disponibles</span>
 
     <div class="modulo-acciones-botones">
       <button
@@ -33,106 +33,494 @@
       {{ mensajeExito }}
     </div>
 
-    <!-- ====================== 1) CAPTURAR HOJA ====================== -->
+    <!-- ====================== 1) CAPTURAR HOJA CONTROL (SENASICA + SECCIÓN IV MVZ) ====================== -->
     <div v-if="selectedAction === 'capturar'">
-      <h3 class="subtitulo">Capturar hoja de reporte de control de campo</h3>
-
-      <div class="sistpec-info-box">
-        <p class="sistpec-info-text">
-          Capture la hoja. Posteriormente podrá capturar los <strong>aretes</strong> en la opción
-          <strong>CAPTURAR ARETES</strong>.
-        </p>
-      </div>
+      <h3 class="subtitulo">Captura Hoja de Control</h3>
 
       <form class="sistpec-form" @submit.prevent="guardarHoja">
-        <div class="sistpec-form-row">
-          <div class="sistpec-form-group">
-            <label>Folio hoja control campo</label>
-            <input v-model="formHoja.folio_hoja" type="text" placeholder="Ej. HCC-2025-010" />
-          </div>
+        <!-- Encabezado TB / CC -->
+        <div class="card-seccion">
+          <div class="seccion-titulo">Encabezado</div>
 
-          <div class="sistpec-form-group">
-            <label>Fecha de muestreo</label>
-            <input v-model="formHoja.fecha_muestreo" type="date" />
-          </div>
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group">
+              <label>Tipo de prueba TB</label>
+              <div class="radio-col">
+                <label class="radio-item">
+                  <input type="radio" value="PLIEGUE_CAUDAL" v-model="formHoja.tb_tipo_prueba" />
+                  Pliegue caudal
+                </label>
+                <label class="radio-item">
+                  <input type="radio" value="CERVICAL_SIMPLE" v-model="formHoja.tb_tipo_prueba" />
+                  Cervical simple
+                </label>
+              </div>
+            </div>
 
-          <div class="sistpec-form-group">
-            <label>Especie</label>
-            <select v-model="formHoja.especie">
-              <option value="" disabled>Seleccione</option>
-              <option>Bovino</option>
-              <option>Caprino</option>
-              <option>Ovino</option>
-              <option>Porcino</option>
-              <option>Otro</option>
-            </select>
-          </div>
+            <div class="sistpec-form-group">
+              <label>Folio TB (opcional)</label>
+              <input v-model="formHoja.folio_tb" type="text" placeholder="Ej. 12345" />
+            </div>
 
-          <div class="sistpec-form-group">
-            <label>Tipo de servicio</label>
-            <select v-model="formHoja.tipo_servicio">
-              <option value="" disabled>Seleccione</option>
-              <option value="Campaña">Campaña</option>
-              <option value="Particular">Particular</option>
-            </select>
+            <div class="sistpec-form-group">
+              <label>CC No. (Folio hoja campo)</label>
+              <input v-model="formHoja.cc_no" type="text" placeholder="Ej. 5409818" />
+            </div>
+
+            <div class="sistpec-form-group">
+              <label>Estatus</label>
+              <input :value="formHoja.numero_caso_asignado ? 'BLOQUEADA' : 'EDITABLE'" type="text" disabled />
+            </div>
           </div>
         </div>
 
-        <div class="sistpec-form-row">
-          <div class="sistpec-form-group" style="grid-column: span 2;">
-            <label>Propietario</label>
-            <select v-model="formHoja.propietario_id">
-              <option value="" disabled>Seleccione</option>
-              <option v-for="p in propietariosDisponibles" :key="p.id" :value="p.id">
-                {{ nombreCompletoProp(p) }} ({{ p.estatus }})
-              </option>
-            </select>
+        <!-- I) Propietario -->
+        <div class="card-seccion">
+          <div class="seccion-titulo">I) Datos del propietario</div>
+
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group">
+              <label>CURP</label>
+              <input
+                v-model="formHoja.prop.curp"
+                type="text"
+                placeholder="Ej. RUMM690828HVZZNG03"
+                @blur="autocargarPropietario"
+              />
+              <small class="hint" :class="propEncontrado ? 'ok' : ''">
+                {{ propEncontrado ? 'Propietario encontrado ✅' : 'Si existe, se autocompletará al salir del campo.' }}
+              </small>
+            </div>
+
+            <div class="sistpec-form-group">
+              <label>Teléfono</label>
+              <input v-model="formHoja.prop.telefono" type="text" placeholder="Ej. 228..." :disabled="propLock" />
+            </div>
+
+            <div class="sistpec-form-group" style="grid-column: span 2;">
+              <label>Correo electrónico</label>
+              <input v-model="formHoja.prop.correo" type="text" placeholder="correo@ejemplo.com" :disabled="propLock" />
+            </div>
           </div>
 
-          <div class="sistpec-form-group" style="grid-column: span 2;">
-            <label>UPP</label>
-            <select v-model="formHoja.upp_id">
-              <option value="" disabled>Seleccione</option>
-              <option v-for="u in uppDisponibles" :key="u.id" :value="u.id">
-                {{ u.clave_upp }} - {{ u.nombre_upp || 'Sin nombre' }}
-              </option>
-            </select>
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group">
+              <label>Apellido paterno</label>
+              <input v-model="formHoja.prop.apellido_paterno" type="text" :disabled="propLock" />
+            </div>
+            <div class="sistpec-form-group">
+              <label>Apellido materno</label>
+              <input v-model="formHoja.prop.apellido_materno" type="text" :disabled="propLock" />
+            </div>
+            <div class="sistpec-form-group" style="grid-column: span 2;">
+              <label>Nombre(s)</label>
+              <input v-model="formHoja.prop.nombres" type="text" :disabled="propLock" />
+            </div>
+          </div>
+
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group" style="grid-column: span 2;">
+              <label>Domicilio</label>
+              <input v-model="formHoja.prop.domicilio" type="text" :disabled="propLock" />
+            </div>
+            <div class="sistpec-form-group">
+              <label>Municipio</label>
+              <input v-model="formHoja.prop.municipio" type="text" :disabled="propLock" />
+            </div>
+            <div class="sistpec-form-group">
+              <label>Localidad / Población</label>
+              <input v-model="formHoja.prop.localidad" type="text" :disabled="propLock" />
+            </div>
+          </div>
+
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group">
+              <label>Código postal</label>
+              <input v-model="formHoja.prop.cp" type="text" :disabled="propLock" />
+            </div>
+            <div class="sistpec-form-group">
+              <label>Estado</label>
+              <input v-model="formHoja.prop.estado" type="text" :disabled="propLock" />
+            </div>
+
+            <div class="sistpec-form-group" style="grid-column: span 2;">
+              <label>Edición propietario</label>
+              <div class="inline-actions">
+                <button type="button" class="sistpec-btn-secondary" @click="propLock = false">Editar manualmente</button>
+                <button type="button" class="sistpec-btn-secondary" @click="autocargarPropietario">
+                  Buscar CURP
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="sistpec-form-row">
-          <div class="sistpec-form-group">
-            <label>Municipio (UPP)</label>
-            <input v-model="formHoja.municipio" type="text" placeholder="Ej. Ayahualulco" />
+        <!-- II) UPP -->
+        <div class="card-seccion">
+          <div class="seccion-titulo">II) Unidad de Producción (UPP / PSG)</div>
+
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group">
+              <label>Clave UPP / PSG</label>
+              <input
+                v-model="formHoja.upp.clave"
+                type="text"
+                placeholder="Ej. 30-025-1055-001"
+                @blur="autocargarUpp"
+              />
+              <small class="hint" :class="uppEncontrada ? 'ok' : ''">
+                {{ uppEncontrada ? 'UPP encontrada ✅' : 'Si existe, se autocompletará al salir del campo.' }}
+              </small>
+            </div>
+
+            <div class="sistpec-form-group" style="grid-column: span 3;">
+              <label>Nombre de la unidad / predio</label>
+              <input v-model="formHoja.upp.nombre_predio" type="text" :disabled="uppLock" />
+            </div>
           </div>
-          <div class="sistpec-form-group">
-            <label>Localidad (UPP)</label>
-            <input v-model="formHoja.localidad" type="text" placeholder="Ej. Los Altos" />
+
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group">
+              <label>Latitud (opcional)</label>
+              <input v-model="formHoja.upp.latitud" type="text" placeholder="Ej. 19.249141" :disabled="uppLock" />
+            </div>
+            <div class="sistpec-form-group">
+              <label>Longitud (opcional)</label>
+              <input v-model="formHoja.upp.longitud" type="text" placeholder="Ej. -97.200479" :disabled="uppLock" />
+            </div>
+
+            <div class="sistpec-form-group" style="grid-column: span 2;">
+              <label>Domicilio</label>
+              <input v-model="formHoja.upp.domicilio" type="text" :disabled="uppLock" />
+            </div>
           </div>
-          <div class="sistpec-form-group">
-            <label>Estado (UPP)</label>
-            <input v-model="formHoja.estado" type="text" placeholder="Ej. Veracruz" />
+
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group">
+              <label>Municipio</label>
+              <input v-model="formHoja.upp.municipio" type="text" :disabled="uppLock" />
+            </div>
+            <div class="sistpec-form-group">
+              <label>Localidad / Población</label>
+              <input v-model="formHoja.upp.localidad" type="text" :disabled="uppLock" />
+            </div>
+            <div class="sistpec-form-group">
+              <label>Código postal</label>
+              <input v-model="formHoja.upp.cp" type="text" :disabled="uppLock" />
+            </div>
+            <div class="sistpec-form-group">
+              <label>Estado</label>
+              <input v-model="formHoja.upp.estado" type="text" :disabled="uppLock" />
+            </div>
           </div>
-          <div class="sistpec-form-group">
-            <label>Código Postal</label>
-            <input v-model="formHoja.codigo_postal" type="text" placeholder="Ej. 91260" />
+
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group" style="grid-column: span 2;">
+              <label>Edición UPP</label>
+              <div class="inline-actions">
+                <button type="button" class="sistpec-btn-secondary" @click="uppLock = false">Editar manualmente</button>
+                <button type="button" class="sistpec-btn-secondary" @click="autocargarUpp">Buscar UPP</button>
+              </div>
+            </div>
+
+            <div class="sistpec-form-group" style="grid-column: span 2;">
+              <label>Observaciones (opcional)</label>
+              <input v-model="formHoja.observaciones" type="text" placeholder="Notas" />
+            </div>
           </div>
         </div>
 
-        <div class="sistpec-form-row">
-          <div class="sistpec-form-group">
-            <label>MVZ (quien muestrea)</label>
-            <input v-model="formHoja.mvz_nombre" type="text" placeholder="Ej. MVZ Juan Pérez" />
+        <!-- III) Prueba -->
+        <div class="card-seccion">
+          <div class="seccion-titulo">III) Datos de la prueba</div>
+
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group" style="grid-column: span 2;">
+              <label>Motivo de la prueba (Brucelosis)</label>
+              <select v-model="formHoja.prueba.motivo">
+                <option value="" disabled>Seleccione</option>
+                <option>Tarjeta al 8%</option>
+                <option>Tarjeta al 3%</option>
+                <option>Rivanol</option>
+                <option>Fijación de complemento</option>
+                <option>Gel de agar</option>
+              </select>
+            </div>
+
+            <div class="sistpec-form-group" style="grid-column: span 2;">
+              <label>Fin zootécnico (solo una opción)</label>
+              <div class="radio-row">
+                <label class="radio-item">
+                  <input type="radio" value="Leche" v-model="formHoja.prueba.fin_zootecnico" />
+                  Leche
+                </label>
+                <label class="radio-item">
+                  <input type="radio" value="Carne" v-model="formHoja.prueba.fin_zootecnico" />
+                  Carne
+                </label>
+                <label class="radio-item">
+                  <input type="radio" value="Mixto" v-model="formHoja.prueba.fin_zootecnico" />
+                  Mixto
+                </label>
+              </div>
+            </div>
           </div>
 
-          <div class="sistpec-form-group">
-            <label>Tel. MVZ (opcional)</label>
-            <input v-model="formHoja.mvz_telefono" type="text" placeholder="Ej. 228..." />
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group" style="grid-column: span 2;">
+              <label>Tipo de identificación</label>
+              <div class="radio-row">
+                <label class="radio-item">
+                  <input type="radio" value="Arete" v-model="formHoja.prueba.tipo_identificacion" />
+                  Arete
+                </label>
+                <label class="radio-item">
+                  <input type="radio" value="Tatuaje" v-model="formHoja.prueba.tipo_identificacion" />
+                  Tatuaje
+                </label>
+                <label class="radio-item">
+                  <input type="radio" value="Otro" v-model="formHoja.prueba.tipo_identificacion" />
+                  Otro
+                </label>
+              </div>
+            </div>
+
+            <!-- ✅ SOLO aparece si selecciona "Otro" -->
+            <div v-if="formHoja.prueba.tipo_identificacion === 'Otro'" class="sistpec-form-group" style="grid-column: span 2;">
+              <label>Especifique</label>
+              <input
+                v-model="formHoja.prueba.tipo_identificacion_otro"
+                type="text"
+                placeholder="Escriba el tipo de identificación"
+              />
+            </div>
           </div>
 
-          <div class="sistpec-form-group" style="grid-column: span 2;">
-            <label>Observaciones (opcional)</label>
-            <input v-model="formHoja.observaciones" type="text" placeholder="Notas del muestreo" />
+          <!-- Resumen TB/BR -->
+          <div class="resumen-box">
+            <div class="resumen-titulo">Resumen (captura numérica TB / BR)</div>
+
+            <div class="sistpec-table-wrapper">
+              <table class="sistpec-table">
+                <thead>
+                  <tr>
+                    <th>Concepto</th>
+                    <th style="width:140px;">TB</th>
+                    <th style="width:140px;">BR</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Negativos</td>
+                    <td><input class="input-inline" v-model.number="formHoja.resumen.negativos.tb" type="number" min="0" /></td>
+                    <td><input class="input-inline" v-model.number="formHoja.resumen.negativos.br" type="number" min="0" /></td>
+                  </tr>
+                  <tr>
+                    <td>Reactores</td>
+                    <td><input class="input-inline" v-model.number="formHoja.resumen.reactores.tb" type="number" min="0" /></td>
+                    <td><input class="input-inline" v-model.number="formHoja.resumen.reactores.br" type="number" min="0" /></td>
+                  </tr>
+                  <tr>
+                    <td>Total probados</td>
+                    <td><input class="input-inline" v-model.number="formHoja.resumen.total_probados.tb" type="number" min="0" /></td>
+                    <td><input class="input-inline" v-model.number="formHoja.resumen.total_probados.br" type="number" min="0" /></td>
+                  </tr>
+                  <tr>
+                    <td>Total del hato</td>
+                    <td><input class="input-inline" v-model.number="formHoja.resumen.total_hato.tb" type="number" min="0" /></td>
+                    <td><input class="input-inline" v-model.number="formHoja.resumen.total_hato.br" type="number" min="0" /></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <small class="hint">
+              Nota: “Tuberculosis” se incluye, pero puede quedar vacío si solo se trabajará Brucelosis.
+            </small>
+          </div>
+
+          <!-- Tuberculosis (opcional) -->
+          <div class="tb-opcional">
+            <div class="resumen-titulo">Tuberculosis (opcional)</div>
+
+            <div class="sistpec-form-row row-4">
+              <div class="sistpec-form-group">
+                <label>Fecha de inyección</label>
+                <input v-model="formHoja.tb.fecha_inyeccion" type="date" />
+              </div>
+              <div class="sistpec-form-group">
+                <label>Hora</label>
+                <input v-model="formHoja.tb.hora_inyeccion" type="time" />
+              </div>
+              <div class="sistpec-form-group">
+                <label>Fecha de lectura</label>
+                <input v-model="formHoja.tb.fecha_lectura" type="date" />
+              </div>
+              <div class="sistpec-form-group">
+                <label>Hora</label>
+                <input v-model="formHoja.tb.hora_lectura" type="time" />
+              </div>
+            </div>
+
+            <div class="sistpec-form-row row-4">
+              <div class="sistpec-form-group">
+                <label>Dosis</label>
+                <div class="radio-row">
+                  <label class="radio-item">
+                    <input type="radio" value="10" v-model="formHoja.tb.dosis" />
+                    10
+                  </label>
+                  <label class="radio-item">
+                    <input type="radio" value="50" v-model="formHoja.tb.dosis" />
+                    50
+                  </label>
+                </div>
+              </div>
+
+              <div class="sistpec-form-group">
+                <label>No. de lote</label>
+                <input v-model="formHoja.tb.lote" type="text" placeholder="Ej. 4820A..." />
+              </div>
+
+              <div class="sistpec-form-group">
+                <label>Fecha de caducidad</label>
+                <input v-model="formHoja.tb.caducidad" type="date" />
+              </div>
+
+              <div class="sistpec-form-group">
+                <label>Resultado laboratorio (seguimiento)</label>
+                <input v-model="formHoja.tb.resultado_lab" type="text" placeholder="Opcional" />
+              </div>
+            </div>
+
+            <div class="sistpec-form-row row-4">
+              <div class="sistpec-form-group">
+                <label>Fecha seguimiento vacuna</label>
+                <input v-model="formHoja.tb.fecha_seguimiento" type="date" />
+              </div>
+              <div class="sistpec-form-group" style="grid-column: span 3;">
+                <label>Resultado seguimiento</label>
+                <input v-model="formHoja.tb.resultado_seguimiento" type="text" placeholder="Opcional" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- IV) Resultados / Animales (CAPTURA MVZ) -->
+        <div class="card-seccion">
+          <div class="seccion-titulo">IV) Animales (captura MVZ)</div>
+
+          <div class="sistpec-form-actions" style="justify-content:flex-end;">
+            <button type="button" class="sistpec-btn-secondary" @click="agregarFilaAnimal">+ Agregar animal</button>
+          </div>
+
+          <div class="sistpec-table-wrapper">
+            <table class="sistpec-table">
+              <thead>
+                <tr>
+                  <th style="width:40px;">#</th>
+                  <th style="width:90px;">I</th>
+                  <th>Arete</th>
+                  <th style="width:160px;">Especie</th>
+                  <th style="width:170px;">Edad (meses)</th>
+                  <th style="width:180px;">Raza</th>
+                  <th style="width:120px;">Sexo</th>
+                  <th style="width:220px;">Fierro (opcional)</th>
+                  <th style="width:110px;">Acciones</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr v-for="(a, idx) in formHoja.animales" :key="a._key">
+                  <td>{{ idx + 1 }}</td>
+
+                  <!-- ✅ I (opcional): RA/IN/IC -->
+                  <td>
+                    <select v-model="formHoja.animales[idx].inc_tipo" class="input-inline">
+                      <option value="">—</option>
+                      <option value="RA">RA</option>
+                      <option value="IN">IN</option>
+                      <option value="IC">IC</option>
+                    </select>
+                  </td>
+
+                  <td>
+                    <input
+                      v-model="formHoja.animales[idx].arete"
+                      type="text"
+                      class="input-inline"
+                      placeholder="Ej. 3064155716"
+                    />
+                  </td>
+
+                  <td>
+                    <select v-model="formHoja.animales[idx].especie" class="input-inline">
+                      <option value="" disabled>Seleccione</option>
+                      <option value="Bovino">Bovino</option>
+                      <option value="Caprino">Caprino</option>
+                      <option value="Ovino">Ovino</option>
+                    </select>
+                  </td>
+
+                  <td>
+                    <div class="edad-box">
+                      <input
+                        v-model.number="formHoja.animales[idx].edad_meses_registro"
+                        type="number"
+                        min="0"
+                        class="input-inline"
+                        placeholder="Meses (base)"
+                        @change="marcarEdadRegistro(formHoja.animales[idx])"
+                      />
+                      <small class="hint ok">Actual: {{ edadActualMeses(formHoja.animales[idx]) }}</small>
+                    </div>
+                  </td>
+
+                  <td>
+                    <input
+                      v-model="formHoja.animales[idx].raza"
+                      type="text"
+                      class="input-inline"
+                      placeholder="String (ej. HF)"
+                    />
+                  </td>
+
+                  <td>
+                    <select v-model="formHoja.animales[idx].sexo" class="input-inline">
+                      <option value="" disabled>—</option>
+                      <option value="H">H</option>
+                      <option value="M">M</option>
+                    </select>
+                  </td>
+
+                  <td>
+                    <input
+                      v-model="formHoja.animales[idx].fierro"
+                      type="text"
+                      class="input-inline"
+                      placeholder="Opcional"
+                    />
+                  </td>
+
+                  <td>
+                    <button type="button" class="sistpec-btn-danger sistpec-btn-sm" @click="quitarFilaAnimal(idx)">
+                      QUITAR
+                    </button>
+                  </td>
+                </tr>
+
+                <tr v-if="formHoja.animales.length === 0">
+                  <td colspan="9" class="sin-resultados">Agregue al menos un animal (aretes).</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="sistpec-info-box">
+            <p class="sistpec-info-text">
+              Columna <strong>I</strong> es opcional:
+              <strong>RA</strong>=Rearetado, <strong>IN</strong>=Incremento natural, <strong>IC</strong>=Incremento por compra.
+            </p>
           </div>
         </div>
 
@@ -140,151 +528,18 @@
           <button type="submit" class="sistpec-btn-primary">GUARDAR HOJA</button>
           <button type="button" class="sistpec-btn-secondary" @click="limpiarFormHoja">LIMPIAR</button>
         </div>
+
       </form>
-
-      <div class="sistpec-info-box" style="margin-top: 12px;">
-        <p class="sistpec-info-text">
-          Al guardar, la hoja queda en estatus <strong>Pendiente</strong> y aún puede editarse
-          hasta que Recepción le asigne <strong>Número de Caso</strong>.
-        </p>
-      </div>
     </div>
 
-    <!-- ====================== 2) CAPTURAR ARETES ====================== -->
-    <div v-else-if="selectedAction === 'aretes'">
-      <h3 class="subtitulo">Capturar números de aretes</h3>
-
-      <div class="sistpec-info-box">
-        <p class="sistpec-info-text">
-          Seleccione una hoja y capture los aretes (uno por muestra). Puede agregar o quitar filas.
-          La cantidad de aretes capturados será el total de muestras asociadas a la hoja.
-        </p>
-      </div>
-
-      <div class="sistpec-search-bar fechas-bar">
-        <div class="sistpec-form-group">
-          <label>Buscar hoja (folio)</label>
-          <input v-model="filtroAretesFolio" type="text" placeholder="Ej. HCC-2025-010" />
-        </div>
-
-        <div class="sistpec-form-group sistpec-search-actions">
-          <button type="button" class="sistpec-btn-primary" @click="buscarHojasParaAretes">BUSCAR</button>
-          <button type="button" class="sistpec-btn-secondary" @click="limpiarBusquedaAretes">LIMPIAR</button>
-        </div>
-      </div>
-
-      <div v-if="buscadoAretes" class="sistpec-table-wrapper">
-        <table class="sistpec-table">
-          <thead>
-            <tr>
-              <th>Folio hoja</th>
-              <th>Fecha</th>
-              <th>UPP</th>
-              <th>Especie</th>
-              <th>Total aretes</th>
-              <th>Número de caso</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            <tr v-for="h in hojasParaAretes" :key="h.id">
-              <td>{{ h.folio_hoja }}</td>
-              <td>{{ h.fecha_muestreo }}</td>
-              <td>{{ uppClave(h.upp_id) }}</td>
-              <td>{{ h.especie }}</td>
-              <td>{{ h.aretes.length }}</td>
-              <td>{{ h.numero_caso || '-' }}</td>
-              <td>
-                <button
-                  type="button"
-                  class="sistpec-btn-secondary sistpec-btn-sm"
-                  @click="seleccionarHojaAretes(h)"
-                  :disabled="h.numero_caso_asignado"
-                  :title="h.numero_caso_asignado ? 'Bloqueado: ya tiene número de caso.' : 'Capturar aretes'"
-                >
-                  SELECCIONAR
-                </button>
-              </td>
-            </tr>
-
-            <tr v-if="hojasParaAretes.length === 0">
-              <td colspan="7" class="sin-resultados">No se encontraron hojas con ese criterio.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Panel captura aretes -->
-      <div v-if="hojaAretesSeleccionada" class="sistpec-edit-panel">
-        <h4 class="subtitulo-secundario">
-          Hoja: {{ hojaAretesSeleccionada.folio_hoja }} | UPP: {{ uppClave(hojaAretesSeleccionada.upp_id) }}
-        </h4>
-
-        <div class="sistpec-form-actions" style="justify-content:flex-end;">
-          <button type="button" class="sistpec-btn-secondary" @click="agregarFilaArete">+ Agregar arete</button>
-        </div>
-
-        <div class="sistpec-table-wrapper">
-          <table class="sistpec-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Número de arete</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr v-for="(a, idx) in hojaAretesSeleccionada.aretes" :key="a._key">
-                <td>{{ idx + 1 }}</td>
-                <td>
-                  <input
-                    v-model="hojaAretesSeleccionada.aretes[idx].arete"
-                    type="text"
-                    class="input-inline"
-                    placeholder="Ej. 301152005..."
-                  />
-                </td>
-                <td>
-                  <button type="button" class="sistpec-btn-danger sistpec-btn-sm" @click="quitarFilaArete(idx)">
-                    QUITAR
-                  </button>
-                </td>
-              </tr>
-
-              <tr v-if="hojaAretesSeleccionada.aretes.length === 0">
-                <td colspan="3" class="sin-resultados">Agregue al menos un arete.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="sistpec-info-box">
-          <p class="sistpec-info-text">
-            Total de aretes capturados: <strong>{{ hojaAretesSeleccionada.aretes.length }}</strong>
-          </p>
-        </div>
-
-        <div class="sistpec-form-actions">
-          <button type="button" class="sistpec-btn-primary" @click="guardarAretes">
-            GUARDAR ARETES
-          </button>
-          <button type="button" class="sistpec-btn-secondary" @click="cancelarAretes">
-            CANCELAR
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ====================== 3) CONSULTAR HOJAS ====================== -->
+    <!-- ====================== 2) CONSULTAR HOJAS ====================== -->
     <div v-else-if="selectedAction === 'consultar'">
-      <h3 class="subtitulo">Consultar hojas de reporte</h3>
+      <h3 class="subtitulo">Consultar</h3>
 
       <div class="sistpec-search-bar">
         <div class="sistpec-form-group">
-          <label>Folio hoja</label>
-          <input v-model="filtrosCons.folio_hoja" type="text" placeholder="Ej. HCC-2025-010" />
+          <label>CC No.</label>
+          <input v-model="filtrosCons.cc_no" type="text" placeholder="Ej. 5409818" />
         </div>
 
         <div class="sistpec-form-group">
@@ -293,8 +548,8 @@
         </div>
 
         <div class="sistpec-form-group">
-          <label>Propietario (nombre)</label>
-          <input v-model="filtrosCons.propietario" type="text" placeholder="Ej. Ruiz" />
+          <label>CURP propietario</label>
+          <input v-model="filtrosCons.curp" type="text" placeholder="Ej. RUMM..." />
         </div>
 
         <div class="sistpec-form-group">
@@ -309,7 +564,7 @@
 
       <div class="sistpec-search-bar fechas-bar">
         <div class="sistpec-form-group sistpec-form-group-inline">
-          <label>Fecha muestreo</label>
+          <label>Fecha (inyección TB) (opcional)</label>
           <div class="sistpec-form-inline-inputs">
             <input v-model="filtrosCons.fecha_inicio" type="date" />
             <span class="vigencia-sep">a</span>
@@ -327,12 +582,11 @@
         <table class="sistpec-table">
           <thead>
             <tr>
-              <th>Folio hoja</th>
-              <th>Fecha</th>
-              <th>Especie</th>
+              <th>CC No.</th>
               <th>UPP</th>
-              <th>Propietario</th>
-              <th>Total aretes</th>
+              <th>CURP</th>
+              <th>Motivo</th>
+              <th>Total animales</th>
               <th>Número de caso</th>
               <th>Estatus edición</th>
               <th>Acciones</th>
@@ -341,12 +595,11 @@
 
           <tbody>
             <tr v-for="h in hojasConsultadas" :key="h.id">
-              <td>{{ h.folio_hoja }}</td>
-              <td>{{ h.fecha_muestreo }}</td>
-              <td>{{ h.especie }}</td>
-              <td>{{ uppClave(h.upp_id) }}</td>
-              <td>{{ propietarioNombre(h.propietario_id) }}</td>
-              <td>{{ h.aretes.length }}</td>
+              <td>{{ h.cc_no }}</td>
+              <td>{{ h.upp?.clave || '—' }}</td>
+              <td>{{ h.prop?.curp || '—' }}</td>
+              <td>{{ h.prueba?.motivo || '—' }}</td>
+              <td>{{ (h.animales || []).length }}</td>
               <td>{{ h.numero_caso || '-' }}</td>
               <td>
                 <span class="badge" :class="h.numero_caso_asignado ? 'badge--inactivo' : 'badge--activo'">
@@ -373,7 +626,7 @@
             </tr>
 
             <tr v-if="hojasConsultadas.length === 0">
-              <td colspan="9" class="sin-resultados">No se encontraron hojas con esos criterios.</td>
+              <td colspan="8" class="sin-resultados">No se encontraron hojas con esos criterios.</td>
             </tr>
           </tbody>
         </table>
@@ -381,19 +634,47 @@
 
       <!-- detalle -->
       <div v-if="detalleHoja" class="sistpec-edit-panel">
-        <h4 class="subtitulo-secundario">Detalle: {{ detalleHoja.folio_hoja }}</h4>
+        <h4 class="subtitulo-secundario">Detalle: CC {{ detalleHoja.cc_no }}</h4>
 
         <div class="detalle-grid">
-          <div><span class="lbl">Propietario:</span> {{ propietarioNombre(detalleHoja.propietario_id) }}</div>
-          <div><span class="lbl">UPP:</span> {{ uppClave(detalleHoja.upp_id) }}</div>
-          <div><span class="lbl">Fecha:</span> {{ detalleHoja.fecha_muestreo }}</div>
-          <div><span class="lbl">Especie:</span> {{ detalleHoja.especie }}</div>
-          <div><span class="lbl">Servicio:</span> {{ detalleHoja.tipo_servicio }}</div>
-          <div><span class="lbl">MVZ:</span> {{ detalleHoja.mvz_nombre || '-' }}</div>
-          <div style="grid-column: span 2;"><span class="lbl">Obs:</span> {{ detalleHoja.observaciones || '-' }}</div>
+          <div><span class="lbl">CURP:</span> {{ detalleHoja.prop?.curp || '—' }}</div>
+          <div><span class="lbl">Propietario:</span> {{ propietarioNombrePorCurp(detalleHoja.prop?.curp) }}</div>
+          <div><span class="lbl">UPP:</span> {{ detalleHoja.upp?.clave || '—' }}</div>
+          <div><span class="lbl">Predio:</span> {{ detalleHoja.upp?.nombre_predio || '—' }}</div>
+          <div><span class="lbl">Motivo:</span> {{ detalleHoja.prueba?.motivo || '—' }}</div>
+          <div><span class="lbl">Fin zootécnico:</span> {{ detalleHoja.prueba?.fin_zootecnico || '—' }}</div>
+
           <div style="grid-column: span 2;">
-            <span class="lbl">Aretes ({{ detalleHoja.aretes.length }}):</span>
-            <span>{{ detalleHoja.aretes.map(x => x.arete).filter(Boolean).join(', ') || '-' }}</span>
+            <span class="lbl">Animales:</span>
+            <div class="sistpec-table-wrapper" style="margin-top:6px;">
+              <table class="sistpec-table">
+                <thead>
+                  <tr>
+                    <th style="width:60px;">I</th>
+                    <th>Arete</th>
+                    <th>Especie</th>
+                    <th>Edad actual</th>
+                    <th>Raza</th>
+                    <th>Sexo</th>
+                    <th>Fierro</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(a, i) in (detalleHoja.animales || [])" :key="i">
+                    <td>{{ a.inc_tipo || '—' }}</td>
+                    <td>{{ a.arete || '—' }}</td>
+                    <td>{{ a.especie || '—' }}</td>
+                    <td>{{ edadActualMeses(a) }}</td>
+                    <td>{{ a.raza || '—' }}</td>
+                    <td>{{ a.sexo || '—' }}</td>
+                    <td>{{ a.fierro || '—' }}</td>
+                  </tr>
+                  <tr v-if="(detalleHoja.animales || []).length === 0">
+                    <td colspan="7" class="sin-resultados">Sin animales capturados.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -403,104 +684,167 @@
       </div>
     </div>
 
-    <!-- ====================== 4) EDITAR HOJA (ANTES DE CASO) ====================== -->
+    <!-- ====================== 3) EDITAR HOJA (ANTES DE CASO) ====================== -->
     <div v-else-if="selectedAction === 'editar'">
-      <h3 class="subtitulo">Editar hoja de reporte (solo antes de asignar número de caso)</h3>
-
-      <div class="sistpec-info-box">
-        <p class="sistpec-info-text">
-          Si la hoja ya tiene <strong>Número de Caso</strong>, queda bloqueada para edición.
-        </p>
-      </div>
+      <h3 class="subtitulo">Editar</h3>
 
       <div v-if="!hojaEditando" class="modulo-alert modulo-alert--error">
         Seleccione una hoja desde <strong>CONSULTAR</strong> para editar.
       </div>
 
       <form v-else class="sistpec-form" @submit.prevent="guardarEdicionHoja">
-        <div class="sistpec-form-row">
-          <div class="sistpec-form-group">
-            <label>Folio hoja</label>
-            <input v-model="hojaEditando.folio_hoja" type="text" />
-          </div>
-          <div class="sistpec-form-group">
-            <label>Fecha de muestreo</label>
-            <input v-model="hojaEditando.fecha_muestreo" type="date" />
-          </div>
-          <div class="sistpec-form-group">
-            <label>Especie</label>
-            <select v-model="hojaEditando.especie">
-              <option value="" disabled>Seleccione</option>
-              <option>Bovino</option>
-              <option>Caprino</option>
-              <option>Ovino</option>
-              <option>Porcino</option>
-              <option>Otro</option>
-            </select>
-          </div>
-          <div class="sistpec-form-group">
-            <label>Tipo de servicio</label>
-            <select v-model="hojaEditando.tipo_servicio">
-              <option value="" disabled>Seleccione</option>
-              <option value="Campaña">Campaña</option>
-              <option value="Particular">Particular</option>
-            </select>
+        <div class="card-seccion">
+          <div class="seccion-titulo">Encabezado</div>
+
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group">
+              <label>CC No.</label>
+              <input v-model="hojaEditando.cc_no" type="text" />
+            </div>
+            <div class="sistpec-form-group">
+              <label>Folio TB (opcional)</label>
+              <input v-model="hojaEditando.folio_tb" type="text" />
+            </div>
+            <div class="sistpec-form-group">
+              <label>Tipo de prueba TB</label>
+              <select v-model="hojaEditando.tb_tipo_prueba">
+                <option value="">—</option>
+                <option value="PLIEGUE_CAUDAL">Pliegue caudal</option>
+                <option value="CERVICAL_SIMPLE">Cervical simple</option>
+              </select>
+            </div>
+            <div class="sistpec-form-group">
+              <label>CURP</label>
+              <input v-model="hojaEditando.prop.curp" type="text" />
+            </div>
           </div>
         </div>
 
-        <div class="sistpec-form-row">
-          <div class="sistpec-form-group" style="grid-column: span 2;">
-            <label>Propietario</label>
-            <select v-model="hojaEditando.propietario_id">
-              <option value="" disabled>Seleccione</option>
-              <option v-for="p in propietariosDisponibles" :key="p.id" :value="p.id">
-                {{ nombreCompletoProp(p) }} ({{ p.estatus }})
-              </option>
-            </select>
-          </div>
-
-          <div class="sistpec-form-group" style="grid-column: span 2;">
-            <label>UPP</label>
-            <select v-model="hojaEditando.upp_id">
-              <option value="" disabled>Seleccione</option>
-              <option v-for="u in uppDisponibles" :key="u.id" :value="u.id">
-                {{ u.clave_upp }} - {{ u.nombre_upp || 'Sin nombre' }}
-              </option>
-            </select>
+        <div class="card-seccion">
+          <div class="seccion-titulo">UPP</div>
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group">
+              <label>Clave UPP / PSG</label>
+              <input v-model="hojaEditando.upp.clave" type="text" />
+            </div>
+            <div class="sistpec-form-group" style="grid-column: span 3;">
+              <label>Predio</label>
+              <input v-model="hojaEditando.upp.nombre_predio" type="text" />
+            </div>
           </div>
         </div>
 
-        <div class="sistpec-form-row">
-          <div class="sistpec-form-group">
-            <label>Municipio</label>
-            <input v-model="hojaEditando.municipio" type="text" />
-          </div>
-          <div class="sistpec-form-group">
-            <label>Localidad</label>
-            <input v-model="hojaEditando.localidad" type="text" />
-          </div>
-          <div class="sistpec-form-group">
-            <label>Estado</label>
-            <input v-model="hojaEditando.estado" type="text" />
-          </div>
-          <div class="sistpec-form-group">
-            <label>Código Postal</label>
-            <input v-model="hojaEditando.codigo_postal" type="text" />
+        <div class="card-seccion">
+          <div class="seccion-titulo">Prueba</div>
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group" style="grid-column: span 2;">
+              <label>Motivo</label>
+              <select v-model="hojaEditando.prueba.motivo">
+                <option value="" disabled>Seleccione</option>
+                <option>Tarjeta al 8%</option>
+                <option>Tarjeta al 3%</option>
+                <option>Rivanol</option>
+                <option>Fijación de complemento</option>
+                <option>Gel de agar</option>
+              </select>
+            </div>
+            <div class="sistpec-form-group" style="grid-column: span 2;">
+              <label>Fin zootécnico</label>
+              <select v-model="hojaEditando.prueba.fin_zootecnico">
+                <option value="" disabled>Seleccione</option>
+                <option>Leche</option>
+                <option>Carne</option>
+                <option>Mixto</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <div class="sistpec-form-row">
-          <div class="sistpec-form-group">
-            <label>MVZ</label>
-            <input v-model="hojaEditando.mvz_nombre" type="text" />
+        <!-- Editar animales también (sección IV) -->
+        <div class="card-seccion">
+          <div class="seccion-titulo">IV) Animales</div>
+
+          <div class="sistpec-form-actions" style="justify-content:flex-end;">
+            <button type="button" class="sistpec-btn-secondary" @click="agregarFilaAnimalEdicion">+ Agregar animal</button>
           </div>
-          <div class="sistpec-form-group">
-            <label>Tel. MVZ</label>
-            <input v-model="hojaEditando.mvz_telefono" type="text" />
-          </div>
-          <div class="sistpec-form-group" style="grid-column: span 2;">
-            <label>Observaciones</label>
-            <input v-model="hojaEditando.observaciones" type="text" />
+
+          <div class="sistpec-table-wrapper">
+            <table class="sistpec-table">
+              <thead>
+                <tr>
+                  <th style="width:40px;">#</th>
+                  <th style="width:90px;">I</th>
+                  <th>Arete</th>
+                  <th style="width:160px;">Especie</th>
+                  <th style="width:170px;">Edad (meses)</th>
+                  <th style="width:180px;">Raza</th>
+                  <th style="width:120px;">Sexo</th>
+                  <th style="width:220px;">Fierro</th>
+                  <th style="width:110px;">Acciones</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr v-for="(a, idx) in hojaEditando.animales" :key="a._key || idx">
+                  <td>{{ idx + 1 }}</td>
+
+                  <td>
+                    <select v-model="hojaEditando.animales[idx].inc_tipo" class="input-inline">
+                      <option value="">—</option>
+                      <option value="RA">RA</option>
+                      <option value="IN">IN</option>
+                      <option value="IC">IC</option>
+                    </select>
+                  </td>
+
+                  <td><input v-model="hojaEditando.animales[idx].arete" type="text" class="input-inline" /></td>
+
+                  <td>
+                    <select v-model="hojaEditando.animales[idx].especie" class="input-inline">
+                      <option value="" disabled>Seleccione</option>
+                      <option value="Bovino">Bovino</option>
+                      <option value="Caprino">Caprino</option>
+                      <option value="Ovino">Ovino</option>
+                    </select>
+                  </td>
+
+                  <td>
+                    <div class="edad-box">
+                      <input
+                        v-model.number="hojaEditando.animales[idx].edad_meses_registro"
+                        type="number"
+                        min="0"
+                        class="input-inline"
+                        @change="marcarEdadRegistro(hojaEditando.animales[idx])"
+                      />
+                      <small class="hint ok">Actual: {{ edadActualMeses(hojaEditando.animales[idx]) }}</small>
+                    </div>
+                  </td>
+
+                  <td><input v-model="hojaEditando.animales[idx].raza" type="text" class="input-inline" /></td>
+
+                  <td>
+                    <select v-model="hojaEditando.animales[idx].sexo" class="input-inline">
+                      <option value="" disabled>—</option>
+                      <option value="H">H</option>
+                      <option value="M">M</option>
+                    </select>
+                  </td>
+
+                  <td><input v-model="hojaEditando.animales[idx].fierro" type="text" class="input-inline" /></td>
+
+                  <td>
+                    <button type="button" class="sistpec-btn-danger sistpec-btn-sm" @click="quitarFilaAnimalEdicion(idx)">
+                      QUITAR
+                    </button>
+                  </td>
+                </tr>
+
+                <tr v-if="(hojaEditando.animales || []).length === 0">
+                  <td colspan="9" class="sin-resultados">Sin animales.</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -541,10 +885,9 @@ function scrollAlContenido() {
 
 /* ===================== Acciones ===================== */
 const acciones = [
-  { id: 'capturar', label: 'CAPTURAR HOJA' },
-  { id: 'aretes', label: 'CAPTURAR ARETES' },
-  { id: 'consultar', label: 'CONSULTAR HOJAS' },
-  { id: 'editar', label: 'EDITAR HOJA' }
+  { id: 'capturar', label: 'CAPTURAR' },
+  { id: 'consultar', label: 'CONSULTAR' },
+  { id: 'editar', label: 'EDITAR' }
 ];
 
 const selectedAction = ref('capturar');
@@ -559,11 +902,9 @@ function cambiarAccion(id) {
 const descripcionAccionActual = computed(() => {
   switch (selectedAction.value) {
     case 'capturar':
-      return 'Capture los datos generales de la hoja de control de campo.';
-    case 'aretes':
-      return 'Seleccione una hoja sin número de caso y capture los aretes.';
+      return 'Capture los datos de la hoja de control de campo correspondientes al MVZ.';
     case 'consultar':
-      return 'Consulte hojas por folio, UPP, propietario y fechas.';
+      return 'Consulte hojas por CC, UPP, CURP y si tiene número de caso.';
     case 'editar':
       return 'Edite hoja solo si NO tiene número de caso asignado.';
     default:
@@ -582,117 +923,300 @@ watch(
 /* ===================== DEMO: MVZ actual ===================== */
 const mvzUserId = 10;
 
-/* ===================== DEMO DATA: Propietarios (solo del MVZ) ===================== */
+/* ===================== DEMO DATA: Propietarios ===================== */
 const propietariosDemo = ref([
-  { id: 1, mvz_user_id: 10, apellido_paterno: 'Ruiz', apellido_materno: 'Mendoza', nombres: 'Miguel Ángel', estatus: 'Activo' },
-  { id: 2, mvz_user_id: 10, apellido_paterno: 'García', apellido_materno: 'López', nombres: 'Juan', estatus: 'Finado' },
-  { id: 3, mvz_user_id: 99, apellido_paterno: 'Otro', apellido_materno: 'MVZ', nombres: 'Ajeno', estatus: 'Activo' }
+  {
+    id: 1,
+    mvz_user_id: 10,
+    curp: 'RUMM690828HVZZNG03',
+    apellido_paterno: 'Ruiz',
+    apellido_materno: 'Mendoza',
+    nombres: 'Miguel Ángel',
+    telefono: '2821312079',
+    domicilio: 'C. Niño Artillero s/n',
+    municipio: 'Ayahualulco',
+    localidad: 'Los Altos',
+    cp: '91260',
+    estado: 'Veracruz',
+    correo: 'soto95.cars@gmail.com'
+  }
 ]);
 
-const propietariosDisponibles = computed(() => propietariosDemo.value.filter(p => p.mvz_user_id === mvzUserId));
-
-function nombreCompletoProp(p) {
+function propietarioNombrePorCurp(curp) {
+  const c = String(curp || '').trim().toUpperCase();
+  if (!c) return '—';
+  const p = propietariosDemo.value.find(x => String(x.curp || '').toUpperCase() === c);
+  if (!p) return '—';
   return `${p.apellido_paterno || ''} ${p.apellido_materno || ''} ${p.nombres || ''}`.trim();
 }
-function propietarioNombre(id) {
-  const p = propietariosDemo.value.find(x => x.id === id);
-  return p ? nombreCompletoProp(p) : '—';
+
+function buscarPropPorCurp(curp) {
+  const c = String(curp || '').trim().toUpperCase();
+  if (!c) return null;
+  return propietariosDemo.value.find(x => String(x.curp || '').toUpperCase() === c) || null;
 }
 
-/* ===================== DEMO DATA: UPP (solo del MVZ) ===================== */
+/* ===================== DEMO DATA: UPP ===================== */
 const uppDemo = ref([
-  { id: 101, mvz_user_id: 10, propietario_id: 1, clave_upp: '30-025-2000-001', nombre_upp: 'El Encino' },
-  { id: 102, mvz_user_id: 10, propietario_id: 2, clave_upp: '30-025-1055-001', nombre_upp: 'San Francisco' },
-  { id: 103, mvz_user_id: 99, propietario_id: 99, clave_upp: 'XX-XXX-XXXX-XXX', nombre_upp: 'Ajena' }
+  {
+    id: 101,
+    mvz_user_id: 10,
+    clave: '30-025-1055-001',
+    nombre_predio: 'San Francisco',
+    latitud: '19.249141',
+    longitud: '-97.200479',
+    domicilio: 'Calle Ayuntamiento s/n',
+    municipio: 'Ayahualulco',
+    localidad: 'Ayahualulco',
+    cp: '91260',
+    estado: 'Veracruz'
+  }
 ]);
 
-const uppDisponibles = computed(() => uppDemo.value.filter(u => u.mvz_user_id === mvzUserId));
-
-function uppClave(uppId) {
-  const u = uppDemo.value.find(x => x.id === uppId);
-  return u ? u.clave_upp : '—';
+function buscarUppPorClave(clave) {
+  const c = String(clave || '').trim().toUpperCase();
+  if (!c) return null;
+  return uppDemo.value.find(x => String(x.clave || '').toUpperCase() === c) || null;
 }
 
-/* ===================== DEMO DATA: hojas control campo (del MVZ) ===================== */
+/* ===================== DEMO DATA: hojas control ===================== */
 const hojasDemo = ref([
   {
     id: 5001,
     mvz_user_id: 10,
-    folio_hoja: 'HCC-2025-010',
-    fecha_muestreo: '2025-12-14',
-    especie: 'Bovino',
-    tipo_servicio: 'Campaña',
-    propietario_id: 1,
-    upp_id: 101,
-    municipio: 'Ayahualulco',
-    localidad: 'Los Altos',
-    estado: 'Veracruz',
-    codigo_postal: '91260',
-    mvz_nombre: 'MVZ Juan Pérez',
-    mvz_telefono: '',
-    observaciones: '',
+    cc_no: '5409818',
+    folio_tb: '',
+    tb_tipo_prueba: 'PLIEGUE_CAUDAL',
     numero_caso_asignado: false,
     numero_caso: '',
-    aretes: [
-      { _key: 'a1', arete: '301152005' },
-      { _key: 'a2', arete: '301152006' }
-    ]
-  },
-  {
-    id: 5002,
-    mvz_user_id: 10,
-    folio_hoja: 'HCC-2025-020',
-    fecha_muestreo: '2025-12-10',
-    especie: 'Bovino',
-    tipo_servicio: 'Campaña',
-    propietario_id: 1,
-    upp_id: 101,
-    municipio: 'Ayahualulco',
-    localidad: 'Los Altos',
-    estado: 'Veracruz',
-    codigo_postal: '91260',
-    mvz_nombre: 'MVZ Juan Pérez',
-    mvz_telefono: '',
     observaciones: '',
-    numero_caso_asignado: true,
-    numero_caso: 'BR25-001',
-    aretes: [{ _key: 'b1', arete: '301152010' }]
+    prop: {
+      curp: 'RUMM690828HVZZNG03',
+      apellido_paterno: 'Ruiz',
+      apellido_materno: 'Mendoza',
+      nombres: 'Miguel Ángel',
+      telefono: '2821312079',
+      domicilio: 'C. Niño Artillero s/n',
+      municipio: 'Ayahualulco',
+      localidad: 'Los Altos',
+      cp: '91260',
+      estado: 'Veracruz',
+      correo: 'soto95.cars@gmail.com'
+    },
+    upp: {
+      clave: '30-025-1055-001',
+      nombre_predio: 'San Francisco',
+      latitud: '19.249141',
+      longitud: '-97.200479',
+      domicilio: 'Calle Ayuntamiento s/n',
+      municipio: 'Ayahualulco',
+      localidad: 'Ayahualulco',
+      cp: '91260',
+      estado: 'Veracruz'
+    },
+    prueba: {
+      motivo: 'Tarjeta al 8%',
+      fin_zootecnico: 'Leche',
+      tipo_identificacion: 'Arete',
+      tipo_identificacion_otro: ''
+    },
+    resumen: {
+      negativos: { tb: 0, br: 0 },
+      reactores: { tb: 0, br: 0 },
+      total_probados: { tb: 0, br: 0 },
+      total_hato: { tb: 0, br: 0 }
+    },
+    tb: {
+      fecha_inyeccion: '',
+      hora_inyeccion: '',
+      fecha_lectura: '',
+      hora_lectura: '',
+      dosis: '',
+      lote: '',
+      caducidad: '',
+      fecha_seguimiento: '',
+      resultado_seguimiento: '',
+      resultado_lab: ''
+    },
+    animales: []
   }
 ]);
 
-/* ===================== 1) Capturar hoja ===================== */
-const formHoja = ref({
-  folio_hoja: '',
-  fecha_muestreo: '',
-  especie: '',
-  tipo_servicio: '',
-  propietario_id: '',
-  upp_id: '',
-  municipio: '',
-  localidad: '',
-  estado: '',
-  codigo_postal: '',
-  mvz_nombre: '',
-  mvz_telefono: '',
-  observaciones: ''
-});
+/* ===================== Form Hoja ===================== */
+const propEncontrado = ref(false);
+const uppEncontrada = ref(false);
+const propLock = ref(false);
+const uppLock = ref(false);
+
+const formHoja = ref(nuevoFormHoja());
+
+function nuevoAnimal() {
+  return {
+    _key: crypto?.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+    inc_tipo: '', // I (opcional): RA/IN/IC
+    arete: '',
+    especie: '',
+    edad_meses_registro: null,
+    fecha_registro_edad: new Date().toISOString().slice(0, 10),
+    raza: '',
+    sexo: '',
+    fierro: ''
+  };
+}
+
+function nuevoFormHoja() {
+  return {
+    cc_no: '',
+    folio_tb: '',
+    tb_tipo_prueba: '',
+    numero_caso_asignado: false,
+    numero_caso: '',
+    observaciones: '',
+    prop: {
+      curp: '',
+      apellido_paterno: '',
+      apellido_materno: '',
+      nombres: '',
+      telefono: '',
+      domicilio: '',
+      municipio: '',
+      localidad: '',
+      cp: '',
+      estado: '',
+      correo: ''
+    },
+    upp: {
+      clave: '',
+      nombre_predio: '',
+      latitud: '',
+      longitud: '',
+      domicilio: '',
+      municipio: '',
+      localidad: '',
+      cp: '',
+      estado: ''
+    },
+    prueba: {
+      motivo: '',
+      fin_zootecnico: '',
+      tipo_identificacion: '',
+      tipo_identificacion_otro: ''
+    },
+    resumen: {
+      negativos: { tb: null, br: null },
+      reactores: { tb: null, br: null },
+      total_probados: { tb: null, br: null },
+      total_hato: { tb: null, br: null }
+    },
+    tb: {
+      fecha_inyeccion: '',
+      hora_inyeccion: '',
+      fecha_lectura: '',
+      hora_lectura: '',
+      dosis: '',
+      lote: '',
+      caducidad: '',
+      fecha_seguimiento: '',
+      resultado_seguimiento: '',
+      resultado_lab: ''
+    },
+    animales: []
+  };
+}
+
+watch(
+  () => formHoja.value.prueba.tipo_identificacion,
+  (val) => {
+    //  si cambia a algo que no sea "Otro", limpiamos el campo
+    if (val !== 'Otro') formHoja.value.prueba.tipo_identificacion_otro = '';
+  }
+);
 
 function limpiarFormHoja() {
-  formHoja.value = {
-    folio_hoja: '',
-    fecha_muestreo: '',
-    especie: '',
-    tipo_servicio: '',
-    propietario_id: '',
-    upp_id: '',
-    municipio: '',
-    localidad: '',
-    estado: '',
-    codigo_postal: '',
-    mvz_nombre: '',
-    mvz_telefono: '',
-    observaciones: ''
-  };
+  formHoja.value = nuevoFormHoja();
+  propEncontrado.value = false;
+  uppEncontrada.value = false;
+  propLock.value = false;
+  uppLock.value = false;
+}
+
+function autocargarPropietario() {
+  propEncontrado.value = false;
+
+  const p = buscarPropPorCurp(formHoja.value.prop.curp);
+  if (!p) return;
+
+  propEncontrado.value = true;
+  propLock.value = true;
+
+  formHoja.value.prop.apellido_paterno = p.apellido_paterno || '';
+  formHoja.value.prop.apellido_materno = p.apellido_materno || '';
+  formHoja.value.prop.nombres = p.nombres || '';
+  formHoja.value.prop.telefono = p.telefono || '';
+  formHoja.value.prop.domicilio = p.domicilio || '';
+  formHoja.value.prop.municipio = p.municipio || '';
+  formHoja.value.prop.localidad = p.localidad || '';
+  formHoja.value.prop.cp = p.cp || '';
+  formHoja.value.prop.estado = p.estado || '';
+  formHoja.value.prop.correo = p.correo || '';
+}
+
+function autocargarUpp() {
+  uppEncontrada.value = false;
+
+  const u = buscarUppPorClave(formHoja.value.upp.clave);
+  if (!u) return;
+
+  uppEncontrada.value = true;
+  uppLock.value = true;
+
+  formHoja.value.upp.nombre_predio = u.nombre_predio || '';
+  formHoja.value.upp.latitud = u.latitud || '';
+  formHoja.value.upp.longitud = u.longitud || '';
+  formHoja.value.upp.domicilio = u.domicilio || '';
+  formHoja.value.upp.municipio = u.municipio || '';
+  formHoja.value.upp.localidad = u.localidad || '';
+  formHoja.value.upp.cp = u.cp || '';
+  formHoja.value.upp.estado = u.estado || '';
+}
+
+function agregarFilaAnimal() {
+  formHoja.value.animales.push(nuevoAnimal());
+}
+
+function quitarFilaAnimal(idx) {
+  formHoja.value.animales.splice(idx, 1);
+}
+
+function marcarEdadRegistro(animal) {
+  if (!animal) return;
+  if (!animal.fecha_registro_edad) animal.fecha_registro_edad = new Date().toISOString().slice(0, 10);
+}
+
+function monthsDiff(fromISO, toISO) {
+  try {
+    const a = new Date(fromISO);
+    const b = new Date(toISO);
+    let months = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
+    if (b.getDate() < a.getDate()) months -= 1;
+    return Math.max(0, months);
+  } catch {
+    return 0;
+  }
+}
+
+function edadActualMeses(animal) {
+  if (!animal) return 0;
+  const base = Number(animal.edad_meses_registro);
+  if (!Number.isFinite(base) || base < 0) return 0;
+  const fr = animal.fecha_registro_edad || new Date().toISOString().slice(0, 10);
+  const hoy = new Date().toISOString().slice(0, 10);
+  return base + monthsDiff(fr, hoy);
+}
+
+function validarNumerico(n) {
+  if (n === null || n === undefined || n === '') return true;
+  return Number.isFinite(Number(n)) && Number(n) >= 0 && Number.isInteger(Number(n));
 }
 
 function guardarHoja() {
@@ -701,125 +1225,122 @@ function guardarHoja() {
 
   const f = formHoja.value;
 
-  if (!String(f.folio_hoja || '').trim()) errores.value.push('Capture el folio de hoja de control de campo.');
-  if (!f.fecha_muestreo) errores.value.push('Seleccione la fecha de muestreo.');
-  if (!String(f.especie || '').trim()) errores.value.push('Seleccione la especie.');
-  if (!String(f.tipo_servicio || '').trim()) errores.value.push('Seleccione el tipo de servicio.');
-  if (!String(f.propietario_id || '').trim()) errores.value.push('Seleccione el propietario.');
-  if (!String(f.upp_id || '').trim()) errores.value.push('Seleccione la UPP.');
+  // Obligatorios principales
+  if (!String(f.cc_no || '').trim()) errores.value.push('Capture el CC No. (folio de hoja de control).');
+  if (!String(f.prop.curp || '').trim()) errores.value.push('Capture la CURP del propietario.');
+  if (!String(f.upp.clave || '').trim()) errores.value.push('Capture la clave UPP / PSG.');
+  if (!String(f.prueba.motivo || '').trim()) errores.value.push('Seleccione el motivo de la prueba.');
+  if (!String(f.prueba.fin_zootecnico || '').trim()) errores.value.push('Seleccione el fin zootécnico.');
+  if (!String(f.prueba.tipo_identificacion || '').trim()) errores.value.push('Seleccione el tipo de identificación.');
+
+  if (f.prueba.tipo_identificacion === 'Otro' && !String(f.prueba.tipo_identificacion_otro || '').trim()) {
+    errores.value.push('En “Tipo de identificación = Otro”, debe especificar el texto.');
+  }
+
+  // Validación numérica resumen
+  const rs = f.resumen;
+  const checks = [
+    rs.negativos.tb, rs.negativos.br,
+    rs.reactores.tb, rs.reactores.br,
+    rs.total_probados.tb, rs.total_probados.br,
+    rs.total_hato.tb, rs.total_hato.br
+  ];
+  if (checks.some(x => !validarNumerico(x))) {
+    errores.value.push('En el Resumen TB/BR solo se permiten números enteros (>=0).');
+  }
+
+  // Sección IV: al menos 1 animal
+  if (!Array.isArray(f.animales) || f.animales.length === 0) {
+    errores.value.push('Agregue al menos un animal (arete).');
+  } else {
+    // validar filas
+    for (let i = 0; i < f.animales.length; i++) {
+      const a = f.animales[i];
+      if (!String(a.arete || '').trim()) errores.value.push(`Fila ${i + 1}: capture arete.`);
+      if (!String(a.especie || '').trim()) errores.value.push(`Fila ${i + 1}: seleccione especie.`);
+      if (!String(a.sexo || '').trim()) errores.value.push(`Fila ${i + 1}: seleccione sexo (H/M).`);
+
+      const em = a.edad_meses_registro;
+      if (em === null || em === '' || !Number.isInteger(Number(em)) || Number(em) < 0) {
+        errores.value.push(`Fila ${i + 1}: edad debe ser número entero (meses).`);
+      }
+      // I (RA/IN/IC) es opcional, no se valida como obligatorio
+    }
+
+    // duplicados de arete dentro de la hoja
+    const aretes = f.animales.map(x => String(x.arete || '').trim()).filter(Boolean);
+    const set = new Set(aretes.map(x => x.toLowerCase()));
+    if (set.size !== aretes.length) errores.value.push('Hay aretes duplicados dentro de la hoja.');
+  }
+
+  // Duplicado CC No.
+  const cc = String(f.cc_no).trim();
+  const existe = hojasDemo.value.some(h => h.mvz_user_id === mvzUserId && String(h.cc_no || '').trim() === cc);
+  if (existe) errores.value.push('Ese CC No. ya existe (registrado por usted).');
 
   if (errores.value.length) return;
 
-  const folio = String(f.folio_hoja).trim();
-  const existe = hojasDemo.value.some(h => h.mvz_user_id === mvzUserId && String(h.folio_hoja || '').trim().toLowerCase() === folio.toLowerCase());
-  if (existe) return errores.value.push('Ese folio de hoja ya existe (registrado por usted).');
+  // DEMO: alta/actualización propietario si no existe
+  const curp = String(f.prop.curp || '').trim().toUpperCase();
+  const pExist = buscarPropPorCurp(curp);
+  if (!pExist) {
+    propietariosDemo.value.push({
+      id: Date.now(),
+      mvz_user_id: mvzUserId,
+      curp,
+      apellido_paterno: String(f.prop.apellido_paterno || '').trim(),
+      apellido_materno: String(f.prop.apellido_materno || '').trim(),
+      nombres: String(f.prop.nombres || '').trim(),
+      telefono: String(f.prop.telefono || '').trim(),
+      domicilio: String(f.prop.domicilio || '').trim(),
+      municipio: String(f.prop.municipio || '').trim(),
+      localidad: String(f.prop.localidad || '').trim(),
+      cp: String(f.prop.cp || '').trim(),
+      estado: String(f.prop.estado || '').trim(),
+      correo: String(f.prop.correo || '').trim()
+    });
+  }
 
+  // DEMO: alta UPP si no existe
+  const clave = String(f.upp.clave || '').trim().toUpperCase();
+  const uExist = buscarUppPorClave(clave);
+  if (!uExist) {
+    uppDemo.value.push({
+      id: Date.now() + 1,
+      mvz_user_id: mvzUserId,
+      clave,
+      nombre_predio: String(f.upp.nombre_predio || '').trim(),
+      latitud: String(f.upp.latitud || '').trim(),
+      longitud: String(f.upp.longitud || '').trim(),
+      domicilio: String(f.upp.domicilio || '').trim(),
+      municipio: String(f.upp.municipio || '').trim(),
+      localidad: String(f.upp.localidad || '').trim(),
+      cp: String(f.upp.cp || '').trim(),
+      estado: String(f.upp.estado || '').trim()
+    });
+  }
+
+  // Guardar hoja
   hojasDemo.value.push({
-    id: Date.now(),
+    id: Date.now() + 10,
     mvz_user_id: mvzUserId,
-    folio_hoja: folio,
-    fecha_muestreo: f.fecha_muestreo,
-    especie: f.especie,
-    tipo_servicio: f.tipo_servicio,
-    propietario_id: Number(f.propietario_id),
-    upp_id: Number(f.upp_id),
-    municipio: String(f.municipio || '').trim(),
-    localidad: String(f.localidad || '').trim(),
-    estado: String(f.estado || '').trim(),
-    codigo_postal: String(f.codigo_postal || '').trim(),
-    mvz_nombre: String(f.mvz_nombre || '').trim(),
-    mvz_telefono: String(f.mvz_telefono || '').trim(),
-    observaciones: String(f.observaciones || '').trim(),
+    ...JSON.parse(JSON.stringify(f)),
+    cc_no: cc,
+    prop: { ...f.prop, curp },
+    upp: { ...f.upp, clave },
     numero_caso_asignado: false,
-    numero_caso: '',
-    aretes: []
+    numero_caso: ''
   });
 
-  mensajeExito.value = 'Hoja registrada (DEMO). Ahora puede capturar aretes.';
+  mensajeExito.value = 'Hoja registrada.';
   limpiarFormHoja();
 }
 
-/* ===================== 2) Capturar aretes ===================== */
-const filtroAretesFolio = ref('');
-const buscadoAretes = ref(false);
-
-function buscarHojasParaAretes() {
-  buscadoAretes.value = true;
-  errores.value = [];
-  mensajeExito.value = '';
-}
-
-function limpiarBusquedaAretes() {
-  filtroAretesFolio.value = '';
-  buscadoAretes.value = false;
-  hojaAretesSeleccionada.value = null;
-  errores.value = [];
-  mensajeExito.value = '';
-}
-
-const hojasParaAretes = computed(() => {
-  if (!buscadoAretes.value) return [];
-  const folio = filtroAretesFolio.value.trim().toLowerCase();
-
-  return hojasDemo.value
-    .filter(h => h.mvz_user_id === mvzUserId)
-    .filter(h => (folio ? (h.folio_hoja || '').toLowerCase().includes(folio) : true));
-});
-
-const hojaAretesSeleccionada = ref(null);
-
-function seleccionarHojaAretes(h) {
-  errores.value = [];
-  mensajeExito.value = '';
-  if (h.numero_caso_asignado) return errores.value.push('La hoja ya tiene número de caso; no se pueden capturar aretes.');
-  hojaAretesSeleccionada.value = JSON.parse(JSON.stringify(h));
-}
-
-function agregarFilaArete() {
-  if (!hojaAretesSeleccionada.value) return;
-  hojaAretesSeleccionada.value.aretes.push({
-    _key: crypto?.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
-    arete: ''
-  });
-}
-
-function quitarFilaArete(idx) {
-  if (!hojaAretesSeleccionada.value) return;
-  hojaAretesSeleccionada.value.aretes.splice(idx, 1);
-}
-
-function guardarAretes() {
-  errores.value = [];
-  mensajeExito.value = '';
-  if (!hojaAretesSeleccionada.value) return errores.value.push('Seleccione una hoja.');
-
-  const vacios = hojaAretesSeleccionada.value.aretes.some(a => !String(a.arete || '').trim());
-  if (hojaAretesSeleccionada.value.aretes.length === 0) errores.value.push('Agregue al menos un arete.');
-  if (vacios) errores.value.push('Hay aretes vacíos. Capture todos los aretes.');
-  if (errores.value.length) return;
-
-  // evitar duplicados dentro de la misma hoja
-  const list = hojaAretesSeleccionada.value.aretes.map(a => String(a.arete).trim());
-  const set = new Set(list.map(x => x.toLowerCase()));
-  if (set.size !== list.length) return errores.value.push('Hay aretes duplicados dentro de la hoja.');
-
-  const idx = hojasDemo.value.findIndex(h => h.id === hojaAretesSeleccionada.value.id);
-  if (idx === -1) return errores.value.push('No se encontró la hoja para actualizar.');
-
-  hojasDemo.value[idx] = { ...hojasDemo.value[idx], aretes: hojaAretesSeleccionada.value.aretes };
-  mensajeExito.value = 'Aretes guardados (DEMO).';
-  hojaAretesSeleccionada.value = null;
-}
-
-function cancelarAretes() {
-  hojaAretesSeleccionada.value = null;
-}
-
-/* ===================== 3) Consultar hojas ===================== */
+/* ===================== Consultar ===================== */
 const filtrosCons = ref({
-  folio_hoja: '',
+  cc_no: '',
   upp: '',
-  propietario: '',
+  curp: '',
   con_caso: '',
   fecha_inicio: '',
   fecha_fin: ''
@@ -835,41 +1356,37 @@ function buscarConsultar() {
 }
 
 function limpiarConsultar() {
-  filtrosCons.value = { folio_hoja: '', upp: '', propietario: '', con_caso: '', fecha_inicio: '', fecha_fin: '' };
+  filtrosCons.value = { cc_no: '', upp: '', curp: '', con_caso: '', fecha_inicio: '', fecha_fin: '' };
   buscadoCons.value = false;
   detalleHoja.value = null;
   errores.value = [];
   mensajeExito.value = '';
 }
 
-function propietarioTexto(id) {
-  return propietarioNombre(id).toLowerCase();
-}
-
 const hojasConsultadas = computed(() => {
   if (!buscadoCons.value) return [];
   const f = filtrosCons.value;
 
-  const folio = f.folio_hoja.trim().toLowerCase();
+  const cc = f.cc_no.trim();
   const upp = f.upp.trim().toLowerCase();
-  const prop = f.propietario.trim().toLowerCase();
+  const curp = f.curp.trim().toUpperCase();
   const conCaso = f.con_caso;
   const ini = f.fecha_inicio;
   const fin = f.fecha_fin;
 
   return hojasDemo.value
     .filter(h => h.mvz_user_id === mvzUserId)
-    .filter(h => (folio ? (h.folio_hoja || '').toLowerCase().includes(folio) : true))
-    .filter(h => (upp ? uppClave(h.upp_id).toLowerCase().includes(upp) : true))
-    .filter(h => (prop ? propietarioTexto(h.propietario_id).includes(prop) : true))
+    .filter(h => (cc ? String(h.cc_no || '').includes(cc) : true))
+    .filter(h => (upp ? String(h.upp?.clave || '').toLowerCase().includes(upp) : true))
+    .filter(h => (curp ? String(h.prop?.curp || '').toUpperCase().includes(curp) : true))
     .filter(h => {
       if (!conCaso) return true;
       return conCaso === 'si' ? h.numero_caso_asignado : !h.numero_caso_asignado;
     })
     .filter(h => {
       let ok = true;
-      if (ini) ok = ok && h.fecha_muestreo >= ini;
-      if (fin) ok = ok && h.fecha_muestreo <= fin;
+      if (ini) ok = ok && String(h.tb?.fecha_inyeccion || '') >= ini;
+      if (fin) ok = ok && String(h.tb?.fecha_inyeccion || '') <= fin;
       return ok;
     });
 });
@@ -878,7 +1395,7 @@ function verDetalle(h) {
   detalleHoja.value = JSON.parse(JSON.stringify(h));
 }
 
-/* ===================== 4) Editar hoja ===================== */
+/* ===================== Editar ===================== */
 const hojaEditando = ref(null);
 
 function abrirEdicionHoja(h) {
@@ -886,6 +1403,7 @@ function abrirEdicionHoja(h) {
   mensajeExito.value = '';
   if (h.numero_caso_asignado) return errores.value.push('La hoja ya tiene número de caso. No es editable.');
   hojaEditando.value = JSON.parse(JSON.stringify(h));
+  hojaEditando.value.animales = hojaEditando.value.animales || [];
   selectedAction.value = 'editar';
 }
 
@@ -894,34 +1412,60 @@ function cancelarEdicionHoja() {
   selectedAction.value = 'consultar';
 }
 
+function agregarFilaAnimalEdicion() {
+  if (!hojaEditando.value) return;
+  hojaEditando.value.animales.push(nuevoAnimal());
+}
+
+function quitarFilaAnimalEdicion(idx) {
+  if (!hojaEditando.value) return;
+  hojaEditando.value.animales.splice(idx, 1);
+}
+
 function guardarEdicionHoja() {
   errores.value = [];
   mensajeExito.value = '';
   if (!hojaEditando.value) return errores.value.push('No hay hoja seleccionada.');
-
   if (hojaEditando.value.numero_caso_asignado) return errores.value.push('La hoja ya tiene número de caso. No es editable.');
 
-  if (!String(hojaEditando.value.folio_hoja || '').trim()) errores.value.push('El folio es obligatorio.');
-  if (!hojaEditando.value.fecha_muestreo) errores.value.push('La fecha es obligatoria.');
-  if (!String(hojaEditando.value.especie || '').trim()) errores.value.push('La especie es obligatoria.');
-  if (!String(hojaEditando.value.tipo_servicio || '').trim()) errores.value.push('El tipo de servicio es obligatorio.');
-  if (!String(hojaEditando.value.propietario_id || '').trim()) errores.value.push('Seleccione propietario.');
-  if (!String(hojaEditando.value.upp_id || '').trim()) errores.value.push('Seleccione UPP.');
+  if (!String(hojaEditando.value.cc_no || '').trim()) errores.value.push('CC No. es obligatorio.');
+  if (!String(hojaEditando.value.prop?.curp || '').trim()) errores.value.push('CURP es obligatoria.');
+  if (!String(hojaEditando.value.upp?.clave || '').trim()) errores.value.push('Clave UPP es obligatoria.');
+  if (!String(hojaEditando.value.prueba?.motivo || '').trim()) errores.value.push('Motivo es obligatorio.');
+  if (!String(hojaEditando.value.prueba?.fin_zootecnico || '').trim()) errores.value.push('Fin zootécnico es obligatorio.');
+
+  // validar animales
+  const list = hojaEditando.value.animales || [];
+  if (list.length === 0) errores.value.push('Agregue al menos un animal.');
+  for (let i = 0; i < list.length; i++) {
+    const a = list[i];
+    if (!String(a.arete || '').trim()) errores.value.push(`Fila ${i + 1}: capture arete.`);
+    if (!String(a.especie || '').trim()) errores.value.push(`Fila ${i + 1}: seleccione especie.`);
+    if (!String(a.sexo || '').trim()) errores.value.push(`Fila ${i + 1}: seleccione sexo.`);
+    const em = a.edad_meses_registro;
+    if (em === null || em === '' || !Number.isInteger(Number(em)) || Number(em) < 0) {
+      errores.value.push(`Fila ${i + 1}: edad debe ser entero (meses).`);
+    }
+  }
+  const aretes = list.map(x => String(x.arete || '').trim()).filter(Boolean);
+  const set = new Set(aretes.map(x => x.toLowerCase()));
+  if (set.size !== aretes.length) errores.value.push('Hay aretes duplicados dentro de la hoja.');
+
   if (errores.value.length) return;
 
-  // evitar duplicar folio con otro registro del mismo MVZ
-  const folio = String(hojaEditando.value.folio_hoja).trim().toLowerCase();
+  // evitar duplicar CC con otro registro
+  const cc = String(hojaEditando.value.cc_no).trim();
   const existe = hojasDemo.value.some(h =>
     h.mvz_user_id === mvzUserId &&
     h.id !== hojaEditando.value.id &&
-    String(h.folio_hoja || '').trim().toLowerCase() === folio
+    String(h.cc_no || '').trim() === cc
   );
-  if (existe) return errores.value.push('Ya existe otra hoja con ese folio (registrado por usted).');
+  if (existe) return errores.value.push('Ya existe otra hoja con ese CC No. (registrada por usted).');
 
   const idx = hojasDemo.value.findIndex(x => x.id === hojaEditando.value.id);
   if (idx === -1) return errores.value.push('No se encontró la hoja para actualizar.');
 
-  hojasDemo.value[idx] = { ...hojasDemo.value[idx], ...hojaEditando.value, propietario_id: Number(hojaEditando.value.propietario_id), upp_id: Number(hojaEditando.value.upp_id) };
+  hojasDemo.value[idx] = JSON.parse(JSON.stringify(hojaEditando.value));
   mensajeExito.value = 'Hoja actualizada (DEMO).';
   hojaEditando.value = null;
   selectedAction.value = 'consultar';
@@ -959,16 +1503,32 @@ function guardarEdicionHoja() {
 .modulo-alert--error{ background:#fbeaea; border:1px solid #f5c2c2; color:#7a1f1f; }
 .modulo-alert--success{ background:#e1f3e1; border:1px solid #c3e6c3; color:#225522; }
 
+/* Cards / secciones */
+.card-seccion{
+  border:1px solid #e5e5e5;
+  border-radius:6px;
+  padding:12px 12px 6px;
+  background:#fff;
+}
+.seccion-titulo{
+  font-weight:900;
+  color:#333;
+  margin-bottom:10px;
+  border-left:4px solid #7a061e;
+  padding-left:10px;
+}
+
 /* Form */
 .sistpec-form{ display:flex; flex-direction:column; gap:16px; }
-.sistpec-form-row{ display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:12px; }
+.sistpec-form-row{ display:grid; gap:12px; }
+.row-4{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
-.sistpec-form-group{ display:flex; flex-direction:column; gap:4px; }
+.sistpec-form-group{ display:flex; flex-direction:column; gap:4px; min-width:0; }
 .sistpec-form-group label{ font-size:13px; font-weight:900; color:#444; }
 .sistpec-form-group input,
 .sistpec-form-group select{
   padding:8px 10px; border-radius:4px; border:1px solid #ccc;
-  font-size:14px; outline:none;
+  font-size:14px; outline:none; min-width:0;
 }
 .sistpec-form-group input:focus,
 .sistpec-form-group select:focus{
@@ -976,10 +1536,41 @@ function guardarEdicionHoja() {
   box-shadow:0 0 0 1px rgba(47, 107, 50, 0.15);
 }
 
-/* Actions */
-.sistpec-form-actions{
-  display:flex; justify-content:flex-end; gap:8px;
+.hint{ font-size:12px; color:#666; margin-top:2px; }
+.hint.ok{ color:#225522; font-weight:700; }
+
+/* radios */
+.radio-row{ display:flex; gap:14px; flex-wrap:wrap; padding:6px 0 2px; }
+.radio-col{ display:flex; flex-direction:column; gap:8px; padding:6px 0 2px; }
+.radio-item{ display:flex; align-items:center; gap:8px; font-size:13px; color:#333; }
+
+/* inline actions */
+.inline-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+
+/* Resumen */
+.resumen-box{
+  margin-top:8px;
+  padding:10px;
+  border:1px dashed #cfcfcf;
+  border-radius:6px;
+  background:#fafafa;
 }
+.resumen-titulo{
+  font-weight:900;
+  margin-bottom:8px;
+  color:#333;
+}
+
+.tb-opcional{
+  margin-top:12px;
+  padding:10px;
+  border:1px dashed #cfcfcf;
+  border-radius:6px;
+  background:#fff;
+}
+
+/* Actions */
+.sistpec-form-actions{ display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
 
 .sistpec-btn-primary{
   background:#2f6b32; color:#fff; border:none;
@@ -1002,30 +1593,53 @@ function guardarEdicionHoja() {
   font-size:12px; font-weight:900; cursor:pointer;
 }
 .sistpec-btn-danger:hover{ background:#5a0416; }
-
 .sistpec-btn-sm{ padding:5px 10px; font-size:11px; }
 
 /* filtros grid */
 .sistpec-search-bar{
-  display:grid; grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap:12px; margin-bottom:16px;
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap:12px;
+  margin-bottom:16px;
+  align-items:end;
 }
-.fechas-bar{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.sistpec-search-actions{
-  display:flex; align-items:flex-end; gap:8px; justify-content:flex-end;
+.fechas-bar{
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items:end;
+}
+.fechas-bar .sistpec-search-actions{
+  grid-column: 2 / 3;
+  justify-self: end;
+  align-self: end;
+  display:flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+.fechas-bar .sistpec-search-actions .sistpec-btn-primary,
+.fechas-bar .sistpec-search-actions .sistpec-btn-secondary{
+  width: 220px;
 }
 
 /* tabla */
 .sistpec-table-wrapper{ width:100%; overflow-x:auto; }
 .sistpec-table{ width:100%; border-collapse:collapse; font-size:13px; }
 .sistpec-table thead{ background:#7a061e; color:#fff; }
-.sistpec-table th, .sistpec-table td{ padding:8px 10px; border:1px solid #ddd; text-align:left; }
+.sistpec-table th, .sistpec-table td{ padding:8px 10px; border:1px solid #ddd; text-align:left; vertical-align:top; }
 .sistpec-table tbody tr:nth-child(even){ background:#fafafa; }
 .sin-resultados{ text-align:center; color:#777; }
 
-.sistpec-edit-panel{
-  margin-top:20px; padding-top:10px; border-top:1px dashed #ccc;
+.input-inline{
+  width:100%;
+  padding:8px 10px;
+  border-radius:4px;
+  border:1px solid #ccc;
+  font-size:14px;
+  outline:none;
+  min-width:0;
 }
+
+.sistpec-edit-panel{ margin-top:20px; padding-top:10px; border-top:1px dashed #ccc; }
 
 .badge{ display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:900; }
 .badge--activo{ background:#e1f3e1; color:#225522; border:1px solid #c3e6c3; }
@@ -1039,24 +1653,28 @@ function guardarEdicionHoja() {
 }
 .lbl{ font-weight:900; color:#444; }
 
-.input-inline{
-  width:100%;
-  padding:8px 10px;
-  border-radius:4px;
-  border:1px solid #ccc;
-  font-size:14px;
-  outline:none;
-}
-
 .vigencia-sep{ font-size:14px; color:#666; }
 
 .acciones{ display:flex; gap:6px; flex-wrap:wrap; }
+
+.edad-box{ display:flex; flex-direction:column; gap:4px; }
 
 /* responsive */
 @media (max-width: 768px) {
   .sistpec-search-bar { grid-template-columns: 1fr; }
   .fechas-bar { grid-template-columns: 1fr; }
-  .sistpec-form-row { grid-template-columns: 1fr; }
+  .fechas-bar .sistpec-search-actions{
+    grid-column: auto;
+    justify-self: stretch;
+    align-self: stretch;
+    margin-top: 6px;
+  }
+  .fechas-bar .sistpec-search-actions .sistpec-btn-primary,
+  .fechas-bar .sistpec-search-actions .sistpec-btn-secondary{
+    width: 100%;
+  }
+
+  .row-4 { grid-template-columns: 1fr; }
   .detalle-grid { grid-template-columns: 1fr; }
 }
 </style>

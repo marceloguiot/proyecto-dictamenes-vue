@@ -105,7 +105,7 @@ const componentMap = {
   recepAdminHojaReporte: ReceplabHojasControl,
 
   //========== MVZ ===========
-  mvzAdministrarResultados: MvzHojasResultadosModulo,
+  mvzAdminHojaResultados: MvzHojasResultadosModulo,
   mvzAdminNumCaso: MvzNumerosCasoModulo,
   mvzAdminPropietario: MvzPropietariosModulo,
   mvzAdminHojaReporte: MvzReportesCampoModulo,
@@ -143,7 +143,7 @@ watch(
   }
 );
 
-/** ✅ Scroll cuando cambia el componente dinámico (Vue lo reemplaza internamente) */
+/**  Scroll cuando cambia el componente dinámico (Vue lo reemplaza internamente) */
 watch(
   () => currentComponent.value,
   async () => {

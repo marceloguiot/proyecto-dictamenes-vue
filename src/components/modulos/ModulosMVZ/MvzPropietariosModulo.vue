@@ -1,7 +1,7 @@
 <template>
   <!-- Barra de acciones -->
   <section class="modulo-acciones">
-    <span class="modulo-acciones-titulo">Administrar Propietarios (MVZ)</span>
+    <span class="modulo-acciones-titulo">Acciones disponibles</span>
 
     <div class="modulo-acciones-botones">
       <button
@@ -33,825 +33,962 @@
       {{ mensajeExito }}
     </div>
 
-    <!-- ====================== 1) REGISTRAR ====================== -->
+    <!-- ====================== 1) REGISTRAR PROPIETARIO ====================== -->
     <div v-if="selectedAction === 'registrar'">
-      <h3 class="subtitulo">Registrar propietario</h3>
+      <h3 class="subtitulo">Registrar</h3>
 
-      <div class="sistpec-info-box">
-        <p class="sistpec-info-text">
-          Capture los datos solicitados por el Comité. El RFC no es obligatorio.
-          El estatus puede ser <strong>Activo</strong> o <strong>Finado</strong>.
-        </p>
-      </div>
+      <form class="sistpec-form" @submit.prevent="registrarPropietario">
+        <div class="card-seccion">
+          <div class="seccion-titulo">Datos generales</div>
 
-      <form class="sistpec-form" @submit.prevent="guardarPropietario">
-        <div class="sistpec-form-row">
-          <div class="sistpec-form-group">
-            <label>Apellido paterno</label>
-            <input v-model="form.apellido_paterno" type="text" placeholder="Ej. Ruiz" />
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group">
+              <label>CURP *</label>
+              <input v-model.trim="formRegistro.curp" type="text" placeholder="Ej. RUMM690828HVZZNG03" />
+            </div>
+
+            <div class="sistpec-form-group">
+              <label>Teléfono *</label>
+              <input v-model.trim="formRegistro.telefono" type="text" placeholder="Ej. 228..." />
+            </div>
+
+            <div class="sistpec-form-group" style="grid-column: span 2;">
+              <label>Correo electrónico</label>
+              <input v-model.trim="formRegistro.correo" type="email" placeholder="correo@ejemplo.com" />
+            </div>
           </div>
 
-          <div class="sistpec-form-group">
-            <label>Apellido materno</label>
-            <input v-model="form.apellido_materno" type="text" placeholder="Ej. Mendoza" />
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group">
+              <label>Apellido paterno *</label>
+              <input v-model.trim="formRegistro.apellido_paterno" type="text" />
+            </div>
+            <div class="sistpec-form-group">
+              <label>Apellido materno</label>
+              <input v-model.trim="formRegistro.apellido_materno" type="text" />
+            </div>
+            <div class="sistpec-form-group" style="grid-column: span 2;">
+              <label>Nombre(s) *</label>
+              <input v-model.trim="formRegistro.nombres" type="text" />
+            </div>
           </div>
 
-          <div class="sistpec-form-group">
-            <label>Nombre(s)</label>
-            <input v-model="form.nombres" type="text" placeholder="Ej. Miguel Ángel" />
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group" style="grid-column: span 2;">
+              <label>Domicilio *</label>
+              <input v-model.trim="formRegistro.domicilio" type="text" placeholder="Calle, número, colonia..." />
+            </div>
+            <div class="sistpec-form-group">
+              <label>Municipio *</label>
+              <input v-model.trim="formRegistro.municipio" type="text" />
+            </div>
+            <div class="sistpec-form-group">
+              <label>Localidad / Población *</label>
+              <input v-model.trim="formRegistro.localidad" type="text" />
+            </div>
           </div>
 
-          <div class="sistpec-form-group">
-            <label>Estatus</label>
-            <select v-model="form.estatus">
-              <option value="Activo">Activo</option>
-              <option value="Finado">Finado</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="sistpec-form-row">
-          <div class="sistpec-form-group">
-            <label>CURP</label>
-            <input v-model="form.curp" type="text" placeholder="Ej. RUMM690828HVZZNG03" />
-          </div>
-
-          <div class="sistpec-form-group">
-            <label>Teléfono</label>
-            <input v-model="form.telefono" type="text" placeholder="10 dígitos" />
-          </div>
-
-          <div class="sistpec-form-group" style="grid-column: span 2;">
-            <label>Correo electrónico</label>
-            <input v-model="form.correo" type="email" placeholder="Ej. correo@dominio.com" />
-          </div>
-        </div>
-
-        <div class="sistpec-form-row">
-          <div class="sistpec-form-group" style="grid-column: span 2;">
-            <label>Domicilio</label>
-            <input v-model="form.domicilio" type="text" placeholder="Calle, número, colonia..." />
-          </div>
-
-          <div class="sistpec-form-group">
-            <label>Localidad</label>
-            <input v-model="form.localidad" type="text" placeholder="Ej. Los Altos" />
-          </div>
-
-          <div class="sistpec-form-group">
-            <label>Municipio</label>
-            <input v-model="form.municipio" type="text" placeholder="Ej. Ayahualulco" />
-          </div>
-        </div>
-
-        <div class="sistpec-form-row">
-          <div class="sistpec-form-group">
-            <label>Código Postal</label>
-            <input v-model="form.codigo_postal" type="text" placeholder="Ej. 91260" />
-          </div>
-
-          <div class="sistpec-form-group">
-            <label>Estado</label>
-            <input v-model="form.estado" type="text" placeholder="Ej. Veracruz" />
-          </div>
-
-          <div class="sistpec-form-group" style="grid-column: span 2;">
-            <label>Observaciones (opcional)</label>
-            <input v-model="form.observaciones" type="text" placeholder="Notas" />
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group">
+              <label>Código postal</label>
+              <input v-model.trim="formRegistro.cp" type="text" />
+            </div>
+            <div class="sistpec-form-group">
+              <label>Estado *</label>
+              <input v-model.trim="formRegistro.estado" type="text" placeholder="Veracruz" />
+            </div>
+            <div class="sistpec-form-group">
+              <label>Estatus</label>
+              <input value="ACTIVO" type="text" disabled />
+            </div>
           </div>
         </div>
 
-        <div class="sistpec-form-actions">
-          <button type="submit" class="sistpec-btn-primary">GUARDAR</button>
-          <button type="button" class="sistpec-btn-secondary" @click="limpiarForm">LIMPIAR</button>
+        <div class="acciones-derecha">
+          <button type="submit" class="btn-primary">GUARDAR</button>
+          <button type="button" class="btn-secondary" @click="limpiarFormRegistro">LIMPIAR</button>
         </div>
       </form>
     </div>
 
-    <!-- ====================== 2) CONSULTAR ====================== -->
-    <div v-else-if="selectedAction === 'consultar'">
-      <h3 class="subtitulo">Consultar propietarios</h3>
+    <!-- ====================== 2) CONSULTAR PROPIETARIOS ====================== -->
+    <div v-if="selectedAction === 'consultar'">
+      <h3 class="subtitulo">Consultar</h3>
 
-      <div class="sistpec-search-bar">
-        <div class="sistpec-form-group">
-          <label>Nombre / Apellidos</label>
-          <input v-model="filtros.nombre" type="text" placeholder="Ej. Ruiz Miguel" />
+      <div class="card-seccion">
+        <div class="seccion-titulo">Filtros de búsqueda</div>
+
+        <div class="sistpec-form-row row-4">
+          <div class="sistpec-form-group">
+            <label>CURP</label>
+            <input v-model.trim="filtros.curp" type="text" placeholder="CURP" />
+          </div>
+
+          <div class="sistpec-form-group">
+            <label>Nombre</label>
+            <input v-model.trim="filtros.nombre" type="text" placeholder="Nombre / apellidos" />
+          </div>
+
+          <div class="sistpec-form-group">
+            <label>Municipio</label>
+            <input v-model.trim="filtros.municipio" type="text" placeholder="Municipio" />
+          </div>
+
+          <div class="sistpec-form-group">
+            <label>Estatus</label>
+            <select v-model="filtros.estatus">
+              <option value="">Todos</option>
+              <option value="ACTIVO">ACTIVO</option>
+              <option value="FINADO">FINADO</option>
+            </select>
+          </div>
         </div>
 
-        <div class="sistpec-form-group">
-          <label>CURP</label>
-          <input v-model="filtros.curp" type="text" placeholder="Ej. RUMM690828..." />
-        </div>
-
-        <div class="sistpec-form-group">
-          <label>Municipio</label>
-          <input v-model="filtros.municipio" type="text" placeholder="Ej. Ayahualulco" />
-        </div>
-
-        <div class="sistpec-form-group">
-          <label>Estatus</label>
-          <select v-model="filtros.estatus">
-            <option value="">Todos</option>
-            <option value="Activo">Activo</option>
-            <option value="Finado">Finado</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="sistpec-search-bar fechas-bar">
-        <div class="sistpec-form-group">
-          <label>Teléfono (opcional)</label>
-          <input v-model="filtros.telefono" type="text" placeholder="Ej. 228..." />
-        </div>
-
-        <div class="sistpec-form-group sistpec-search-actions">
-          <button type="button" class="sistpec-btn-primary" @click="buscar">BUSCAR</button>
-          <button type="button" class="sistpec-btn-secondary" @click="limpiarBusqueda">LIMPIAR</button>
+        <div class="acciones-derecha">
+          <button type="button" class="btn-primary" @click="buscarPropietarios">BUSCAR</button>
+          <button type="button" class="btn-secondary" @click="limpiarFiltros">LIMPIAR</button>
         </div>
       </div>
 
-      <div v-if="buscado" class="sistpec-table-wrapper">
-        <table class="sistpec-table">
-          <thead>
-            <tr>
-              <th>Propietario</th>
-              <th>CURP</th>
-              <th>Teléfono</th>
-              <th>Municipio</th>
-              <th>Estatus</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
+      <div class="card-seccion" v-if="resultados.length">
+        <div class="seccion-titulo">Resultados</div>
 
-          <tbody>
-            <tr v-for="p in propietariosFiltrados" :key="p.id">
-              <td>{{ p.apellido_paterno }} {{ p.apellido_materno }} {{ p.nombres }}</td>
-              <td>{{ p.curp }}</td>
-              <td>{{ p.telefono || '-' }}</td>
-              <td>{{ p.municipio || '-' }}</td>
-              <td>
-                <span class="badge" :class="badgeEstatusClase(p.estatus)">
-                  {{ p.estatus }}
-                </span>
-              </td>
-              <td>
-                <div class="acciones">
-                  <button type="button" class="sistpec-btn-secondary sistpec-btn-sm" @click="verDetalle(p)">
+        <div class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>CURP</th>
+                <th>Nombre</th>
+                <th>Municipio</th>
+                <th>Estatus</th>
+                <th>UPP asociadas</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="p in resultados" :key="p.id">
+                <td>{{ p.curp }}</td>
+                <td>{{ p.apellido_paterno }} {{ p.apellido_materno }} {{ p.nombres }}</td>
+                <td>{{ p.municipio }}</td>
+                <td>
+                  <span class="badge" :class="p.estatus === 'ACTIVO' ? 'badge-ok' : 'badge-warn'">
+                    {{ p.estatus }}
+                  </span>
+                </td>
+                <td>{{ p.upps?.length || 0 }}</td>
+                <td>
+                  <button class="btn-mini" type="button" @click="seleccionarPropietario(p)">
                     VER
                   </button>
-
-                  <button
-                    type="button"
-                    class="sistpec-btn-secondary sistpec-btn-sm"
-                    :disabled="!puedeEditar(p)"
-                    @click="abrirEdicion(p)"
-                    title="Solo puede editar propietarios registrados por usted."
-                  >
-                    EDITAR
-                  </button>
-
-                  <button
-                    type="button"
-                    class="sistpec-btn-primary sistpec-btn-sm"
-                    :disabled="p.estatus !== 'Finado'"
-                    @click="abrirTraslado(p)"
-                    title="Si está Finado, podrá trasladar sus UPP a otro propietario."
-                  >
-                    TRASLADO UPP
-                  </button>
-                </div>
-              </td>
-            </tr>
-
-            <tr v-if="propietariosFiltrados.length === 0">
-              <td colspan="6" class="sin-resultados">No se encontraron propietarios con esos criterios.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Panel detalle -->
-      <div v-if="detalle" class="sistpec-edit-panel">
-        <h4 class="subtitulo-secundario">Detalle: {{ nombreCompleto(detalle) }}</h4>
-
-        <div class="detalle-grid">
-          <div><span class="lbl">CURP:</span> {{ detalle.curp || '-' }}</div>
-          <div><span class="lbl">Tel:</span> {{ detalle.telefono || '-' }}</div>
-          <div style="grid-column: span 2;"><span class="lbl">Correo:</span> {{ detalle.correo || '-' }}</div>
-          <div style="grid-column: span 2;"><span class="lbl">Domicilio:</span> {{ detalle.domicilio || '-' }}</div>
-          <div><span class="lbl">Localidad:</span> {{ detalle.localidad || '-' }}</div>
-          <div><span class="lbl">Municipio:</span> {{ detalle.municipio || '-' }}</div>
-          <div><span class="lbl">CP:</span> {{ detalle.codigo_postal || '-' }}</div>
-          <div><span class="lbl">Estado:</span> {{ detalle.estado || '-' }}</div>
-          <div style="grid-column: span 2;"><span class="lbl">Obs:</span> {{ detalle.observaciones || '-' }}</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <div class="sistpec-form-actions">
-          <button type="button" class="sistpec-btn-secondary" @click="detalle = null">CERRAR</button>
+        <!-- Detalle seleccionado -->
+        <div v-if="propSeleccionado" class="detalle">
+          <h4 class="subtitulo2">Detalle del propietario</h4>
+
+          <div class="detalle-grid">
+            <div><b>CURP:</b> {{ propSeleccionado.curp }}</div>
+            <div><b>Tel:</b> {{ propSeleccionado.telefono }}</div>
+            <div style="grid-column: span 2;"><b>Correo:</b> {{ propSeleccionado.correo || '—' }}</div>
+
+            <div><b>Apellido paterno:</b> {{ propSeleccionado.apellido_paterno }}</div>
+            <div><b>Apellido materno:</b> {{ propSeleccionado.apellido_materno || '—' }}</div>
+            <div style="grid-column: span 2;"><b>Nombre(s):</b> {{ propSeleccionado.nombres }}</div>
+
+            <div style="grid-column: span 2;"><b>Domicilio:</b> {{ propSeleccionado.domicilio }}</div>
+            <div><b>Municipio:</b> {{ propSeleccionado.municipio }}</div>
+            <div><b>Localidad:</b> {{ propSeleccionado.localidad }}</div>
+
+            <div><b>CP:</b> {{ propSeleccionado.cp || '—' }}</div>
+            <div><b>Estado:</b> {{ propSeleccionado.estado }}</div>
+            <div><b>Estatus:</b> {{ propSeleccionado.estatus }}</div>
+          </div>
+
+          <div class="card-seccion" style="margin-top: 12px;">
+            <div class="seccion-titulo">UPP asociadas (solo lectura)</div>
+
+            <div v-if="!propSeleccionado.upps?.length" class="hint">
+              No hay UPP asociadas.
+            </div>
+
+            <ul v-else class="upp-list">
+              <li v-for="u in propSeleccionado.upps" :key="u.clave">
+                <b>{{ u.clave }}</b> — {{ u.nombre_predio }} ({{ u.municipio }})
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- ====================== 3) EDITAR (PROPIOS) ====================== -->
-    <div v-else-if="selectedAction === 'editar'">
-      <h3 class="subtitulo">Editar propietario (solo propios)</h3>
+    <!-- ====================== 3) EDITAR PROPIETARIO ====================== -->
+    <div v-if="selectedAction === 'editar'">
+      <h3 class="subtitulo">Editar</h3>
 
-      <div class="sistpec-info-box">
-        <p class="sistpec-info-text">
-          Solo puede editar propietarios que usted registró. Si cambia a <strong>Finado</strong>,
-          el sistema permitirá trasladar sus UPP a otro propietario.
-        </p>
+      <div class="card-seccion">
+        <div class="seccion-titulo">Buscar propietario</div>
+
+        <div class="sistpec-form-row row-4">
+          <div class="sistpec-form-group">
+            <label>CURP *</label>
+            <input v-model.trim="buscarEditar.curp" type="text" placeholder="CURP" />
+          </div>
+
+          <div class="acciones-derecha" style="grid-column: span 3;">
+            <button type="button" class="btn-primary" @click="buscarParaEditar">BUSCAR</button>
+            <button type="button" class="btn-secondary" @click="limpiarEdicion">LIMPIAR</button>
+          </div>
+        </div>
       </div>
 
-      <div v-if="!editando" class="modulo-alert modulo-alert--error">
-        Seleccione un propietario desde <strong>CONSULTAR</strong> para editar.
-      </div>
+      <div v-if="formEdicion.id" class="card-seccion">
+        <div class="seccion-titulo">Datos del propietario</div>
 
-      <form v-else class="sistpec-form" @submit.prevent="guardarEdicion">
-        <div class="sistpec-form-row">
-          <div class="sistpec-form-group">
-            <label>Apellido paterno</label>
-            <input v-model="editando.apellido_paterno" type="text" />
-          </div>
-          <div class="sistpec-form-group">
-            <label>Apellido materno</label>
-            <input v-model="editando.apellido_materno" type="text" />
-          </div>
-          <div class="sistpec-form-group">
-            <label>Nombre(s)</label>
-            <input v-model="editando.nombres" type="text" />
-          </div>
-          <div class="sistpec-form-group">
-            <label>Estatus</label>
-            <select v-model="editando.estatus">
-              <option value="Activo">Activo</option>
-              <option value="Finado">Finado</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="sistpec-form-row">
-          <div class="sistpec-form-group">
-            <label>CURP</label>
-            <input v-model="editando.curp" type="text" />
-          </div>
-          <div class="sistpec-form-group">
-            <label>Teléfono</label>
-            <input v-model="editando.telefono" type="text" />
-          </div>
-          <div class="sistpec-form-group" style="grid-column: span 2;">
-            <label>Correo electrónico</label>
-            <input v-model="editando.correo" type="email" />
-          </div>
-        </div>
-
-        <div class="sistpec-form-row">
-          <div class="sistpec-form-group" style="grid-column: span 2;">
-            <label>Domicilio</label>
-            <input v-model="editando.domicilio" type="text" />
-          </div>
-          <div class="sistpec-form-group">
-            <label>Localidad</label>
-            <input v-model="editando.localidad" type="text" />
-          </div>
-          <div class="sistpec-form-group">
-            <label>Municipio</label>
-            <input v-model="editando.municipio" type="text" />
-          </div>
-        </div>
-
-        <div class="sistpec-form-row">
-          <div class="sistpec-form-group">
-            <label>Código Postal</label>
-            <input v-model="editando.codigo_postal" type="text" />
-          </div>
-          <div class="sistpec-form-group">
-            <label>Estado</label>
-            <input v-model="editando.estado" type="text" />
-          </div>
-          <div class="sistpec-form-group" style="grid-column: span 2;">
-            <label>Observaciones</label>
-            <input v-model="editando.observaciones" type="text" />
-          </div>
-        </div>
-
-        <div class="sistpec-form-actions">
-          <button type="submit" class="sistpec-btn-primary">GUARDAR CAMBIOS</button>
-          <button type="button" class="sistpec-btn-secondary" @click="cancelarEdicion">CANCELAR</button>
-        </div>
-      </form>
-    </div>
-
-    <!-- ====================== 4) TRASLADAR UPP (DEMO) ====================== -->
-    <div v-else-if="selectedAction === 'traslado'">
-      <h3 class="subtitulo">Trasladar UPP de propietario finado</h3>
-
-      <div class="sistpec-info-box">
-        <p class="sistpec-info-text">
-          Este flujo es para cuando un propietario está <strong>Finado</strong>. En producción, aquí se listarán
-          sus UPP y se permitirá reasignarlas a otro propietario <strong>Activo</strong>.
-        </p>
-      </div>
-
-      <div v-if="!propFinadoSeleccionado" class="modulo-alert modulo-alert--error">
-        Seleccione un propietario (Finado) desde <strong>CONSULTAR</strong> y presione <strong>TRASLADO UPP</strong>.
-      </div>
-
-      <div v-else class="sistpec-edit-panel">
-        <h4 class="subtitulo-secundario">Propietario finado: {{ nombreCompleto(propFinadoSeleccionado) }}</h4>
-
-        <form class="sistpec-form" @submit.prevent="confirmarTrasladoDemo">
-          <div class="sistpec-form-row">
-            <div class="sistpec-form-group" style="grid-column: span 2;">
-              <label>Nuevo propietario (Activo)</label>
-              <select v-model="traslado.nuevo_propietario_id">
-                <option value="" disabled>Seleccione</option>
-                <option v-for="p in propietariosActivos" :key="p.id" :value="p.id">
-                  {{ nombreCompleto(p) }}
-                </option>
-              </select>
+        <form class="sistpec-form" @submit.prevent="guardarEdicion">
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group">
+              <label>CURP</label>
+              <input :value="formEdicion.curp" type="text" disabled />
             </div>
-
+            <div class="sistpec-form-group">
+              <label>Teléfono *</label>
+              <input v-model.trim="formEdicion.telefono" type="text" />
+            </div>
             <div class="sistpec-form-group" style="grid-column: span 2;">
-              <label>Motivo / Observación (opcional)</label>
-              <input v-model="traslado.observaciones" type="text" placeholder="Ej. Cambio de titular por fallecimiento" />
+              <label>Correo</label>
+              <input v-model.trim="formEdicion.correo" type="email" />
             </div>
           </div>
 
-          <div class="sistpec-form-actions">
-            <button type="submit" class="sistpec-btn-primary">CONFIRMAR (DEMO)</button>
-            <button type="button" class="sistpec-btn-secondary" @click="cancelarTraslado">CANCELAR</button>
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group">
+              <label>Apellido paterno *</label>
+              <input v-model.trim="formEdicion.apellido_paterno" type="text" />
+            </div>
+            <div class="sistpec-form-group">
+              <label>Apellido materno</label>
+              <input v-model.trim="formEdicion.apellido_materno" type="text" />
+            </div>
+            <div class="sistpec-form-group" style="grid-column: span 2;">
+              <label>Nombre(s) *</label>
+              <input v-model.trim="formEdicion.nombres" type="text" />
+            </div>
+          </div>
+
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group" style="grid-column: span 2;">
+              <label>Domicilio *</label>
+              <input v-model.trim="formEdicion.domicilio" type="text" />
+            </div>
+            <div class="sistpec-form-group">
+              <label>Municipio *</label>
+              <input v-model.trim="formEdicion.municipio" type="text" />
+            </div>
+            <div class="sistpec-form-group">
+              <label>Localidad / Población *</label>
+              <input v-model.trim="formEdicion.localidad" type="text" />
+            </div>
+          </div>
+
+          <div class="sistpec-form-row row-4">
+            <div class="sistpec-form-group">
+              <label>Código postal</label>
+              <input v-model.trim="formEdicion.cp" type="text" />
+            </div>
+            <div class="sistpec-form-group">
+              <label>Estado *</label>
+              <input v-model.trim="formEdicion.estado" type="text" />
+            </div>
+            <div class="sistpec-form-group">
+              <label>Estatus</label>
+              <input :value="formEdicion.estatus" type="text" disabled />
+            </div>
+          </div>
+
+          <div class="card-seccion" style="margin-top: 12px;">
+            <div class="seccion-titulo">UPP asociadas (solo lectura)</div>
+
+            <div v-if="!formEdicion.upps?.length" class="hint">
+              No hay UPP asociadas.
+            </div>
+
+            <ul v-else class="upp-list">
+              <li v-for="u in formEdicion.upps" :key="u.clave">
+                <b>{{ u.clave }}</b> — {{ u.nombre_predio }} ({{ u.municipio }})
+              </li>
+            </ul>
+
+            <div class="hint">
+              El traslado de UPP se realiza en <b>Administrar UPP</b>.
+            </div>
+          </div>
+
+          <div class="acciones-derecha">
+            <button type="submit" class="btn-primary">GUARDAR CAMBIOS</button>
+            <button type="button" class="btn-secondary" @click="limpiarEdicion">CANCELAR</button>
           </div>
         </form>
-
-        <div class="sistpec-info-box" style="margin-top: 12px;">
-          <p class="sistpec-info-text">
-            Nota: aquí todavía no se hace el traslado real de UPP porque eso lo maneja el módulo de UPP (o backend).
-            Este panel solo ilustra la regla de negocio.
-          </p>
-        </div>
       </div>
     </div>
 
-    <!-- fallback -->
-    <div v-else>
-      <h3 class="subtitulo">Acción no disponible</h3>
-      <p>El contenido para esta acción aún está en desarrollo.</p>
+    <!-- ====================== 4) ELIMINAR (LÓGICO) -> CAMBIAR A FINADO ====================== -->
+    <div v-if="selectedAction === 'eliminar'">
+      <h3 class="subtitulo">Cambiar estatus</h3>
+
+      <div class="card-seccion">
+        <div class="seccion-titulo">Buscar propietario</div>
+
+        <div class="sistpec-form-row row-4">
+          <div class="sistpec-form-group">
+            <label>CURP *</label>
+            <input v-model.trim="buscarBaja.curp" type="text" placeholder="CURP" />
+          </div>
+
+          <div class="acciones-derecha" style="grid-column: span 3;">
+            <button type="button" class="btn-primary" @click="buscarParaBaja">BUSCAR</button>
+            <button type="button" class="btn-secondary" @click="limpiarBaja">LIMPIAR</button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="propBaja.id" class="card-seccion">
+        <div class="seccion-titulo">Confirmación</div>
+
+
+        <div class="detalle-grid">
+          <div><b>CURP:</b> {{ propBaja.curp }}</div>
+          <div><b>Nombre:</b> {{ propBaja.apellido_paterno }} {{ propBaja.apellido_materno }} {{ propBaja.nombres }}</div>
+          <div><b>Estatus actual:</b> {{ propBaja.estatus }}</div>
+          <div><b>UPP asociadas:</b> {{ propBaja.upps?.length || 0 }}</div>
+        </div>
+
+        <div class="acciones-derecha">
+          <button
+            type="button"
+            class="btn-danger"
+            :disabled="propBaja.estatus === 'FINADO'"
+            @click="confirmarBajaFinado"
+          >
+            CONFIRMAR FINADO
+          </button>
+          <button type="button" class="btn-secondary" @click="limpiarBaja">CANCELAR</button>
+        </div>
+      </div>
     </div>
   </section>
 </template>
 
-<script setup>
-import { computed, nextTick, ref, watch } from 'vue';
+<script>
+export default {
+  name: "MvzPropietariosModulo",
 
-defineProps({
-  codigo: { type: String, required: false, default: '' },
-  rol: { type: String, required: false, default: 'MVZ' }
-});
+  data() {
+    return {
+      acciones: [
+        {
+          id: "registrar",
+          label: "REGISTRAR",
+          descripcion: "Registre un nuevo propietario.",
+        },
+        {
+          id: "consultar",
+          label: "CONSULTAR",
+          descripcion: "Consulte propietarios.",
+        },
+        {
+          id: "editar",
+          label: "EDITAR",
+          descripcion: "Edite los datos de un propietario existente.",
+        },
+        {
+          id: "eliminar",
+          label: "FINADO",
+          descripcion:
+            "Cambie el estatus del propietario.",
+        },
+      ],
 
-/* ===================== Scroll ===================== */
-const moduloContenidoRef = ref(null);
-function scrollAlContenido() {
-  nextTick(() => {
-    if (!moduloContenidoRef.value) return;
-    const rect = moduloContenidoRef.value.getBoundingClientRect();
-    const offset = 90;
-    const top = rect.top + window.scrollY - offset;
-    window.scrollTo({ top, behavior: 'smooth' });
-  });
-}
+      selectedAction: "consultar",
+      errores: [],
+      mensajeExito: "",
+      moduloContenidoRef: null,
 
-/* ===================== Acciones ===================== */
-const acciones = [
-  { id: 'registrar', label: 'REGISTRAR' },
-  { id: 'consultar', label: 'CONSULTAR' },
-  { id: 'editar', label: 'EDITAR (PROPIOS)' },
-  { id: 'traslado', label: 'TRASLADO UPP (FINADO)' }
-];
+      // Mock DB
+      propietariosDB: [
+        {
+          id: 1,
+          curp: "RUMM690828HVZZNG03",
+          apellido_paterno: "Ruiz",
+          apellido_materno: "Mendoza",
+          nombres: "Miguel Angel",
+          telefono: "2282132079",
+          correo: "soto95.cars@gmail.com",
+          domicilio: "C. Niño Artillero s/n",
+          municipio: "Ayahualulco",
+          localidad: "Los Altos",
+          cp: "91260",
+          estado: "Veracruz",
+          estatus: "ACTIVO",
+          upps: [
+            { clave: "30-025-1055-001", nombre_predio: "San Francisco", municipio: "Ayahualulco" },
+          ],
+        },
+        {
+          id: 2,
+          curp: "AAAA000000HVZXXX00",
+          apellido_paterno: "López",
+          apellido_materno: "Pérez",
+          nombres: "Juan",
+          telefono: "2290000000",
+          correo: "",
+          domicilio: "Calle 1",
+          municipio: "Xalapa",
+          localidad: "Centro",
+          cp: "91000",
+          estado: "Veracruz",
+          estatus: "FINADO",
+          upps: [
+            { clave: "30-999-0000-001", nombre_predio: "Rancho Ejemplo", municipio: "Xalapa" },
+          ],
+        },
+      ],
 
-const selectedAction = ref('registrar');
-const errores = ref([]);
-const mensajeExito = ref('');
+      // Registrar
+      formRegistro: this.formPropietarioVacio(),
 
-function cambiarAccion(id) {
-  selectedAction.value = id;
-  scrollAlContenido();
-}
+      // Consultar
+      filtros: { curp: "", nombre: "", municipio: "", estatus: "" },
+      resultados: [],
+      propSeleccionado: null,
 
-const descripcionAccionActual = computed(() => {
-  switch (selectedAction.value) {
-    case 'registrar':
-      return 'Registre propietarios con datos completos (CURP, contacto y domicilio).';
-    case 'consultar':
-      return 'Consulte propietarios registrados por usted, filtrando por CURP, municipio y estatus.';
-    case 'editar':
-      return 'Edite solo propietarios que usted registró.';
-    case 'traslado':
-      return 'Si un propietario está Finado, sus UPP pueden trasladarse a otro propietario Activo.';
-    default:
-      return '';
-  }
-});
+      // Editar
+      buscarEditar: { curp: "" },
+      formEdicion: {},
 
-watch(
-  () => selectedAction.value,
-  () => {
-    errores.value = [];
-    mensajeExito.value = '';
-  }
-);
-
-/* ===================== DEMO: MVZ actual ===================== */
-const mvzUserId = 10;
-
-/* ===================== DEMO DATA ===================== */
-const propietariosDemo = ref([
-  {
-    id: 1,
-    mvz_user_id: 10,
-    apellido_paterno: 'Ruiz',
-    apellido_materno: 'Mendoza',
-    nombres: 'Miguel Ángel',
-    curp: 'RUMM690828HVZZNG03',
-    telefono: '2282132079',
-    correo: 'soto95.cavsegmail.com',
-    domicilio: 'C. Niño Artillero S/N',
-    municipio: 'Ayahualulco',
-    localidad: 'Los Altos',
-    codigo_postal: '91260',
-    estado: 'Veracruz',
-    estatus: 'Activo',
-    observaciones: ''
+      // Baja/Finado
+      buscarBaja: { curp: "" },
+      propBaja: {},
+    };
   },
-  {
-    id: 2,
-    mvz_user_id: 10,
-    apellido_paterno: 'García',
-    apellido_materno: 'López',
-    nombres: 'Juan',
-    curp: 'XXXX690828HVZZNG00',
-    telefono: '',
-    correo: '',
-    domicilio: '',
-    municipio: 'Xalapa',
-    localidad: '',
-    codigo_postal: '',
-    estado: 'Veracruz',
-    estatus: 'Finado',
-    observaciones: 'Registro histórico'
+
+  computed: {
+    descripcionAccionActual() {
+      const a = this.acciones.find((x) => x.id === this.selectedAction);
+      return a ? a.descripcion : "";
+    },
   },
-  {
-    id: 3,
-    mvz_user_id: 99,
-    apellido_paterno: 'Otro',
-    apellido_materno: 'MVZ',
-    nombres: 'Ajeno',
-    curp: 'YYYY690828HVZZNG00',
-    telefono: '',
-    correo: '',
-    domicilio: '',
-    municipio: 'Otro',
-    localidad: '',
-    codigo_postal: '',
-    estado: 'Veracruz',
-    estatus: 'Activo',
-    observaciones: ''
-  }
-]);
 
-/* ===================== Helpers ===================== */
-function nombreCompleto(p) {
-  return `${p.apellido_paterno || ''} ${p.apellido_materno || ''} ${p.nombres || ''}`.trim();
-}
+  mounted() {
+    this.resultados = [...this.propietariosDB];
+  },
 
-function badgeEstatusClase(estatus) {
-  if (estatus === 'Activo') return 'badge--activo';
-  if (estatus === 'Finado') return 'badge--inactivo';
-  return 'badge--proceso';
-}
+  methods: {
+    formPropietarioVacio() {
+      return {
+        curp: "",
+        apellido_paterno: "",
+        apellido_materno: "",
+        nombres: "",
+        telefono: "",
+        correo: "",
+        domicilio: "",
+        municipio: "",
+        localidad: "",
+        cp: "",
+        estado: "Veracruz",
+      };
+    },
 
-/* ===================== 1) Registrar ===================== */
-const form = ref({
-  apellido_paterno: '',
-  apellido_materno: '',
-  nombres: '',
-  curp: '',
-  telefono: '',
-  correo: '',
-  domicilio: '',
-  municipio: '',
-  localidad: '',
-  codigo_postal: '',
-  estado: '',
-  estatus: 'Activo',
-  observaciones: ''
-});
+    cambiarAccion(id) {
+      this.selectedAction = id;
+      this.errores = [];
+      this.mensajeExito = "";
+      // Reset selección
+      this.propSeleccionado = null;
+    },
 
-function limpiarForm() {
-  form.value = {
-    apellido_paterno: '',
-    apellido_materno: '',
-    nombres: '',
-    curp: '',
-    telefono: '',
-    correo: '',
-    domicilio: '',
-    municipio: '',
-    localidad: '',
-    codigo_postal: '',
-    estado: '',
-    estatus: 'Activo',
-    observaciones: ''
-  };
-}
+    setError(msg) {
+      if (!this.errores.includes(msg)) this.errores.push(msg);
+    },
 
-function guardarPropietario() {
-  errores.value = [];
-  mensajeExito.value = '';
+    setExito(msg) {
+      this.mensajeExito = msg;
+      setTimeout(() => (this.mensajeExito = ""), 3500);
+    },
 
-  const f = form.value;
+    // ================= REGISTRAR =================
+    registrarPropietario() {
+      this.errores = [];
 
-  // Validaciones mínimas (ajustables)
-  if (!String(f.apellido_paterno || '').trim()) errores.value.push('Capture el apellido paterno.');
-  if (!String(f.apellido_materno || '').trim()) errores.value.push('Capture el apellido materno.');
-  if (!String(f.nombres || '').trim()) errores.value.push('Capture el/los nombre(s).');
-  if (!String(f.curp || '').trim()) errores.value.push('Capture la CURP.');
-  if (!String(f.municipio || '').trim()) errores.value.push('Capture el municipio.');
-  if (!String(f.estado || '').trim()) errores.value.push('Capture el estado.');
-  if (errores.value.length) return;
+      const f = this.formRegistro;
+      if (!f.curp || !f.telefono || !f.apellido_paterno || !f.nombres || !f.domicilio || !f.municipio || !f.localidad || !f.estado) {
+        this.setError("No puede haber campos obligatorios en blanco (*).");
+        return;
+      }
 
-  // CURP "única" por MVZ (misma CURP no debe duplicarse en registros del mismo MVZ)
-  const curp = String(f.curp).trim().toUpperCase();
-  const existe = propietariosDemo.value.some(p => p.mvz_user_id === mvzUserId && String(p.curp || '').toUpperCase() === curp);
-  if (existe) return errores.value.push('Ya existe un propietario con esa CURP (registrado por usted).');
+      const yaExiste = this.propietariosDB.some((p) => p.curp.toUpperCase() === f.curp.toUpperCase());
+      if (yaExiste) {
+        this.setError("El propietario ya existe (CURP duplicada).");
+        return;
+      }
 
-  propietariosDemo.value.push({
-    id: Date.now(),
-    mvz_user_id: mvzUserId,
-    apellido_paterno: String(f.apellido_paterno || '').trim(),
-    apellido_materno: String(f.apellido_materno || '').trim(),
-    nombres: String(f.nombres || '').trim(),
-    curp,
-    telefono: String(f.telefono || '').trim(),
-    correo: String(f.correo || '').trim(),
-    domicilio: String(f.domicilio || '').trim(),
-    municipio: String(f.municipio || '').trim(),
-    localidad: String(f.localidad || '').trim(),
-    codigo_postal: String(f.codigo_postal || '').trim(),
-    estado: String(f.estado || '').trim(),
-    estatus: f.estatus,
-    observaciones: String(f.observaciones || '').trim()
-  });
+      // TODO: API -> POST /propietarios
+      const nuevo = {
+        id: Date.now(),
+        ...JSON.parse(JSON.stringify(f)),
+        estatus: "ACTIVO",
+        upps: [],
+      };
+      nuevo.curp = nuevo.curp.toUpperCase();
+      this.propietariosDB.unshift(nuevo);
 
-  mensajeExito.value = 'Propietario registrado (DEMO).';
-  limpiarForm();
-}
+      this.setExito("Propietario registrado con éxito.");
+      this.formRegistro = this.formPropietarioVacio();
+    },
 
-/* ===================== 2) Consultar ===================== */
-const filtros = ref({ nombre: '', curp: '', municipio: '', estatus: '', telefono: '' });
-const buscado = ref(false);
-const detalle = ref(null);
+    limpiarFormRegistro() {
+      this.errores = [];
+      this.mensajeExito = "";
+      this.formRegistro = this.formPropietarioVacio();
+    },
 
-function buscar() {
-  buscado.value = true;
-  errores.value = [];
-  mensajeExito.value = '';
-}
+    // ================= CONSULTAR =================
+    buscarPropietarios() {
+      this.errores = [];
+      this.propSeleccionado = null;
 
-function limpiarBusqueda() {
-  filtros.value = { nombre: '', curp: '', municipio: '', estatus: '', telefono: '' };
-  buscado.value = false;
-  detalle.value = null;
-  errores.value = [];
-  mensajeExito.value = '';
-}
+      const { curp, nombre, municipio, estatus } = this.filtros;
 
-const propietariosFiltrados = computed(() => {
-  if (!buscado.value) return [];
-  const f = filtros.value;
+      if (!curp && !nombre && !municipio && !estatus) {
+        this.setError("Debe ingresar al menos un criterio de búsqueda o seleccionar un estatus.");
+        return;
+      }
 
-  const n = f.nombre.trim().toLowerCase();
-  const c = f.curp.trim().toUpperCase();
-  const m = f.municipio.trim().toLowerCase();
-  const e = f.estatus;
-  const t = f.telefono.trim();
+      const curpN = (curp || "").trim().toUpperCase();
+      const nombreN = (nombre || "").trim().toLowerCase();
+      const muniN = (municipio || "").trim().toLowerCase();
+      const estN = (estatus || "").trim().toUpperCase();
 
-  const base = propietariosDemo.value.filter(p => p.mvz_user_id === mvzUserId);
+      // TODO: API -> GET /propietarios?...
+      let res = [...this.propietariosDB];
 
-  return base.filter(p => {
-    const textoNombre = `${p.apellido_paterno} ${p.apellido_materno} ${p.nombres}`.toLowerCase();
-    const okNombre = n ? textoNombre.includes(n) : true;
-    const okCurp = c ? String(p.curp || '').toUpperCase().includes(c) : true;
-    const okMun = m ? String(p.municipio || '').toLowerCase().includes(m) : true;
-    const okEst = e ? p.estatus === e : true;
-    const okTel = t ? String(p.telefono || '').includes(t) : true;
-    return okNombre && okCurp && okMun && okEst && okTel;
-  });
-});
+      if (curpN) res = res.filter((p) => (p.curp || "").toUpperCase().includes(curpN));
+      if (nombreN) {
+        res = res.filter((p) =>
+          `${p.apellido_paterno} ${p.apellido_materno} ${p.nombres}`.toLowerCase().includes(nombreN)
+        );
+      }
+      if (muniN) res = res.filter((p) => (p.municipio || "").toLowerCase().includes(muniN));
+      if (estN) res = res.filter((p) => (p.estatus || "").toUpperCase() === estN);
 
-function verDetalle(p) {
-  detalle.value = { ...p };
-}
+      if (!res.length) {
+        this.setError("No se encontraron resultados con los criterios ingresados, favor de verificar.");
+        this.resultados = [];
+        return;
+      }
 
-/* ===================== 3) Editar (propios) ===================== */
-const editando = ref(null);
+      this.resultados = res;
+      this.setExito(`Se encontraron ${res.length} resultado(s).`);
+    },
 
-function puedeEditar(p) {
-  return p?.mvz_user_id === mvzUserId;
-}
+    limpiarFiltros() {
+      this.errores = [];
+      this.mensajeExito = "";
+      this.filtros = { curp: "", nombre: "", municipio: "", estatus: "" };
+      this.resultados = [...this.propietariosDB];
+      this.propSeleccionado = null;
+    },
 
-function abrirEdicion(p) {
-  errores.value = [];
-  mensajeExito.value = '';
-  if (!puedeEditar(p)) return errores.value.push('No tiene permisos para editar este propietario.');
-  editando.value = { ...p };
-  selectedAction.value = 'editar';
-}
+    seleccionarPropietario(p) {
+      this.propSeleccionado = JSON.parse(JSON.stringify(p));
+    },
 
-function cancelarEdicion() {
-  editando.value = null;
-  selectedAction.value = 'consultar';
-}
+    // ================= EDITAR =================
+    buscarParaEditar() {
+      this.errores = [];
+      this.mensajeExito = "";
 
-function guardarEdicion() {
-  errores.value = [];
-  mensajeExito.value = '';
+      const curp = (this.buscarEditar.curp || "").trim().toUpperCase();
+      if (!curp) {
+        this.setError("No puede haber campos en blanco. Ingrese CURP.");
+        return;
+      }
 
-  if (!editando.value) return errores.value.push('No hay propietario seleccionado para editar.');
-  if (!puedeEditar(editando.value)) return errores.value.push('No tiene permisos para editar este propietario.');
+      // TODO: API -> GET /propietarios/:curp
+      const p = this.propietariosDB.find((x) => (x.curp || "").toUpperCase() === curp);
 
-  const curp = String(editando.value.curp || '').trim().toUpperCase();
-  if (!curp) errores.value.push('La CURP es obligatoria.');
-  if (!String(editando.value.apellido_paterno || '').trim()) errores.value.push('Apellido paterno obligatorio.');
-  if (!String(editando.value.apellido_materno || '').trim()) errores.value.push('Apellido materno obligatorio.');
-  if (!String(editando.value.nombres || '').trim()) errores.value.push('Nombre(s) obligatorio.');
-  if (!String(editando.value.municipio || '').trim()) errores.value.push('Municipio obligatorio.');
-  if (!String(editando.value.estado || '').trim()) errores.value.push('Estado obligatorio.');
-  if (errores.value.length) return;
+      if (!p) {
+        this.setError("No se pudo encontrar el propietario, favor de verificar.");
+        return;
+      }
 
-  // evitar duplicar CURP con otro registro del mismo MVZ
-  const existe = propietariosDemo.value.some(
-    p => p.mvz_user_id === mvzUserId && p.id !== editando.value.id && String(p.curp || '').toUpperCase() === curp
-  );
-  if (existe) return errores.value.push('Ya existe otro propietario con esa CURP (registrado por usted).');
+      this.formEdicion = JSON.parse(JSON.stringify(p));
+      this.setExito("Propietario cargado para edición.");
+    },
 
-  const idx = propietariosDemo.value.findIndex(x => x.id === editando.value.id);
-  if (idx === -1) return errores.value.push('No se encontró el propietario.');
+    guardarEdicion() {
+      this.errores = [];
+      const f = this.formEdicion;
 
-  propietariosDemo.value[idx] = { ...propietariosDemo.value[idx], ...editando.value, curp };
-  mensajeExito.value = 'Propietario actualizado (DEMO).';
-  editando.value = null;
-  selectedAction.value = 'consultar';
-}
+      if (!f.telefono || !f.apellido_paterno || !f.nombres || !f.domicilio || !f.municipio || !f.localidad || !f.estado) {
+        this.setError("No puede haber campos obligatorios en blanco (*).");
+        return;
+      }
 
-/* ===================== 4) Traslado UPP (DEMO) ===================== */
-const propFinadoSeleccionado = ref(null);
-const traslado = ref({ nuevo_propietario_id: '', observaciones: '' });
+      // TODO: API -> PUT /propietarios/:id
+      const idx = this.propietariosDB.findIndex((p) => p.id === f.id);
+      if (idx === -1) {
+        this.setError("No se pudo actualizar (registro no encontrado).");
+        return;
+      }
 
-const propietariosActivos = computed(() =>
-  propietariosDemo.value.filter(p => p.mvz_user_id === mvzUserId && p.estatus === 'Activo')
-);
+      // Importante: UPP se mantiene (solo lectura aquí)
+      this.propietariosDB[idx] = {
+        ...this.propietariosDB[idx],
+        telefono: f.telefono,
+        correo: f.correo,
+        apellido_paterno: f.apellido_paterno,
+        apellido_materno: f.apellido_materno,
+        nombres: f.nombres,
+        domicilio: f.domicilio,
+        municipio: f.municipio,
+        localidad: f.localidad,
+        cp: f.cp,
+        estado: f.estado,
+      };
 
-function abrirTraslado(p) {
-  errores.value = [];
-  mensajeExito.value = '';
-  if (!puedeEditar(p)) return errores.value.push('No tiene permisos para este propietario.');
-  if (p.estatus !== 'Finado') return errores.value.push('El propietario debe estar en estatus Finado para traslado.');
-  propFinadoSeleccionado.value = { ...p };
-  traslado.value = { nuevo_propietario_id: '', observaciones: '' };
-  selectedAction.value = 'traslado';
-}
+      this.setExito("Datos actualizados con éxito.");
+      this.resultados = [...this.propietariosDB];
+    },
 
-function cancelarTraslado() {
-  propFinadoSeleccionado.value = null;
-  traslado.value = { nuevo_propietario_id: '', observaciones: '' };
-  selectedAction.value = 'consultar';
-}
+    limpiarEdicion() {
+      this.errores = [];
+      this.mensajeExito = "";
+      this.buscarEditar = { curp: "" };
+      this.formEdicion = {};
+    },
 
-function confirmarTrasladoDemo() {
-  errores.value = [];
-  mensajeExito.value = '';
+    // ================= BAJA (FINADO) =================
+    buscarParaBaja() {
+      this.errores = [];
+      this.mensajeExito = "";
+      this.propBaja = {};
 
-  if (!propFinadoSeleccionado.value) return errores.value.push('No hay propietario finado seleccionado.');
-  const nuevoId = Number(traslado.value.nuevo_propietario_id);
-  if (!nuevoId) return errores.value.push('Seleccione el nuevo propietario.');
+      const curp = (this.buscarBaja.curp || "").trim().toUpperCase();
+      if (!curp) {
+        this.setError("No puede haber campos en blanco. Ingrese CURP.");
+        return;
+      }
 
-  const nuevo = propietariosDemo.value.find(p => p.id === nuevoId && p.mvz_user_id === mvzUserId && p.estatus === 'Activo');
-  if (!nuevo) return errores.value.push('El nuevo propietario debe ser Activo y registrado por usted.');
+      // TODO: API -> GET /propietarios/:curp
+      const p = this.propietariosDB.find((x) => (x.curp || "").toUpperCase() === curp);
 
-  const ok = window.confirm(
-    `CONFIRMAR (DEMO): trasladar UPP del propietario finado "${nombreCompleto(propFinadoSeleccionado.value)}" a "${nombreCompleto(nuevo)}"?`
-  );
-  if (!ok) return;
+      if (!p) {
+        this.setError("No se pudo encontrar el propietario, favor de verificar.");
+        return;
+      }
 
-  mensajeExito.value = 'Traslado simulado (DEMO). El traslado real de UPP se realiza en el módulo UPP / backend.';
-  cancelarTraslado();
-}
+      this.propBaja = JSON.parse(JSON.stringify(p));
+      this.setExito("Propietario encontrado.");
+    },
+
+    confirmarBajaFinado() {
+      this.errores = [];
+      if (!this.propBaja?.id) {
+        this.setError("Seleccione un propietario antes de confirmar.");
+        return;
+      }
+      if (this.propBaja.estatus === "FINADO") {
+        this.setError("El propietario ya se encuentra en estatus FINADO.");
+        return;
+      }
+
+      // TODO: API -> PATCH /propietarios/:id/estatus FINADO
+      const idx = this.propietariosDB.findIndex((p) => p.id === this.propBaja.id);
+      if (idx === -1) {
+        this.setError("No se pudo actualizar el estatus (registro no encontrado).");
+        return;
+      }
+
+      this.propietariosDB[idx].estatus = "FINADO";
+
+      this.setExito("Estatus actualizado a FINADO.");
+      this.propBaja = {};
+      this.buscarBaja = { curp: "" };
+      this.resultados = [...this.propietariosDB];
+    },
+
+    limpiarBaja() {
+      this.errores = [];
+      this.mensajeExito = "";
+      this.buscarBaja = { curp: "" };
+      this.propBaja = {};
+    },
+  },
+};
 </script>
 
 <style scoped>
-.modulo-acciones { margin-bottom: 20px; }
-.modulo-acciones-titulo { display:block; font-size:14px; margin-bottom:8px; color:#333; font-weight:800; }
-.modulo-acciones-botones { display:flex; flex-wrap:wrap; gap:6px; }
-
-.sistpec-btn-accion{
-  border:none; padding:8px 14px; font-size:12px; font-weight:800;
-  text-transform:uppercase; border-radius:4px; cursor:pointer;
-  background:#2f6b32; color:#fff; letter-spacing:0.4px;
+/* ==== Layout general  ==== */
+.modulo-acciones {
+  margin-bottom: 16px;
 }
-.sistpec-btn-accion.active{ background:#244e26; }
 
-.modulo-contenido { margin-top: 10px; }
-.subtitulo { font-size:18px; margin:10px 0 15px; color:#333; }
-.subtitulo-secundario { font-size:16px; margin:16px 0 10px; color:#333; }
-
-.sistpec-info-box{
-  margin-top:10px; padding:10px 14px; border-radius:4px;
-  background:#e1f3e1; border:1px solid #c3e6c3;
+.modulo-acciones-titulo {
+  display: inline-block;
+  margin-bottom: 6px;
+  font-weight: 700;
+  font-size: 14px;
 }
-.sistpec-info-text{ margin:0; font-size:13px; color:#225522; }
 
-.modulo-alert{ margin-bottom:12px; padding:10px 14px; border-radius:4px; font-size:13px; }
-.modulo-alert--error{ background:#fbeaea; border:1px solid #f5c2c2; color:#7a1f1f; }
-.modulo-alert--success{ background:#e1f3e1; border:1px solid #c3e6c3; color:#225522; }
+.modulo-acciones-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
 
-.sistpec-form{ display:flex; flex-direction:column; gap:16px; }
-.sistpec-form-row{ display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:12px; }
+/* ===== BOTONES DE ACCIÓN  ===== */
+.sistpec-btn-accion {
+  border: 0;
+  padding: 8px 14px;            
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;            
+  line-height: 1.1;
+  background: #1f5f2b;
+  color: #fff;
+}
 
-.sistpec-form-group{ display:flex; flex-direction:column; gap:4px; }
-.sistpec-form-group label{ font-size:13px; font-weight:800; color:#444; }
+.sistpec-btn-accion.active {
+  outline: 2px solid rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+/* ===== RECUADRO VERDE ===== */
+.sistpec-info-box {
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #e3f6e6;
+  border: 1px solid #bfe7c6;
+}
+
+.sistpec-info-text {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f5f2b;                
+}
+
+/* ===== CONTENIDO ===== */
+.modulo-contenido {
+  padding-bottom: 25px;
+}
+
+.subtitulo {
+  margin: 10px 0 12px;
+  font-size: 18px;
+}
+
+.subtitulo2 {
+  margin: 12px 0 8px;
+  font-size: 15px;
+}
+
+/* ===== ALERTAS ===== */
+.modulo-alert {
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.modulo-alert--error {
+  background: #ffe8e8;
+  border: 1px solid #ffbdbd;
+}
+
+.modulo-alert--success {
+  background: #e8fff1;
+  border: 1px solid #b9f0cf;
+  color: #1f5f2b;
+}
+
+/* ===== TARJETAS ===== */
+.card-seccion {
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #eee;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.seccion-titulo {
+  font-weight: 800;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+/* ===== FORMULARIOS ===== */
+.sistpec-form-row {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.row-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.sistpec-form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
 .sistpec-form-group input,
-.sistpec-form-group select{
-  padding:8px 10px; border-radius:4px; border:1px solid #ccc;
-  font-size:14px; outline:none;
-}
-.sistpec-form-group input:focus,
-.sistpec-form-group select:focus{
-  border-color:#2f6b32;
-  box-shadow:0 0 0 1px rgba(47, 107, 50, 0.15);
+.sistpec-form-group select {
+  width: 100%;
+  padding: 8px 10px;             
+  border-radius: 6px;
+  border: 1px solid #d9d9d9;
+  font-size: 13px;
 }
 
-.sistpec-form-actions{
-  display:flex; justify-content:flex-end; gap:8px;
+/* ===== BOTONES DE FORMULARIO ===== */
+.acciones-derecha {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
 }
 
-.sistpec-btn-primary{
-  background:#2f6b32; color:#fff; border:none;
-  padding:8px 18px; border-radius:4px;
-  font-size:13px; font-weight:900; cursor:pointer;
-}
-.sistpec-btn-primary:hover{ background:#244e26; }
-.sistpec-btn-primary:disabled{ opacity:.5; cursor:not-allowed; }
-
-.sistpec-btn-secondary{
-  background:#e0e0e0; color:#333; border:none;
-  padding:8px 18px; border-radius:4px;
-  font-size:13px; font-weight:900; cursor:pointer;
-}
-.sistpec-btn-secondary:hover{ background:#d0d0d0; }
-.sistpec-btn-secondary:disabled{ opacity:.5; cursor:not-allowed; }
-
-.sistpec-btn-sm{ padding:5px 10px; font-size:11px; }
-
-.sistpec-search-bar{
-  display:grid; grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap:12px; margin-bottom:16px;
-}
-.fechas-bar{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.sistpec-search-actions{
-  display:flex; align-items:flex-end; gap:8px; justify-content:flex-end;
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-mini {
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 14px;            
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
 }
 
-.sistpec-table-wrapper{ width:100%; overflow-x:auto; }
-.sistpec-table{ width:100%; border-collapse:collapse; font-size:13px; }
-.sistpec-table thead{ background:#7a061e; color:#fff; }
-.sistpec-table th, .sistpec-table td{ padding:8px 10px; border:1px solid #ddd; text-align:left; }
-.sistpec-table tbody tr:nth-child(even){ background:#fafafa; }
-.sin-resultados{ text-align:center; color:#777; }
-
-.sistpec-edit-panel{
-  margin-top:20px; padding-top:10px; border-top:1px dashed #ccc;
+.btn-primary {
+  background: #1f5f2b;
+  color: #fff;
 }
 
-.acciones{ display:flex; gap:6px; flex-wrap:wrap; }
-
-.badge{ display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:900; }
-.badge--activo{ background:#e1f3e1; color:#225522; border:1px solid #c3e6c3; }
-.badge--inactivo{ background:#fbeaea; color:#7a1f1f; border:1px solid #f5c2c2; }
-.badge--proceso{ background:#fff4e5; color:#b26a00; border:1px solid #ffd7a3; }
-
-.detalle-grid{
-  display:grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap:8px 12px;
-  font-size:13px;
+.btn-secondary {
+  background: #dedede;
+  color: #222;
 }
-.lbl{ font-weight:900; color:#444; }
 
-@media (max-width: 768px) {
-  .sistpec-search-bar { grid-template-columns: 1fr; }
-  .fechas-bar { grid-template-columns: 1fr; }
-  .sistpec-form-row { grid-template-columns: 1fr; }
-  .detalle-grid { grid-template-columns: 1fr; }
+.btn-danger {
+  background: #a31414;
+  color: #fff;
 }
+
+.btn-mini {
+  background: #1f5f2b;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+/* ===== TABLAS ===== */
+.tabla-wrap {
+  overflow: auto;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla th,
+.tabla td {
+  border: 1px solid #eee;
+  padding: 8px;
+  text-align: left;
+  font-size: 13px;
+}
+
+.tabla th {
+  background: #7a0f1c;
+  color: #fff;
+}
+
+/* ===== BADGES ===== */
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.badge-ok {
+  background: #dff5e6;
+  color: #1f5f2b;
+}
+
+.badge-warn {
+  background: #fff1d8;
+  color: #a65c00;
+}
+
+/* ===== DETALLE ===== */
+.detalle {
+  margin-top: 12px;
+}
+
+.detalle-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  font-size: 13px;
+  background: #fafafa;
+  border: 1px solid #eee;
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.upp-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #555;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1100px) {
+  .row-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .detalle-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 650px) {
+  .row-4 {
+    grid-template-columns: 1fr;
+  }
+  .detalle-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 </style>

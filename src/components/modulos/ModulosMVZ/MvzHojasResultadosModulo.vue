@@ -1,7 +1,7 @@
 <template>
   <!-- Barra de acciones -->
   <section class="modulo-acciones">
-    <span class="modulo-acciones-titulo">Administrar Hojas de Resultados (MVZ)</span>
+    <span class="modulo-acciones-titulo">Acciones disponibles</span>
 
     <div class="modulo-acciones-botones">
       <button
@@ -35,14 +35,7 @@
 
     <!-- ====================== CONSULTAR RESULTADOS (PDF) ====================== -->
     <div v-if="selectedAction === 'consultar'">
-      <h3 class="subtitulo">Consultar hojas de resultados (PDF)</h3>
-
-      <div class="sistpec-info-box">
-        <p class="sistpec-info-text">
-          Consulte las hojas de resultados emitidas por el laboratorio para sus números de caso.
-          Este módulo es <strong>solo consulta</strong>.
-        </p>
-      </div>
+      <h3 class="subtitulo">Consultar</h3>
 
       <div v-if="mostrarAlerta" class="modulo-alert modulo-alert--error">
         Debe capturar <strong>al menos un criterio</strong> para buscar.
@@ -369,7 +362,7 @@ function verDetalle(r) {
 
 /**
  * IMPORTANTE:
- * Aquí abrimos una URL demo. En producción:
+ *   En producción:
  * - podría ser una ruta interna: /api/resultados/:id/pdf (con auth)
  * - o un blob/base64 (descarga segura)
  */

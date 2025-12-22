@@ -1,7 +1,7 @@
 <template>
   <!-- Barra de acciones -->
   <section class="modulo-acciones">
-    <span class="modulo-acciones-titulo">Administrar UPP (MVZ)</span>
+    <span class="modulo-acciones-titulo">Acciones disponibles</span>
 
     <div class="modulo-acciones-botones">
       <button
@@ -37,14 +37,7 @@
 
     <!-- ====================== 1) AGREGAR UPP ====================== -->
     <div v-if="selectedAction === 'agregar'">
-      <h3 class="subtitulo">Agregar UPP</h3>
-
-      <div class="sistpec-info-box">
-        <p class="sistpec-info-text">
-          Registre una UPP ligada a un propietario. Si el propietario está <strong>Finado</strong>,
-          no se permite registrar nuevas UPP a su nombre.
-        </p>
-      </div>
+      <h3 class="subtitulo">Agregar</h3>
 
       <form class="sistpec-form" @submit.prevent="guardarUpp">
         <div class="sistpec-form-row">
@@ -101,12 +94,12 @@
 
         <div class="sistpec-form-row">
           <div class="sistpec-form-group">
-            <label>Latitud (opcional)</label>
+            <label>Latitud</label>
             <input v-model="formUpp.latitud" type="text" placeholder="Ej. 19.449141" />
           </div>
 
           <div class="sistpec-form-group">
-            <label>Longitud (opcional)</label>
+            <label>Longitud</label>
             <input v-model="formUpp.longitud" type="text" placeholder="Ej. -97.200479" />
           </div>
 
@@ -125,7 +118,7 @@
 
     <!-- ====================== 2) CONSULTAR UPP ====================== -->
     <div v-else-if="selectedAction === 'consultar'">
-      <h3 class="subtitulo">Consultar UPP</h3>
+      <h3 class="subtitulo">Consultar</h3>
 
       <div class="sistpec-search-bar">
         <div class="sistpec-form-group">
@@ -352,14 +345,7 @@
 
     <!-- ====================== 4) TRASLADAR UPP ====================== -->
     <div v-else-if="selectedAction === 'trasladar'">
-      <h3 class="subtitulo">Trasladar UPP a otro propietario</h3>
-
-      <div class="sistpec-info-box">
-        <p class="sistpec-info-text">
-          Solo se permite trasladar cuando el propietario actual está en estatus <strong>Finado</strong>.
-          El traslado conserva el historial; solo cambia el propietario asignado.
-        </p>
-      </div>
+      <h3 class="subtitulo">Trasladar a otro propietario</h3>
 
       <div v-if="!uppTrasladando" class="modulo-alert modulo-alert--error">
         Seleccione una UPP desde <strong>CONSULTAR</strong> y presione <strong>TRASLADAR</strong>.
@@ -429,10 +415,10 @@ function scrollAlContenido() {
 
 /* ===================== Acciones ===================== */
 const acciones = [
-  { id: 'agregar', label: 'AGREGAR UPP' },
-  { id: 'consultar', label: 'CONSULTAR UPP' },
-  { id: 'editar', label: 'EDITAR UPP' },
-  { id: 'trasladar', label: 'TRASLADAR UPP' }
+  { id: 'agregar', label: 'AGREGAR' },
+  { id: 'consultar', label: 'CONSULTAR' },
+  { id: 'editar', label: 'EDITAR' },
+  { id: 'trasladar', label: 'TRASLADAR' }
 ];
 
 const selectedAction = ref('agregar');

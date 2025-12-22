@@ -1,7 +1,7 @@
 <template>
   <!-- Barra de acciones -->
   <section class="modulo-acciones">
-    <span class="modulo-acciones-titulo">Administrar Números de Caso (MVZ)</span>
+    <span class="modulo-acciones-titulo">Acciones disponibles</span>
 
     <div class="modulo-acciones-botones">
       <button
@@ -35,14 +35,8 @@
 
     <!-- ====================== CONSULTAR ====================== -->
     <div v-if="selectedAction === 'consultar'">
-      <h3 class="subtitulo">Consultar números de caso (solo los míos)</h3>
+      <h3 class="subtitulo">Consultar</h3>
 
-      <div class="sistpec-info-box">
-        <p class="sistpec-info-text">
-          Aquí se muestran únicamente los números de caso asignados a hojas de control que usted registró.
-          Este módulo es <strong>solo consulta</strong>.
-        </p>
-      </div>
 
       <div v-if="mostrarAlerta" class="modulo-alert modulo-alert--error">
         Debe capturar <strong>al menos un criterio</strong> para buscar.
@@ -214,7 +208,7 @@ function cambiarAccion(id) {
 const descripcionAccionActual = computed(() => {
   switch (selectedAction.value) {
     case 'consultar':
-      return 'Consulte números de caso asignados a sus hojas; solo consulta.';
+      return 'Consulte números de caso que han sido asginados a sus hojas de control.';
     default:
       return '';
   }
@@ -233,9 +227,7 @@ const mvzUserId = 10;
 
 /* ===================== DEMO DATA ===================== */
 /**
- * En producción, esto vendría del backend, por ejemplo:
- * - casos vinculados a hoja_control_campo del MVZ
- * - total_muestras = conteo de muestras/aretes de la hoja
+ * En producción, esto vendría del backend
  */
 const casosDemo = ref([
   {
