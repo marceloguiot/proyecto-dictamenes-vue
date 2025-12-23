@@ -46,43 +46,43 @@ import Modulo from './components/modulos/Modulo.vue';
 // ===== Configuración de menús por rol =====
 const menusPorRol = {
   administrador: [
-    { texto: 'Administrar Usuarios', modulo: 'adminAdministrarUsuarios' },
-    { texto: 'Administrar Propietarios', modulo: 'adminAdministrarPropietarios' },
-    { texto: 'Administrar UPP', modulo: 'adminAdministrarUPP' },
-    { texto: 'Administrar Muestras', modulo: 'adminAdministrarMuestras' },
-    { texto: 'Administrar Resultados', modulo: 'adminAdministrarResultados' },
+    { texto: 'Usuarios', modulo: 'adminAdministrarUsuarios' },
+    { texto: 'Propietarios', modulo: 'adminAdministrarPropietarios' },
+    { texto: 'UPP', modulo: 'adminAdministrarUPP' },
+    { texto: 'Muestras', modulo: 'adminAdministrarMuestras' },
+    { texto: 'Resultados', modulo: 'adminAdministrarResultados' },
     { texto: 'Cerrar Sesión', modulo: 'cerrarSesion', especial: true }
   ],
   responsableLaboratorio: [
-    { texto: 'Administrar Número de caso', modulo: 'resplabAdminNumdeCaso' },
-    { texto: 'Administrar Muestras', modulo: 'resplabAdminMuestra' },
-    { texto: 'Administrar Resultados', modulo: 'resplabAdminResultados' },
-    { texto: 'Administrar Hojas de resultados', modulo: 'resplabAdminHojaResultados' },
-    { texto: 'Administrar Hoja de reporte', modulo: 'resplabAdminHojaReporte' },
+    { texto: 'Número de caso', modulo: 'resplabAdminNumdeCaso' },
+    { texto: 'Muestras', modulo: 'resplabAdminMuestra' },
+    { texto: 'Resultados', modulo: 'resplabAdminResultados' },
+    { texto: 'Hojas de resultados', modulo: 'resplabAdminHojaResultados' },
+    { texto: 'Hoja de reporte', modulo: 'resplabAdminHojaReporte' },
     { texto: 'Cerrar Sesión', modulo: 'cerrarSesion', especial: true }
   ],
   recepcionista: [
-    { texto: 'Administrar número de caso', modulo: 'recepAdminNumCaso' },
-    { texto: 'Administrar Muestras', modulo: 'recepAdminMuestras' },
-    { texto: 'Administrar Resultados', modulo: 'recepAdminResultados' },
-    { texto: 'Administrar hojas de resultados', modulo: 'recepAdminHojasResultados' },
-    { texto: 'Administrar Hoja de reporte', modulo: 'recepAdminHojaReporte' },
+    { texto: 'Número de caso', modulo: 'recepAdminNumCaso' },
+    { texto: 'Muestras', modulo: 'recepAdminMuestras' },
+    { texto: 'Resultados', modulo: 'recepAdminResultados' },
+    { texto: 'Hojas de resultados', modulo: 'recepAdminHojasResultados' },
+    { texto: 'Hoja de reporte', modulo: 'recepAdminHojaReporte' },
     { texto: 'Cerrar Sesión', modulo: 'cerrarSesion', especial: true }
   ],
   coordinador: [
-  { texto: 'Administrar UPP', modulo: 'coordAdministrarUPP' },
-  { texto: 'Administrar Resultados', modulo: 'coordAdministrarResultados' },
-  { texto: 'Administrar Hoja de reporte', modulo: 'coordAdministrarHojaReporte' },
-  { texto: 'Administrar Actividad de campo', modulo: 'coordAdministrarActividadCampo' },
+  { texto: 'UPP', modulo: 'coordAdministrarUPP' },
+  { texto: 'Resultados', modulo: 'coordAdministrarResultados' },
+  { texto: 'Hoja de reporte', modulo: 'coordAdministrarHojaReporte' },
+  { texto: 'Actividad de campo', modulo: 'coordAdministrarActividadCampo' },
   { texto: 'Cerrar Sesión', modulo: 'cerrarSesion', especial: true }
   ],
 
   mvzAutorizado: [
-    { texto: 'Administrar hoja de reporte', modulo: 'mvzAdminHojaReporte' },
-    { texto: 'Administrar Propietario', modulo: 'mvzAdminPropietario' },
-    { texto: 'Administrar UPP', modulo: 'mvzAdminUpp' },
-    { texto: 'Administrar número de caso', modulo: 'mvzAdminNumCaso' },
-    { texto: 'Administrar hoja de resultados', modulo: 'mvzAdminHojaResultados' },
+    { texto: 'hoja de reporte', modulo: 'mvzAdminHojaReporte' },
+    { texto: 'Propietarios', modulo: 'mvzAdminPropietario' },
+    { texto: 'UPP', modulo: 'mvzAdminUpp' },
+    { texto: 'Número de caso', modulo: 'mvzAdminNumCaso' },
+    { texto: 'Hojas de resultados', modulo: 'mvzAdminHojaResultados' },
     { texto: 'Cerrar Sesión', modulo: 'cerrarSesion', especial: true }
   ]
 };

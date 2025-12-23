@@ -25,27 +25,27 @@ const panel = computed(() => {
     case 'administrador':
       return {
         id: 'adminPanel',
-        titulo: 'Bienvenido a SISTPEC, Administrador'
+        titulo: 'Administrador - SISTPEC'
       };
     case 'responsableLaboratorio':
       return {
         id: 'responsablelabPanel',
-        titulo: 'Bienvenido a SISTPEC, Responsable de laboratorio'
+        titulo: 'Responsable de laboratorio - SISTPEC'
       };
     case 'recepcionista':
       return {
         id: 'recepcionistaPanel',
-        titulo: 'Bienvenido a SISTPEC, Recepcionista'
+        titulo: 'Recepcionista - SISTPEC'
       };
     case 'coordinador':
       return {
         id: 'coordinadorPanel',
-        titulo: 'Bienvenido a SISTPEC, Coordinador'
+        titulo: 'Coordinador - SISTPEC'
       };
     case 'mvzAutorizado':
       return {
         id: 'mvzPanel',
-        titulo: 'Bienvenido a SISTPEC, MVZ'
+        titulo: 'MVZ - SISTPEC'
       };
     default:
       return {

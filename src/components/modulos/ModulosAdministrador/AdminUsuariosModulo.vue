@@ -42,7 +42,7 @@
 
       <!-- ================= REGISTRAR USUARIO ================= -->
       <div v-if="selectedAction === 'registrar'">
-        <h3 class="subtitulo">Registrar usuario</h3>
+        <h3 class="subtitulo">Registrar</h3>
 
         <form class="sistpec-form" @submit.prevent="guardarUsuario">
           <div class="sistpec-form-row">
@@ -136,7 +136,7 @@
 
       <!-- ================= CONSULTAR USUARIOS ================= -->
       <div v-else-if="selectedAction === 'consultar'">
-        <h3 class="subtitulo">Consultar usuarios</h3>
+        <h3 class="subtitulo">Consultar</h3>
 
         <div class="sistpec-search-bar">
           <div class="sistpec-form-group">
@@ -203,7 +203,7 @@
 
       <!-- ================= EDITAR USUARIOS ================= -->
       <div v-else-if="selectedAction === 'editar'">
-        <h3 class="subtitulo">Editar usuarios</h3>
+        <h3 class="subtitulo">Editar</h3>
 
         <div class="sistpec-search-bar">
           <div class="sistpec-form-group">
@@ -377,7 +377,7 @@
 
       <!-- ================= ELIMINAR / DESACTIVAR ================= -->
       <div v-else-if="selectedAction === 'eliminar'">
-        <h3 class="subtitulo">Editar Estatus</h3>
+        <h3 class="subtitulo">Cambiar Estatus</h3>
 
 
         <div class="sistpec-search-bar">

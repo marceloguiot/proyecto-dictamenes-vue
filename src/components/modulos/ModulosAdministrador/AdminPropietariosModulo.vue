@@ -133,7 +133,7 @@
                   class="badge"
                   :class="p.activo ? 'badge--activo' : 'badge--inactivo'"
                 >
-                  {{ p.activo ? 'ACTIVO' : 'INACTIVO' }}
+                  {{ p.activo ? 'ACTIVO' : 'FINADO' }}
                 </span>
               </td>
             </tr>
@@ -235,7 +235,7 @@
                   class="badge"
                   :class="p.activo ? 'badge--activo' : 'badge--inactivo'"
                 >
-                  {{ p.activo ? 'ACTIVO' : 'INACTIVO' }}
+                  {{ p.activo ? 'ACTIVO' : 'FINADO' }}
                 </span>
               </td>
               <td>
@@ -442,7 +442,7 @@
                   class="badge"
                   :class="p.activo ? 'badge--activo' : 'badge--inactivo'"
                 >
-                  {{ p.activo ? 'ACTIVO' : 'INACTIVO' }}
+                  {{ p.activo ? 'ACTIVO' : 'FINADO' }}
                 </span>
               </td>
               <td>

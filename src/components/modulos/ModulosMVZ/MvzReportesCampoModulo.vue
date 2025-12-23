@@ -44,7 +44,7 @@
 
           <div class="sistpec-form-row row-4">
             <div class="sistpec-form-group">
-              <label>Tipo de prueba TB</label>
+              <label>Tipo de prueba BR</label>
               <div class="radio-col">
                 <label class="radio-item">
                   <input type="radio" value="PLIEGUE_CAUDAL" v-model="formHoja.tb_tipo_prueba" />
@@ -58,7 +58,7 @@
             </div>
 
             <div class="sistpec-form-group">
-              <label>Folio TB (opcional)</label>
+              <label>Folio BR (opcional)</label>
               <input v-model="formHoja.folio_tb" type="text" placeholder="Ej. 12345" />
             </div>
 

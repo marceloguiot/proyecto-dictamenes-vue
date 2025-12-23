@@ -254,13 +254,8 @@
 
     <!-- ====================== 3) EDITAR UPP ====================== -->
     <div v-else-if="selectedAction === 'editar'">
-      <h3 class="subtitulo">Editar UPP</h3>
+      <h3 class="subtitulo">Editar</h3>
 
-      <div class="sistpec-info-box">
-        <p class="sistpec-info-text">
-          Solo puede editar UPP registradas por usted (MVZ). La clave UPP debe mantenerse única.
-        </p>
-      </div>
 
       <div v-if="!uppEditando" class="modulo-alert modulo-alert--error">
         Seleccione una UPP desde <strong>CONSULTAR</strong> para editar.
@@ -345,7 +340,7 @@
 
     <!-- ====================== 4) TRASLADAR UPP ====================== -->
     <div v-else-if="selectedAction === 'trasladar'">
-      <h3 class="subtitulo">Trasladar a otro propietario</h3>
+      <h3 class="subtitulo">Trasladar</h3>
 
       <div v-if="!uppTrasladando" class="modulo-alert modulo-alert--error">
         Seleccione una UPP desde <strong>CONSULTAR</strong> y presione <strong>TRASLADAR</strong>.
@@ -673,7 +668,7 @@ function guardarEdicionUpp() {
   if (idx === -1) return errores.value.push('No se encontró la UPP para actualizar.');
 
   uppDemo.value[idx] = { ...uppDemo.value[idx], ...uppEditando.value, clave_upp: clave, propietario_id: Number(uppEditando.value.propietario_id) };
-  mensajeExito.value = 'UPP actualizada (DEMO).';
+  mensajeExito.value = 'UPP actualizada.';
   uppEditando.value = null;
   selectedAction.value = 'consultar';
 }

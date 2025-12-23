@@ -35,7 +35,7 @@
 
     <!-- CONSULTAR -->
     <div v-if="selectedAction === 'consultar'">
-      <h4 class="subtitulo-secundario">Consultar UPP</h4>
+      <h4 class="subtitulo-secundario">Consultar</h4>
 
       <div class="sistpec-search-bar">
         <div class="sistpec-form-group">
@@ -108,13 +108,8 @@
 
     <!-- ELIMINAR (baja lógica) -->
     <div v-else-if="selectedAction === 'eliminar'">
-      <h4 class="subtitulo-secundario">Eliminar UPP</h4>
+      <h4 class="subtitulo-secundario">Eliminar</h4>
 
-      <div class="sistpec-info-box">
-        <p class="sistpec-info-text">
-          La eliminación se realiza como baja lógica: la UPP se marca como <strong>INACTIVA</strong>.
-        </p>
-      </div>
 
       <div class="sistpec-search-bar">
         <div class="sistpec-form-group">

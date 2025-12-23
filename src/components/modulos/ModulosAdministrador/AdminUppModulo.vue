@@ -167,12 +167,6 @@
     <div v-else-if="selectedAction === 'eliminar'">
       <h3 class="subtitulo">Eliminar (dar de baja) UPP</h3>
 
-      <div class="sistpec-info-box">
-        <p class="sistpec-info-text">
-          La eliminación se maneja como baja lógica: la UPP se marca como
-          <strong>BAJA</strong> y ya no se considera activa en el sistema.
-        </p>
-      </div>
 
       <!-- Filtros -->
       <div class="sistpec-search-bar">
