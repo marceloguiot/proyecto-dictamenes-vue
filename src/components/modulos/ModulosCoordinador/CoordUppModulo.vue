@@ -108,7 +108,7 @@
 
     <!-- ELIMINAR (baja lógica) -->
     <div v-else-if="selectedAction === 'eliminar'">
-      <h4 class="subtitulo-secundario">Eliminar</h4>
+      <h4 class="subtitulo-secundario">Cambiar estatus</h4>
 
 
       <div class="sistpec-search-bar">
@@ -206,7 +206,7 @@ import { computed, ref, watch } from 'vue';
 
 const acciones = [
   { id: 'consultar', label: 'CONSULTAR' },
-  { id: 'eliminar', label: 'ELIMINAR' }
+  { id: 'eliminar', label: 'CAMBIAR ESTATUS' }
 ];
 
 const selectedAction = ref('consultar');

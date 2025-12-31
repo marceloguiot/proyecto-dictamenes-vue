@@ -350,13 +350,6 @@
     <div v-else-if="selectedAction === 'eliminar'">
       <h3 class="subtitulo">Cambiar estatus</h3>
 
-      <div class="sistpec-info-box">
-        <p class="sistpec-info-text">
-          El cambio de estatus se realiza como baja lógica: el propietario se marca como
-          <strong>INACTIVO</strong> y deja de estar disponible para nuevas solicitudes
-          o dictámenes, pero se conserva el historial en SISTPEC.
-        </p>
-      </div>
 
       <!-- Filtros -->
       <div class="sistpec-search-bar">
@@ -515,7 +508,7 @@ function scrollAlContenido() {
 const accionesPropietarios = [
   { id: 'consultar', label: 'CONSULTAR' },
   { id: 'editar',    label: 'EDITAR' },
-  { id: 'eliminar',  label: 'ELIMINAR' }
+  { id: 'eliminar',  label: 'CAMBIAR ESTATUS' }
 ];
 
 const selectedAction      = ref('consultar');
