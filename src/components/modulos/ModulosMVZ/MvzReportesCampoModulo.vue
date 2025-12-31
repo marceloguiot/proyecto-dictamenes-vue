@@ -1,3 +1,4 @@
+<!-- MvzReportesCampoModulo -->
 <template>
   <!-- Barra de acciones -->
   <section class="modulo-acciones">
@@ -83,7 +84,10 @@
               placeholder="Ej. RUMM690828HVZZNG03"
               @blur="autocompletarPropietario"
             />
-            <small class="hint">Si existe, se autocompletará al salir del campo.</small>
+            <small class="hint">
+              Si existe en BD, se autocompletará al salir del campo.
+              <span v-if="propLoading"> (Consultando...)</span>
+            </small>
           </div>
 
           <div class="sistpec-form-group">
@@ -153,8 +157,16 @@
         <div class="sistpec-form-row sistpec-form-row-3">
           <div class="sistpec-form-group">
             <label>Clave UPP</label>
-            <input v-model="formHoja.upp.clave" type="text" placeholder="Ej. 30-025-1055-001" @blur="autocompletarUpp" />
-            <small class="hint">Si existe, se autocompletará al salir del campo.</small>
+            <input
+              v-model="formHoja.upp.clave"
+              type="text"
+              placeholder="Ej. 30-025-1055-001"
+              @blur="autocompletarUpp"
+            />
+            <small class="hint">
+              Si existe en BD, se autocompletará al salir del campo.
+              <span v-if="uppLoading"> (Consultando...)</span>
+            </small>
           </div>
 
           <div class="sistpec-form-group">
@@ -163,7 +175,7 @@
           </div>
 
           <div class="sistpec-form-group">
-            <label>Domicilio</label>
+            <label>Calle</label>
             <input v-model="formHoja.upp.domicilio" type="text" />
           </div>
         </div>
@@ -209,7 +221,6 @@
           <h4>III) Resumen</h4>
         </div>
 
-        <!-- Motivo/Fin/Identificación (catálogos respetados) -->
         <div class="sistpec-form-row sistpec-form-row-3">
           <div class="sistpec-form-group">
             <label>Motivo de prueba</label>
@@ -443,8 +454,10 @@
       </div>
 
       <div class="sistpec-form-actions">
-        <button type="button" class="sistpec-btn-primary" @click="guardarHoja">Guardar</button>
-        <button type="button" class="sistpec-btn-secondary" @click="limpiarFormHoja">Limpiar</button>
+        <button type="button" class="sistpec-btn-primary" @click="guardarHoja" :disabled="saving">
+          {{ saving ? 'Guardando...' : 'Guardar' }}
+        </button>
+        <button type="button" class="sistpec-btn-secondary" @click="limpiarFormHoja" :disabled="saving">Limpiar</button>
       </div>
     </div>
 
@@ -481,8 +494,10 @@
         </div>
 
         <div class="sistpec-form-actions">
-          <button type="button" class="sistpec-btn-primary" @click="buscarHojas">Buscar</button>
-          <button type="button" class="sistpec-btn-secondary" @click="limpiarFiltros">Limpiar</button>
+          <button type="button" class="sistpec-btn-primary" @click="buscarHojas" :disabled="listLoading">
+            {{ listLoading ? 'Buscando...' : 'Buscar' }}
+          </button>
+          <button type="button" class="sistpec-btn-secondary" @click="limpiarFiltros" :disabled="listLoading">Limpiar</button>
         </div>
       </div>
 
@@ -503,9 +518,9 @@
             <tr v-for="h in resultados" :key="h.id">
               <td>{{ h.cc_no }}</td>
               <td>{{ nombreProp(h) }}</td>
-              <td>{{ h.upp.clave }}</td>
-              <td>{{ h.animales.length }}</td>
-              <td>{{ h.numero_caso_asignado ? h.numero_caso : '—' }}</td>
+              <td>{{ h.upp?.clave || '—' }}</td>
+              <td>{{ (h.animales || []).length }}</td>
+              <td>{{ h.numero_caso_asignado ? (h.numero_caso || '—') : '—' }}</td>
               <td>
                 <span class="badge" :class="h.numero_caso_asignado ? 'badge--inactivo' : 'badge--activo'">
                   {{ h.numero_caso_asignado ? 'CERRADA' : 'EDITABLE' }}
@@ -535,11 +550,11 @@
 
         <div class="detalle-grid">
           <div><span class="lbl">CC No.:</span> {{ detalle.cc_no }}</div>
-          <div><span class="lbl">UPP:</span> {{ detalle.upp.clave }}</div>
+          <div><span class="lbl">UPP:</span> {{ detalle.upp?.clave || '—' }}</div>
           <div><span class="lbl">Propietario:</span> {{ nombreProp(detalle) }}</div>
-          <div><span class="lbl">Animales:</span> {{ detalle.animales.length }}</div>
+          <div><span class="lbl">Animales:</span> {{ (detalle.animales || []).length }}</div>
           <div><span class="lbl">Estatus:</span> {{ detalle.numero_caso_asignado ? 'CERRADA' : 'EDITABLE' }}</div>
-          <div><span class="lbl">Número de caso:</span> {{ detalle.numero_caso_asignado ? detalle.numero_caso : '—' }}</div>
+          <div><span class="lbl">Número de caso:</span> {{ detalle.numero_caso_asignado ? (detalle.numero_caso || '—') : '—' }}</div>
         </div>
       </div>
     </div>
@@ -548,17 +563,31 @@
     <div v-if="selectedAction === 'editar'" class="accion-area">
       <h3 class="subtitulo-secundario">Editar</h3>
       <p class="hint">Seleccione una hoja en “Consultar” y pulse “Editar”.</p>
+      <p class="hint">
+        (En esta versión dejamos el flujo de edición preparado, pero primero aseguramos guardar/consultar/autocompletar al 100%.)
+      </p>
     </div>
   </section>
 </template>
 
 <script setup>
-import { computed, reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from "vue";
+import api from "@/services/api";
 
-/* ===================== Config / datos demo ===================== */
+/* =========================================================
+   IMPORTANTe:
+   - Idealmente este id_usuario debe salir del login/token.
+   Esta como constante por el momento
+========================================================= */
 const mvzUserId = 1;
 
-// catálogo de opciones Motivo de prueba (respetado)
+/* loading flags */
+const uppLoading = ref(false);
+const propLoading = ref(false);
+const saving = ref(false);
+const listLoading = ref(false);
+
+/* catálogo de opciones Motivo de prueba */
 const opcionesMotivoPrueba = [
   "Tarjeta al 8%",
   "Tarjeta al 3%",
@@ -567,48 +596,48 @@ const opcionesMotivoPrueba = [
   "Gel de agar"
 ];
 
-// Acciones
+/* Acciones */
 const acciones = [
-  { id: 'capturar', label: 'CAPTURAR', descripcion: 'Capture los datos de la hoja de control de campo correspondientes al MVZ.' },
-  { id: 'consultar', label: 'CONSULTAR', descripcion: 'Consulte hojas por CC No., propietario o UPP.' },
-  { id: 'editar', label: 'EDITAR', descripcion: 'Edite hojas en estatus editable (sin número de caso).' }
+  { id: "capturar", label: "CAPTURAR", descripcion: "Capture los datos de la hoja de control de campo correspondientes al MVZ." },
+  { id: "consultar", label: "CONSULTAR", descripcion: "Consulte hojas por CC No., propietario o UPP." },
+  { id: "editar", label: "EDITAR", descripcion: "Edite hojas en estatus editable (sin número de caso)." }
 ];
 
-const selectedAction = ref('capturar');
-const descripcionAccionActual = computed(() => acciones.find(a => a.id === selectedAction.value)?.descripcion || '');
+const selectedAction = ref("capturar");
+const descripcionAccionActual = computed(() => acciones.find(a => a.id === selectedAction.value)?.descripcion || "");
 
 const errores = ref([]);
-const mensajeExito = ref('');
+const mensajeExito = ref("");
 
 /* ===================== Catálogos razas ===================== */
 const RAZAS = {
   CAPRINO: [
-    'ALPINA AMERICANA','ALPINA FRANCESA','ALPINA SUIZA','ANGLO NUBIA','BOER','CRIOLLA','GRANADINA',
-    'MANCHA AMERICANA','MURCIANA','NUBIA','SAANEN','TOGGENBURG'
+    "ALPINA AMERICANA","ALPINA FRANCESA","ALPINA SUIZA","ANGLO NUBIA","BOER","CRIOLLA","GRANADINA",
+    "MANCHA AMERICANA","MURCIANA","NUBIA","SAANEN","TOGGENBURG"
   ],
   OVINO: [
-    'BLACKBELLY','COLUMBIA','CORREDALE','CRIOLLA','CHEVIOT','DORSET HORN','FRISONA DEL ESTE','HAMPSHIRE',
-    'KARAKUL','KATAHDIN','LINCOLN','MERINO AMERICANO','OXFORD','PANAMA','PELIBUEY TABASCO','RAMBOUILLET',
-    'ROMANOV','SAINT CROIX','SOUTHDOWN','SROPSHIRE','SUFFOLK','TUNEZ','CHAROLLAIS','ILE DE FRANCE',
-    'SANTA CRUZ','TEXEL','DAMARA','DORSET POLLED','RIDEAU ARCOTT'
+    "BLACKBELLY","COLUMBIA","CORREDALE","CRIOLLA","CHEVIOT","DORSET HORN","FRISONA DEL ESTE","HAMPSHIRE",
+    "KARAKUL","KATAHDIN","LINCOLN","MERINO AMERICANO","OXFORD","PANAMA","PELIBUEY TABASCO","RAMBOUILLET",
+    "ROMANOV","SAINT CROIX","SANTA CRUZ","SOUTHDOWN","SROPSHIRE","SUFFOLK","TUNEZ","CHAROLLAIS","ILE DE FRANCE",
+    "SANTA CRUZ","TEXEL","DAMARA","DORSET POLLED","RIDEAU ARCOTT"
   ],
   BOVINO: [
-    'ANGUS','BEEFMASTER','BELGIAN BLUE','BLONDE D\'AQUITAINE','BRAFORD','BRAHMAN','BRAHMENTAL','BRANGUS',
-    'BUFFALO (BUBALIS BUBALIS)','CANADIENNE','CHARRAY','CHAROLAIS','CHI-ANGUS','CHIANINA','DANS JERSEY',
-    'DEVON','DEXTER','FRIESIAN (BELGIUM)','FRIESIAN (DUTCH)','GUERNSEY','GUZERA','GYR','HEREFORD (BLACK)',
-    'HEREFORD','HIGHLAND (SCOTCHEM HIGHLAND)','HOLSTEIN','INDO BRAZIL','JERSEY','LIDIA','LIMOUSIN',
-    'LINCOLN RED','MEXICAN CORRIENTE','MONTBELIARD','NELLOR','NORMANDY'
+    "ANGUS","BEEFMASTER","BELGIAN BLUE","BLONDE D'AQUITAINE","BRAFORD","BRAHMAN","BRAHMENTAL","BRANGUS",
+    "BUFFALO (BUBALIS BUBALIS)","CANADIENNE","CHARRAY","CHAROLAIS","CHI-ANGUS","CHIANINA","DANS JERSEY",
+    "DEVON","DEXTER","FRIESIAN (BELGIUM)","FRIESIAN (DUTCH)","GUERNSEY","GUZERA","GYR","HEREFORD (BLACK)",
+    "HEREFORD","HIGHLAND (SCOTCHEM HIGHLAND)","HOLSTEIN","INDO BRAZIL","JERSEY","LIDIA","LIMOUSIN",
+    "LINCOLN RED","MEXICAN CORRIENTE","MONTBELIARD","NELLOR","NORMANDY"
   ]
 };
 
 const animalTmp = reactive({
-  inc_tipo: '',
-  arete: '',
-  especie: '',
-  raza: '',
+  inc_tipo: "",
+  arete: "",
+  especie: "",
+  raza: "",
   edad_meses_registro: null,
-  sexo: '',
-  fierro: ''
+  sexo: "",
+  fierro: ""
 });
 
 const razasDisponiblesTmp = computed(() => {
@@ -618,56 +647,42 @@ const razasDisponiblesTmp = computed(() => {
 });
 
 function onChangeEspecieTmp() {
-  animalTmp.raza = '';
+  animalTmp.raza = "";
 }
 
-/* ===================== Datos demo "BD" ===================== */
-const propietariosDemo = ref([
-  {
-    id: 1,
-    mvz_user_id: mvzUserId,
-    curp: 'RUMM690828HVZZNG03',
-    apellido_paterno: 'Ruiz',
-    apellido_materno: 'Mendoza',
-    nombres: 'Miguel Angel',
-    telefono: '2821312079',
-    domicilio: 'C. Niño Artillero s/n',
-    municipio: 'Ayahualulco',
-    localidad: 'Los Altos',
-    cp: '91260',
-    estado: 'Veracruz',
-    correo: 'soto95.cars@gmail.com'
-  }
-]);
-
-const uppDemo = ref([
-  {
-    id: 101,
-    mvz_user_id: mvzUserId,
-    clave: '30-025-1055-001',
-    nombre_predio: 'San Francisco',
-    latitud: '19.249141',
-    longitud: '-97.200479',
-    domicilio: 'Calle Ayuntamiento s/n',
-    municipio: 'Ayahualulco',
-    localidad: 'Ayahualulco',
-    cp: '91260',
-    estado: 'Veracruz'
-  }
-]);
-
-const hojasDemo = ref([
-  {
-    id: 5001,
-    mvz_user_id: mvzUserId,
-    cc_no: '5409818',
-    folio_tb: '',
-    tb_tipo_prueba: 'PLIEGUE_CAUDAL',
-    numero_caso_asignado: false,
-    numero_caso: '',
-    prop: propietariosDemo.value[0],
-    upp: uppDemo.value[0],
-    prueba: { motivo: 'Tarjeta al 8%', fin_zootecnico: 'Leche', tipo_identificacion: 'Arete', tipo_identificacion_otro: '' },
+/* ===================== Form ===================== */
+function nuevoForm() {
+  return {
+    cc_no: "",
+    folio_tb: "",
+    tb_tipo_prueba: "",
+    prop: {
+      id_propietario: null,
+      curp: "",
+      apellido_paterno: "",
+      apellido_materno: "",
+      nombres: "",
+      telefono: "",
+      domicilio: "",
+      municipio: "",
+      localidad: "",
+      cp: "",
+      estado: "",
+      correo: ""
+    },
+    upp: {
+      id_upp: null,
+      clave: "",
+      nombre_predio: "",
+      latitud: "",
+      longitud: "",
+      domicilio: "",
+      municipio: "",
+      localidad: "",
+      cp: "",
+      estado: ""
+    },
+    prueba: { motivo: "", fin_zootecnico: "", tipo_identificacion: "", tipo_identificacion_otro: "" },
     resumen: {
       negativos: { tb: 0, br: 0 },
       reactores: { tb: 0, br: 0 },
@@ -675,263 +690,284 @@ const hojasDemo = ref([
       total_hato: { tb: 0, br: 0 }
     },
     tb: {
-      fecha_inyeccion: '',
-      hora_inyeccion: '',
-      fecha_lectura: '',
-      hora_lectura: '',
-      dosis: '',
-      lote: '',
-      caducidad: '',
-      fecha_seguimiento: '',
-      resultado_vacuna: ''
+      fecha_inyeccion: "",
+      hora_inyeccion: "",
+      fecha_lectura: "",
+      hora_lectura: "",
+      dosis: "",
+      lote: "",
+      caducidad: "",
+      fecha_seguimiento: "",
+      resultado_vacuna: ""
     },
-    animales: []
-  }
-]);
-
-/* ===================== Form ===================== */
-function nuevoForm() {
-  return {
-    cc_no: '',
-    folio_tb: '',
-    tb_tipo_prueba: '',
-    prop: { curp: '', apellido_paterno: '', apellido_materno: '', nombres: '', telefono: '', domicilio: '', municipio: '', localidad: '', cp: '', estado: '', correo: '' },
-    upp: { clave: '', nombre_predio: '', latitud: '', longitud: '', domicilio: '', municipio: '', localidad: '', cp: '', estado: '' },
-    prueba: { motivo: '', fin_zootecnico: '', tipo_identificacion: '', tipo_identificacion_otro: '' },
-    resumen: {
-      negativos: { tb: 0, br: 0 },
-      reactores: { tb: 0, br: 0 },
-      total_probados: { tb: 0, br: 0 },
-      total_hato: { tb: 0, br: 0 }
-    },
-    tb: { fecha_inyeccion: '', hora_inyeccion: '', fecha_lectura: '', hora_lectura: '', dosis: '', lote: '', caducidad: '', fecha_seguimiento: '', resultado_vacuna: '' },
     animales: []
   };
 }
 const formHoja = reactive(nuevoForm());
 
-/* Limpia “especifique” cuando ya no es “Otro” (evita que quede texto guardado) */
+/* Limpia “especifique” cuando ya no es “Otro” */
 watch(
   () => formHoja.prueba.tipo_identificacion,
   (val) => {
-    if (val !== 'Otro') formHoja.prueba.tipo_identificacion_otro = '';
+    if (val !== "Otro") formHoja.prueba.tipo_identificacion_otro = "";
   }
 );
 
-/* ===================== UI actions ===================== */
+/* ===================== Helpers ===================== */
+function normalizeCurp(v) {
+  return String(v || "").trim().toUpperCase();
+}
+function normalizeUpp(v) {
+  return String(v || "").trim().toUpperCase();
+}
 function cambiarAccion(id) {
   selectedAction.value = id;
-  mensajeExito.value = '';
+  mensajeExito.value = "";
   errores.value = [];
 }
 
-/* ===================== Autocompletar ===================== */
-function buscarPropPorCurp(curp) {
-  const c = String(curp || '').trim().toUpperCase();
-  return propietariosDemo.value.find(p => p.mvz_user_id === mvzUserId && p.curp.toUpperCase() === c);
-}
-function autocompletarPropietario() {
-  const p = buscarPropPorCurp(formHoja.prop.curp);
-  if (!p) return;
-  Object.assign(formHoja.prop, JSON.parse(JSON.stringify(p)));
+/* ===================== Autocompletar (Propietario) ===================== */
+async function autocompletarPropietario() {
+  const curp = normalizeCurp(formHoja.prop.curp);
+  formHoja.prop.curp = curp;
+  if (!curp) return;
+
+  propLoading.value = true;
+  errores.value = [];
+  try {
+    const { data } = await api.get("/api/propietarios/por-curp", { params: { curp } });
+
+    // Esperado del backend (recomendado):
+    // { id_propietario, curp, apellido_paterno, apellido_materno, nombres, telefono, correo, domicilio, municipio, localidad, cp, estado }
+    formHoja.prop.id_propietario = data.id_propietario ?? null;
+    formHoja.prop.apellido_paterno = data.apellido_paterno || "";
+    formHoja.prop.apellido_materno = data.apellido_materno || "";
+    formHoja.prop.nombres = data.nombres || "";
+    formHoja.prop.telefono = data.telefono || "";
+    formHoja.prop.correo = data.correo || "";
+    formHoja.prop.domicilio = data.domicilio || "";
+    formHoja.prop.municipio = data.municipio || "";
+    formHoja.prop.localidad = data.localidad || "";
+    formHoja.prop.cp = data.cp || "";
+    formHoja.prop.estado = data.estado || "";
+  } catch (e) {
+    const status = e?.response?.status;
+    if (status === 404) {
+      // No existe → dejar que capture normal (solo limpiamos lo demás, conservando CURP)
+      formHoja.prop.id_propietario = null;
+      formHoja.prop.apellido_paterno = "";
+      formHoja.prop.apellido_materno = "";
+      formHoja.prop.nombres = "";
+      formHoja.prop.telefono = "";
+      formHoja.prop.correo = "";
+      formHoja.prop.domicilio = "";
+      formHoja.prop.municipio = "";
+      formHoja.prop.localidad = "";
+      formHoja.prop.cp = "";
+      formHoja.prop.estado = "";
+    } else {
+      errores.value = [`Error consultando propietario: ${e?.response?.data?.detail || "Servidor no disponible"}`];
+    }
+  } finally {
+    propLoading.value = false;
+  }
 }
 
-function buscarUppPorClave(clave) {
-  const c = String(clave || '').trim().toUpperCase();
-  return uppDemo.value.find(u => u.mvz_user_id === mvzUserId && u.clave.toUpperCase() === c);
-}
-function autocompletarUpp() {
-  const u = buscarUppPorClave(formHoja.upp.clave);
-  if (!u) return;
-  Object.assign(formHoja.upp, JSON.parse(JSON.stringify(u)));
+/* ===================== Autocompletar (UPP) ===================== */
+async function autocompletarUpp() {
+  const clave = normalizeUpp(formHoja.upp.clave);
+  formHoja.upp.clave = clave;
+  if (!clave) return;
+
+  uppLoading.value = true;
+  errores.value = [];
+  try {
+    const { data } = await api.get("/api/upp/por-clave", { params: { clave } });
+
+    // Conserva clave y rellena lo demás desde BD
+    formHoja.upp.id_upp = data.id_upp ?? null;
+    formHoja.upp.nombre_predio = data.nombre_predio || "";
+    formHoja.upp.domicilio = data.domicilio || "";
+    formHoja.upp.municipio = data.municipio || "";
+    formHoja.upp.localidad = data.localidad || "";
+    formHoja.upp.cp = data.codigo_postal || data.cp || "";
+    formHoja.upp.estado = data.estado || "";
+    formHoja.upp.latitud = data.latitud ?? "";
+    formHoja.upp.longitud = data.longitud ?? "";
+  } catch (e) {
+    const status = e?.response?.status;
+    if (status === 404) {
+      // No existe → dejar que capture normal (solo limpiamos lo demás, conservando CLAVE)
+      formHoja.upp.id_upp = null;
+      formHoja.upp.nombre_predio = "";
+      formHoja.upp.domicilio = "";
+      formHoja.upp.municipio = "";
+      formHoja.upp.localidad = "";
+      formHoja.upp.cp = "";
+      formHoja.upp.estado = "";
+      formHoja.upp.latitud = "";
+      formHoja.upp.longitud = "";
+    } else {
+      errores.value = [`Error consultando UPP: ${e?.response?.data?.detail || "Servidor no disponible"}`];
+    }
+  } finally {
+    uppLoading.value = false;
+  }
 }
 
 /* ===================== Animales (agregar 1 a 1) ===================== */
 function edadActualMeses(a) {
   const n = Number(a.edad_meses_registro);
-  return Number.isFinite(n) ? n : '';
+  return Number.isFinite(n) ? n : "";
 }
+
 function agregarAnimal() {
   errores.value = [];
-  const inc = (animalTmp.inc_tipo || '').toUpperCase().trim();
-  if (inc && !['RA', 'IN', 'IC'].includes(inc)) errores.value.push('Columna I solo permite RA, IN o IC (o vacío).');
-  if (!String(animalTmp.arete || '').trim()) errores.value.push('Capture No. arete / identificación.');
-  if (!String(animalTmp.especie || '').trim()) errores.value.push('Seleccione especie.');
-  if (!String(animalTmp.raza || '').trim()) errores.value.push('Seleccione raza.');
-  if (!String(animalTmp.sexo || '').trim()) errores.value.push('Seleccione sexo.');
-  const em = animalTmp.edad_meses_registro;
-  if (em === null || em === '' || !Number.isInteger(Number(em)) || Number(em) < 0) errores.value.push('Edad debe ser entero (meses).');
+  const inc = (animalTmp.inc_tipo || "").toUpperCase().trim();
+  if (inc && !["RA", "IN", "IC"].includes(inc)) errores.value.push("Columna I solo permite RA, IN o IC (o vacío).");
+  if (!String(animalTmp.arete || "").trim()) errores.value.push("Capture No. arete / identificación.");
+  if (!String(animalTmp.especie || "").trim()) errores.value.push("Seleccione especie.");
+  if (!String(animalTmp.raza || "").trim()) errores.value.push("Seleccione raza.");
+  if (!String(animalTmp.sexo || "").trim()) errores.value.push("Seleccione sexo.");
 
-  const areteN = String(animalTmp.arete || '').trim().toLowerCase();
-  if (areteN && formHoja.animales.some(x => String(x.arete || '').trim().toLowerCase() === areteN)) {
-    errores.value.push('Ese arete ya está capturado en la hoja.');
+  const em = animalTmp.edad_meses_registro;
+  if (em === null || em === "" || !Number.isInteger(Number(em)) || Number(em) < 0) errores.value.push("Edad debe ser entero (meses).");
+
+  const areteN = String(animalTmp.arete || "").trim().toLowerCase();
+  if (areteN && formHoja.animales.some(x => String(x.arete || "").trim().toLowerCase() === areteN)) {
+    errores.value.push("Ese arete ya está capturado en la hoja.");
   }
 
   if (errores.value.length) return;
 
   formHoja.animales.push({
     inc_tipo: inc,
-    arete: String(animalTmp.arete || '').trim(),
-    especie: String(animalTmp.especie || '').trim(),
-    raza: String(animalTmp.raza || '').trim(),
+    arete: String(animalTmp.arete || "").trim(),
+    especie: String(animalTmp.especie || "").trim(),
+    raza: String(animalTmp.raza || "").trim(),
     edad_meses_registro: Number(animalTmp.edad_meses_registro),
-    sexo: String(animalTmp.sexo || '').trim().toUpperCase(),
-    fierro: String(animalTmp.fierro || '').trim()
+    sexo: String(animalTmp.sexo || "").trim().toUpperCase(),
+    fierro: String(animalTmp.fierro || "").trim()
   });
 
-  animalTmp.inc_tipo = '';
-  animalTmp.arete = '';
-  animalTmp.especie = '';
-  animalTmp.raza = '';
+  animalTmp.inc_tipo = "";
+  animalTmp.arete = "";
+  animalTmp.especie = "";
+  animalTmp.raza = "";
   animalTmp.edad_meses_registro = null;
-  animalTmp.sexo = '';
-  animalTmp.fierro = '';
+  animalTmp.sexo = "";
+  animalTmp.fierro = "";
 }
 
 function eliminarAnimal(idx) {
   formHoja.animales.splice(idx, 1);
 }
 
-/* ===================== Guardar / limpiar ===================== */
+/* ===================== Guardar ===================== */
 function validarCaptura() {
   errores.value = [];
 
-  if (!String(formHoja.cc_no || '').trim()) errores.value.push('CC No. es obligatorio.');
-  if (!String(formHoja.tb_tipo_prueba || '').trim()) errores.value.push('Seleccione tipo de prueba TB.');
+  if (!String(formHoja.cc_no || "").trim()) errores.value.push("CC No. es obligatorio.");
+  if (!String(formHoja.tb_tipo_prueba || "").trim()) errores.value.push("Seleccione tipo de prueba TB.");
 
   const p = formHoja.prop;
-  if (!String(p.curp || '').trim()) errores.value.push('CURP es obligatorio.');
-  if (!String(p.apellido_paterno || '').trim()) errores.value.push('Apellido paterno es obligatorio.');
-  if (!String(p.apellido_materno || '').trim()) errores.value.push('Apellido materno es obligatorio.');
-  if (!String(p.nombres || '').trim()) errores.value.push('Nombre(s) es obligatorio.');
+  if (!String(p.curp || "").trim()) errores.value.push("CURP es obligatorio.");
+  if (!String(p.apellido_paterno || "").trim()) errores.value.push("Apellido paterno es obligatorio.");
+  if (!String(p.apellido_materno || "").trim()) errores.value.push("Apellido materno es obligatorio.");
+  if (!String(p.nombres || "").trim()) errores.value.push("Nombre(s) es obligatorio.");
 
   const u = formHoja.upp;
-  if (!String(u.clave || '').trim()) errores.value.push('UPP (clave) es obligatorio.');
-  if (!String(u.nombre_predio || '').trim()) errores.value.push('Nombre del predio es obligatorio.');
+  if (!String(u.clave || "").trim()) errores.value.push("UPP (clave) es obligatorio.");
+  if (!String(u.nombre_predio || "").trim()) errores.value.push("Nombre del predio es obligatorio.");
 
   const pr = formHoja.prueba;
-  if (!String(pr.motivo || '').trim()) errores.value.push('Motivo de prueba es obligatorio.');
-  if (!String(pr.fin_zootecnico || '').trim()) errores.value.push('Fin zootécnico es obligatorio.');
-  if (!String(pr.tipo_identificacion || '').trim()) errores.value.push('Tipo de identificación es obligatorio.');
-  if (pr.tipo_identificacion === 'Otro' && !String(pr.tipo_identificacion_otro || '').trim()) {
-    errores.value.push('Especifique el tipo de identificación (Otro).');
+  if (!String(pr.motivo || "").trim()) errores.value.push("Motivo de prueba es obligatorio.");
+  if (!String(pr.fin_zootecnico || "").trim()) errores.value.push("Fin zootécnico es obligatorio.");
+  if (!String(pr.tipo_identificacion || "").trim()) errores.value.push("Tipo de identificación es obligatorio.");
+  if (pr.tipo_identificacion === "Otro" && !String(pr.tipo_identificacion_otro || "").trim()) {
+    errores.value.push("Especifique el tipo de identificación (Otro).");
   }
 
   if (!Array.isArray(formHoja.animales) || formHoja.animales.length === 0) {
-    errores.value.push('Agregue al menos un animal.');
+    errores.value.push("Agregue al menos un animal.");
   }
 
   // TB opcional: si capturan algo, exigir completo
   const tb = formHoja.tb || {};
   const tbCapturada =
-    !!String(tb.fecha_inyeccion || '').trim() ||
-    !!String(tb.hora_inyeccion || '').trim() ||
-    !!String(tb.fecha_lectura || '').trim() ||
-    !!String(tb.hora_lectura || '').trim() ||
-    !!String(tb.dosis || '').trim() ||
-    !!String(tb.lote || '').trim() ||
-    !!String(tb.caducidad || '').trim();
+    !!String(tb.fecha_inyeccion || "").trim() ||
+    !!String(tb.hora_inyeccion || "").trim() ||
+    !!String(tb.fecha_lectura || "").trim() ||
+    !!String(tb.hora_lectura || "").trim() ||
+    !!String(tb.dosis || "").trim() ||
+    !!String(tb.lote || "").trim() ||
+    !!String(tb.caducidad || "").trim();
 
   if (tbCapturada) {
-    if (!tb.fecha_inyeccion) errores.value.push('TB: fecha de inyección es obligatoria si se captura TB.');
-    if (!tb.hora_inyeccion) errores.value.push('TB: hora de inyección es obligatoria si se captura TB.');
-    if (!tb.fecha_lectura) errores.value.push('TB: fecha de lectura es obligatoria si se captura TB.');
-    if (!tb.hora_lectura) errores.value.push('TB: hora de lectura es obligatoria si se captura TB.');
-    if (!tb.dosis) errores.value.push('TB: dosis es obligatoria si se captura TB.');
-    if (!tb.lote) errores.value.push('TB: lote es obligatorio si se captura TB.');
-    if (!tb.caducidad) errores.value.push('TB: caducidad es obligatoria si se captura TB.');
+    if (!tb.fecha_inyeccion) errores.value.push("TB: fecha de inyección es obligatoria si se captura TB.");
+    if (!tb.hora_inyeccion) errores.value.push("TB: hora de inyección es obligatoria si se captura TB.");
+    if (!tb.fecha_lectura) errores.value.push("TB: fecha de lectura es obligatoria si se captura TB.");
+    if (!tb.hora_lectura) errores.value.push("TB: hora de lectura es obligatoria si se captura TB.");
+    if (!tb.dosis) errores.value.push("TB: dosis es obligatoria si se captura TB.");
+    if (!tb.lote) errores.value.push("TB: lote es obligatorio si se captura TB.");
+    if (!tb.caducidad) errores.value.push("TB: caducidad es obligatoria si se captura TB.");
   }
-
-  const cc = String(formHoja.cc_no || '').trim();
-  const existe = hojasDemo.value.some(h => h.mvz_user_id === mvzUserId && String(h.cc_no || '').trim() === cc);
-  if (existe) errores.value.push('Ese CC No. ya existe (registrado por usted).');
 
   return errores.value.length === 0;
-}
-
-function guardarHoja() {
-  mensajeExito.value = '';
-  if (!validarCaptura()) return;
-
-  // alta propietario demo si no existe
-  const curp = String(formHoja.prop.curp || '').trim().toUpperCase();
-  if (!buscarPropPorCurp(curp)) {
-    propietariosDemo.value.push({
-      id: Date.now(),
-      mvz_user_id: mvzUserId,
-      ...JSON.parse(JSON.stringify(formHoja.prop)),
-      curp
-    });
-  }
-
-  // alta upp demo si no existe
-  const clave = String(formHoja.upp.clave || '').trim().toUpperCase();
-  if (!buscarUppPorClave(clave)) {
-    uppDemo.value.push({
-      id: Date.now() + 1,
-      mvz_user_id: mvzUserId,
-      ...JSON.parse(JSON.stringify(formHoja.upp)),
-      clave
-    });
-  }
-
-  hojasDemo.value.push({
-    id: Date.now() + 10,
-    mvz_user_id: mvzUserId,
-    ...JSON.parse(JSON.stringify(formHoja)),
-    cc_no: String(formHoja.cc_no || '').trim(),
-    prop: { ...JSON.parse(JSON.stringify(formHoja.prop)), curp },
-    upp: { ...JSON.parse(JSON.stringify(formHoja.upp)), clave },
-    numero_caso_asignado: false,
-    numero_caso: ''
-  });
-
-  mensajeExito.value = 'Hoja registrada.';
-  limpiarFormHoja();
 }
 
 function limpiarFormHoja() {
   Object.assign(formHoja, nuevoForm());
   errores.value = [];
-  mensajeExito.value = '';
+  mensajeExito.value = "";
+}
+
+async function guardarHoja() {
+  mensajeExito.value = "";
+  errores.value = [];
+  if (!validarCaptura()) return;
+
+  saving.value = true;
+  try {
+    // Normalizaciones mínimas
+    formHoja.prop.curp = normalizeCurp(formHoja.prop.curp);
+    formHoja.upp.clave = normalizeUpp(formHoja.upp.clave);
+
+    const payload = {
+      // En BD se guardará como folio = CC No.
+      folio: String(formHoja.cc_no || "").trim(),
+      // Guardamos TODO como JSON
+      contenido: JSON.parse(JSON.stringify(formHoja)),
+      // Quién captura
+      id_usuario: mvzUserId
+    };
+
+    await api.post("/api/hoja-reporte", payload);
+
+    mensajeExito.value = "Hoja registrada en BD.";
+    limpiarFormHoja();
+  } catch (e) {
+    errores.value = [`Error guardando hoja: ${e?.response?.data?.detail || "Servidor no disponible"}`];
+  } finally {
+    saving.value = false;
+  }
 }
 
 /* ===================== Consultar ===================== */
-const filtros = reactive({ cc_no: '', curp: '', upp: '', estatus: 'TODOS' });
+const filtros = reactive({ cc_no: "", curp: "", upp: "", estatus: "TODOS" });
 const resultados = ref([]);
 const detalle = ref(null);
 
 function nombreProp(h) {
   const p = h?.prop || {};
-  return `${p.apellido_paterno || ''} ${p.apellido_materno || ''} ${p.nombres || ''}`.trim() || '—';
-}
-
-function buscarHojas() {
-  const cc = String(filtros.cc_no || '').trim().toLowerCase();
-  const curp = String(filtros.curp || '').trim().toLowerCase();
-  const upp = String(filtros.upp || '').trim().toLowerCase();
-  const est = String(filtros.estatus || 'TODOS');
-
-  resultados.value = hojasDemo.value
-    .filter(h => h.mvz_user_id === mvzUserId)
-    .filter(h => (cc ? String(h.cc_no || '').toLowerCase().includes(cc) : true))
-    .filter(h => (curp ? String(h.prop?.curp || '').toLowerCase().includes(curp) : true))
-    .filter(h => (upp ? String(h.upp?.clave || '').toLowerCase().includes(upp) : true))
-    .filter(h => {
-      if (est === 'TODOS') return true;
-      if (est === 'EDITABLE') return !h.numero_caso_asignado;
-      if (est === 'CERRADA') return !!h.numero_caso_asignado;
-      return true;
-    });
-
-  detalle.value = null;
+  return `${p.apellido_paterno || ""} ${p.apellido_materno || ""} ${p.nombres || ""}`.trim() || "—";
 }
 
 function limpiarFiltros() {
-  filtros.cc_no = '';
-  filtros.curp = '';
-  filtros.upp = '';
-  filtros.estatus = 'TODOS';
+  filtros.cc_no = "";
+  filtros.curp = "";
+  filtros.upp = "";
+  filtros.estatus = "TODOS";
   resultados.value = [];
   detalle.value = null;
 }
@@ -942,14 +978,50 @@ function verDetalle(h) {
 
 function iniciarEdicion(h) {
   detalle.value = h;
-  selectedAction.value = 'editar';
-  mensajeExito.value = '';
+  selectedAction.value = "editar";
+  mensajeExito.value = "";
   errores.value = [];
+}
+
+async function buscarHojas() {
+  listLoading.value = true;
+  errores.value = [];
+  mensajeExito.value = "";
+  detalle.value = null;
+
+  try {
+    const params = {
+      cc_no: String(filtros.cc_no || "").trim(),
+      curp: String(filtros.curp || "").trim(),
+      upp: String(filtros.upp || "").trim(),
+      estatus: String(filtros.estatus || "TODOS")
+    };
+
+    const { data } = await api.get("/api/hoja-reporte", { params });
+
+    // Esperado del backend:
+    // data = [{ id_reporte, folio, contenido, fecha }]
+    resultados.value = (Array.isArray(data) ? data : []).map(r => {
+      const contenido = r.contenido || {};
+      return {
+        id: r.id_reporte ?? r.id ?? null,
+        cc_no: r.folio ?? contenido.cc_no ?? "",
+        ...contenido,
+        // fallback si un día se agregan estos flags en backend:
+        numero_caso_asignado: contenido.numero_caso_asignado ?? false,
+        numero_caso: contenido.numero_caso ?? ""
+      };
+    });
+  } catch (e) {
+    errores.value = [`Error consultando hojas: ${e?.response?.data?.detail || "Servidor no disponible"}`];
+  } finally {
+    listLoading.value = false;
+  }
 }
 </script>
 
 <style scoped>
-/* ===== Estilo general SISTPEC (como tu módulo ejemplo) ===== */
+/* ===== Estilo general SISTPEC ===== */
 .modulo-acciones { margin-bottom: 20px; }
 .modulo-acciones-titulo { display:block; font-size:14px; margin-bottom:8px; color:#333; font-weight:700; }
 .modulo-acciones-botones { display:flex; flex-wrap:wrap; gap:6px; }
