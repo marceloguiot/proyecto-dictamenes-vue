@@ -1,3 +1,4 @@
+<!-- AdminUsuariosModulo -->
 <template>
   <!-- CONTENEDOR DEL MÓDULO PARA HACER SCROLL AUTOMÁTICO -->
   <div ref="moduloRoot">
@@ -44,26 +45,39 @@
       <div v-if="selectedAction === 'registrar'">
         <h3 class="subtitulo">Registrar</h3>
 
-        <form class="sistpec-form" @submit.prevent="guardarUsuario">
+        <!--  novalidate para desactivar validación nativa del navegador -->
+        <form class="sistpec-form" novalidate @submit.prevent="guardarUsuario">
           <div class="sistpec-form-row">
             <div class="sistpec-form-group">
               <label>Nombre</label>
               <input v-model="nuevoUsuario.nombre" type="text" required />
+              <small v-if="erroresCampoRegistro.nombre" class="campo-error">
+                {{ erroresCampoRegistro.nombre }}
+              </small>
             </div>
 
             <div class="sistpec-form-group">
               <label>Apellido paterno</label>
               <input v-model="nuevoUsuario.apellido_paterno" type="text" required />
+              <small v-if="erroresCampoRegistro.apellido_paterno" class="campo-error">
+                {{ erroresCampoRegistro.apellido_paterno }}
+              </small>
             </div>
 
             <div class="sistpec-form-group">
               <label>Apellido materno</label>
               <input v-model="nuevoUsuario.apellido_materno" type="text" />
+              <small v-if="erroresCampoRegistro.apellido_materno" class="campo-error">
+                {{ erroresCampoRegistro.apellido_materno }}
+              </small>
             </div>
 
             <div class="sistpec-form-group">
               <label>Nombre de usuario</label>
               <input v-model="nuevoUsuario.nombre_usuario" type="text" required />
+              <small v-if="erroresCampoRegistro.nombre_usuario" class="campo-error">
+                {{ erroresCampoRegistro.nombre_usuario }}
+              </small>
             </div>
           </div>
 
@@ -71,6 +85,9 @@
             <div class="sistpec-form-group">
               <label>Correo electrónico</label>
               <input v-model="nuevoUsuario.correo" type="email" required />
+              <small v-if="erroresCampoRegistro.correo" class="campo-error">
+                {{ erroresCampoRegistro.correo }}
+              </small>
             </div>
 
             <div class="sistpec-form-group">
@@ -83,6 +100,9 @@
                 <option value="4">Coordinador</option>
                 <option value="5">MVZ autorizado</option>
               </select>
+              <small v-if="erroresCampoRegistro.tipo_usuario" class="campo-error">
+                {{ erroresCampoRegistro.tipo_usuario }}
+              </small>
             </div>
           </div>
 
@@ -90,11 +110,17 @@
             <div class="sistpec-form-group">
               <label>Contraseña</label>
               <input v-model="nuevoUsuario.password" type="password" required />
+              <small v-if="erroresCampoRegistro.password" class="campo-error">
+                {{ erroresCampoRegistro.password }}
+              </small>
             </div>
 
             <div class="sistpec-form-group">
               <label>Confirmar contraseña</label>
               <input v-model="nuevoUsuario.confirmPassword" type="password" required />
+              <small v-if="erroresCampoRegistro.confirmPassword" class="campo-error">
+                {{ erroresCampoRegistro.confirmPassword }}
+              </small>
             </div>
           </div>
 
@@ -115,6 +141,12 @@
                 <span class="vigencia-sep">a</span>
                 <input v-model="nuevoUsuario.vigencia_fin" type="date" required />
               </div>
+              <small v-if="erroresCampoRegistro.vigencia_inicio" class="campo-error">
+                {{ erroresCampoRegistro.vigencia_inicio }}
+              </small>
+              <small v-else-if="erroresCampoRegistro.vigencia_fin" class="campo-error">
+                {{ erroresCampoRegistro.vigencia_fin }}
+              </small>
             </div>
           </div>
 
@@ -280,26 +312,39 @@
         <div v-if="usuarioEditando" class="sistpec-edit-panel">
           <h4 class="subtitulo-secundario">Editando: {{ usuarioEditando.nombre_usuario }}</h4>
 
-          <form class="sistpec-form" @submit.prevent="guardarCambiosUsuario">
+          <!-- novalidate para desactivar validación nativa del navegador -->
+          <form class="sistpec-form" novalidate @submit.prevent="guardarCambiosUsuario">
             <div class="sistpec-form-row">
               <div class="sistpec-form-group">
                 <label>Nombre</label>
                 <input v-model="usuarioEditando.nombre" type="text" required />
+                <small v-if="erroresCampoEdicion.nombre" class="campo-error">
+                  {{ erroresCampoEdicion.nombre }}
+                </small>
               </div>
 
               <div class="sistpec-form-group">
                 <label>Apellido paterno</label>
                 <input v-model="usuarioEditando.apellido_paterno" type="text" required />
+                <small v-if="erroresCampoEdicion.apellido_paterno" class="campo-error">
+                  {{ erroresCampoEdicion.apellido_paterno }}
+                </small>
               </div>
 
               <div class="sistpec-form-group">
                 <label>Apellido materno</label>
                 <input v-model="usuarioEditando.apellido_materno" type="text" />
+                <small v-if="erroresCampoEdicion.apellido_materno" class="campo-error">
+                  {{ erroresCampoEdicion.apellido_materno }}
+                </small>
               </div>
 
               <div class="sistpec-form-group">
                 <label>Nombre de usuario</label>
                 <input v-model="usuarioEditando.nombre_usuario" type="text" required />
+                <small v-if="erroresCampoEdicion.nombre_usuario" class="campo-error">
+                  {{ erroresCampoEdicion.nombre_usuario }}
+                </small>
               </div>
             </div>
 
@@ -307,6 +352,9 @@
               <div class="sistpec-form-group">
                 <label>Correo electrónico</label>
                 <input v-model="usuarioEditando.correo" type="email" required />
+                <small v-if="erroresCampoEdicion.correo" class="campo-error">
+                  {{ erroresCampoEdicion.correo }}
+                </small>
               </div>
 
               <div class="sistpec-form-group">
@@ -319,6 +367,9 @@
                   <option value="4">Coordinador</option>
                   <option value="5">MVZ autorizado</option>
                 </select>
+                <small v-if="erroresCampoEdicion.tipo_usuario" class="campo-error">
+                  {{ erroresCampoEdicion.tipo_usuario }}
+                </small>
               </div>
             </div>
 
@@ -330,6 +381,9 @@
                   type="password"
                   placeholder="Dejar en blanco para no cambiar"
                 />
+                <small v-if="erroresCampoEdicion.password" class="campo-error">
+                  {{ erroresCampoEdicion.password }}
+                </small>
               </div>
 
               <div class="sistpec-form-group">
@@ -339,6 +393,9 @@
                   type="password"
                   placeholder="Repetir contraseña"
                 />
+                <small v-if="erroresCampoEdicion.confirmPassword" class="campo-error">
+                  {{ erroresCampoEdicion.confirmPassword }}
+                </small>
               </div>
             </div>
 
@@ -355,6 +412,12 @@
                   <span class="vigencia-sep">a</span>
                   <input v-model="usuarioEditando.vigencia_fin" type="date" required />
                 </div>
+                <small v-if="erroresCampoEdicion.vigencia_inicio" class="campo-error">
+                  {{ erroresCampoEdicion.vigencia_inicio }}
+                </small>
+                <small v-else-if="erroresCampoEdicion.vigencia_fin" class="campo-error">
+                  {{ erroresCampoEdicion.vigencia_fin }}
+                </small>
               </div>
             </div>
 
@@ -378,7 +441,6 @@
       <!-- ================= ELIMINAR / DESACTIVAR ================= -->
       <div v-else-if="selectedAction === 'eliminar'">
         <h3 class="subtitulo">Cambiar Estatus</h3>
-
 
         <div class="sistpec-search-bar">
           <div class="sistpec-form-group">
@@ -467,7 +529,6 @@
       <!-- ================= BITÁCORA DE CAMBIOS ================= -->
       <div v-else-if="selectedAction === 'bitacora'">
         <h3 class="subtitulo">Bitácora</h3>
-
 
         <div class="sistpec-search-bar">
           <div class="sistpec-form-group">
@@ -559,7 +620,7 @@
 import { computed, ref, watch, onMounted, nextTick } from 'vue';
 
 const props = defineProps({
-  codigo: { type: String, required: true }, 
+  codigo: { type: String, required: true },
   rol: { type: String, required: true }
 });
 
@@ -593,6 +654,63 @@ const rolesCatalog = {
 const errores = ref([]);
 const mensajeExito = ref('');
 
+/** errores menasje */
+const erroresCampoRegistro = ref({
+  nombre: '',
+  apellido_paterno: '',
+  apellido_materno: '',
+  nombre_usuario: '',
+  correo: '',
+  tipo_usuario: '',
+  password: '',
+  confirmPassword: '',
+  vigencia_inicio: '',
+  vigencia_fin: ''
+});
+
+const erroresCampoEdicion = ref({
+  nombre: '',
+  apellido_paterno: '',
+  apellido_materno: '',
+  nombre_usuario: '',
+  correo: '',
+  tipo_usuario: '',
+  password: '',
+  confirmPassword: '',
+  vigencia_inicio: '',
+  vigencia_fin: ''
+});
+
+function resetErroresCampoRegistro() {
+  erroresCampoRegistro.value = {
+    nombre: '',
+    apellido_paterno: '',
+    apellido_materno: '',
+    nombre_usuario: '',
+    correo: '',
+    tipo_usuario: '',
+    password: '',
+    confirmPassword: '',
+    vigencia_inicio: '',
+    vigencia_fin: ''
+  };
+}
+
+function resetErroresCampoEdicion() {
+  erroresCampoEdicion.value = {
+    nombre: '',
+    apellido_paterno: '',
+    apellido_materno: '',
+    nombre_usuario: '',
+    correo: '',
+    tipo_usuario: '',
+    password: '',
+    confirmPassword: '',
+    vigencia_inicio: '',
+    vigencia_fin: ''
+  };
+}
+
 const soloLetrasRegex = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]+$/;
 const passwordMinLength = 8;
 
@@ -602,7 +720,7 @@ const accionesUsuarios = [
   { id: 'consultar', label: 'CONSULTAR' },
   { id: 'editar', label: 'EDITAR' },
   { id: 'eliminar', label: 'CAMBIAR ESTATUS' },
-  { id: 'bitacora', label: 'BITÁCORA' } 
+  { id: 'bitacora', label: 'BITÁCORA' }
 ];
 
 const selectedAction = ref('registrar');
@@ -745,6 +863,8 @@ watch(
     errores.value = [];
     mensajeExito.value = '';
     usuarioEditando.value = null;
+    resetErroresCampoRegistro();
+    resetErroresCampoEdicion();
   }
 );
 
@@ -817,7 +937,7 @@ const usuariosFiltrados = computed(() => {
 });
 
 function buscarUsuarios() {
-  // búsqueda reactiva (en backend sería un GET)
+  // búsqueda reactiva 
 }
 
 function limpiarFiltros() {
@@ -846,44 +966,83 @@ function limpiarFormulario() {
   };
   errores.value = [];
   mensajeExito.value = '';
+  resetErroresCampoRegistro();
 }
 
 function validarFormularioRegistro() {
   errores.value = [];
+  resetErroresCampoRegistro();
 
-  if (!nuevoUsuario.value.nombre) errores.value.push('El campo Nombre es obligatorio.');
-  else if (!soloLetrasRegex.test(nuevoUsuario.value.nombre)) errores.value.push('El campo Nombre solo debe contener letras.');
+  const u = nuevoUsuario.value;
 
-  if (!nuevoUsuario.value.apellido_paterno) errores.value.push('El campo Apellido paterno es obligatorio.');
-  else if (!soloLetrasRegex.test(nuevoUsuario.value.apellido_paterno)) errores.value.push('El campo Apellido paterno solo debe contener letras.');
+  if (!u.nombre) {
+    errores.value.push('El campo Nombre es obligatorio.');
+    erroresCampoRegistro.value.nombre = 'No se puede dejar en blanco.';
+  } else if (!soloLetrasRegex.test(u.nombre)) {
+    errores.value.push('El campo Nombre solo debe contener letras.');
+    erroresCampoRegistro.value.nombre = 'Solo letras.';
+  }
 
-  if (nuevoUsuario.value.apellido_materno && !soloLetrasRegex.test(nuevoUsuario.value.apellido_materno)) {
+  if (!u.apellido_paterno) {
+    errores.value.push('El campo Apellido paterno es obligatorio.');
+    erroresCampoRegistro.value.apellido_paterno = 'No se puede dejar en blanco.';
+  } else if (!soloLetrasRegex.test(u.apellido_paterno)) {
+    errores.value.push('El campo Apellido paterno solo debe contener letras.');
+    erroresCampoRegistro.value.apellido_paterno = 'Solo letras.';
+  }
+
+  if (u.apellido_materno && !soloLetrasRegex.test(u.apellido_materno)) {
     errores.value.push('El campo Apellido materno solo debe contener letras.');
+    erroresCampoRegistro.value.apellido_materno = 'Solo letras.';
   }
 
-  if (!nuevoUsuario.value.nombre_usuario) errores.value.push('Debe capturar el Nombre de usuario.');
-  if (!nuevoUsuario.value.correo) errores.value.push('Debe capturar el correo electrónico.');
+  if (!u.nombre_usuario) {
+    errores.value.push('Debe capturar el Nombre de usuario.');
+    erroresCampoRegistro.value.nombre_usuario = 'No se puede dejar en blanco.';
+  }
 
-  if (!nuevoUsuario.value.password) errores.value.push('La contraseña es obligatoria.');
-  else {
-    if (nuevoUsuario.value.password.length < passwordMinLength) {
+  if (!u.correo) {
+    errores.value.push('Debe capturar el correo electrónico.');
+    erroresCampoRegistro.value.correo = 'No se puede dejar en blanco.';
+  }
+
+  if (!u.tipo_usuario) {
+    errores.value.push('Debe seleccionar un rol.');
+    erroresCampoRegistro.value.tipo_usuario = 'Seleccione una opción.';
+  }
+
+  if (!u.password) {
+    errores.value.push('La contraseña es obligatoria.');
+    erroresCampoRegistro.value.password = 'No se puede dejar en blanco.';
+  } else {
+    if (u.password.length < passwordMinLength) {
       errores.value.push(`La contraseña debe tener al menos ${passwordMinLength} caracteres.`);
-    }
-    if (!/[A-Za-z]/.test(nuevoUsuario.value.password) || !/\d/.test(nuevoUsuario.value.password)) {
+      erroresCampoRegistro.value.password = `Mínimo ${passwordMinLength} caracteres.`;
+    } else if (!/[A-Za-z]/.test(u.password) || !/\d/.test(u.password)) {
       errores.value.push('La contraseña debe contener letras y números.');
+      erroresCampoRegistro.value.password = 'Debe contener letras y números.';
     }
   }
 
-  if (nuevoUsuario.value.password !== nuevoUsuario.value.confirmPassword) {
-    errores.value.push('La confirmación de contraseña no coincide.');
+  if (!u.confirmPassword) {
+    erroresCampoRegistro.value.confirmPassword = 'No se puede dejar en blanco.';
   }
+
+  if (u.password !== u.confirmPassword) {
+    errores.value.push('La confirmación de contraseña no coincide.');
+    erroresCampoRegistro.value.confirmPassword = 'No coincide.';
+  }
+
+  if (!u.vigencia_inicio) erroresCampoRegistro.value.vigencia_inicio = 'Seleccione fecha.';
+  if (!u.vigencia_fin) erroresCampoRegistro.value.vigencia_fin = 'Seleccione fecha.';
 
   if (
-    nuevoUsuario.value.vigencia_inicio &&
-    nuevoUsuario.value.vigencia_fin &&
-    nuevoUsuario.value.vigencia_fin < nuevoUsuario.value.vigencia_inicio
+    u.vigencia_inicio &&
+    u.vigencia_fin &&
+    u.vigencia_fin < u.vigencia_inicio
   ) {
     errores.value.push('La fecha de fin de vigencia no puede ser menor que la fecha de inicio.');
+    erroresCampoRegistro.value.vigencia_fin = 'No puede ser menor que la fecha de inicio.';
   }
 
   return errores.value.length === 0;
@@ -931,12 +1090,14 @@ function guardarUsuario() {
   });
 
   mensajeExito.value = 'El usuario ha sido registrado correctamente.';
+  resetErroresCampoRegistro();
 }
 
 // ===== Edición =====
 function seleccionarUsuario(u) {
   errores.value = [];
   mensajeExito.value = '';
+  resetErroresCampoEdicion();
 
   usuarioEditando.value = {
     id: u.id,
@@ -959,10 +1120,12 @@ function cancelarEdicion() {
   const ok = window.confirm('¿Desea cancelar la edición? Los cambios no guardados se perderán.');
   if (!ok) return;
   usuarioEditando.value = null;
+  resetErroresCampoEdicion();
 }
 
 function validarFormularioEdicion() {
   errores.value = [];
+  resetErroresCampoEdicion();
 
   if (!usuarioEditando.value) {
     errores.value.push('Debe seleccionar un usuario para editar.');
@@ -971,33 +1134,70 @@ function validarFormularioEdicion() {
 
   const u = usuarioEditando.value;
 
-  if (!u.nombre) errores.value.push('El campo Nombre es obligatorio.');
-  else if (!soloLetrasRegex.test(u.nombre)) errores.value.push('El campo Nombre solo debe contener letras.');
+  if (!u.nombre) {
+    errores.value.push('El campo Nombre es obligatorio.');
+    erroresCampoEdicion.value.nombre = 'No se puede dejar en blanco.';
+  } else if (!soloLetrasRegex.test(u.nombre)) {
+    errores.value.push('El campo Nombre solo debe contener letras.');
+    erroresCampoEdicion.value.nombre = 'Solo letras.';
+  }
 
-  if (!u.apellido_paterno) errores.value.push('El campo Apellido paterno es obligatorio.');
-  else if (!soloLetrasRegex.test(u.apellido_paterno)) errores.value.push('El campo Apellido paterno solo debe contener letras.');
+  if (!u.apellido_paterno) {
+    errores.value.push('El campo Apellido paterno es obligatorio.');
+    erroresCampoEdicion.value.apellido_paterno = 'No se puede dejar en blanco.';
+  } else if (!soloLetrasRegex.test(u.apellido_paterno)) {
+    errores.value.push('El campo Apellido paterno solo debe contener letras.');
+    erroresCampoEdicion.value.apellido_paterno = 'Solo letras.';
+  }
 
   if (u.apellido_materno && !soloLetrasRegex.test(u.apellido_materno)) {
     errores.value.push('El campo Apellido materno solo debe contener letras.');
+    erroresCampoEdicion.value.apellido_materno = 'Solo letras.';
   }
 
-  if (!u.nombre_usuario) errores.value.push('Debe capturar el Nombre de usuario.');
-  if (!u.correo) errores.value.push('Debe capturar el correo electrónico.');
+  if (!u.nombre_usuario) {
+    errores.value.push('Debe capturar el Nombre de usuario.');
+    erroresCampoEdicion.value.nombre_usuario = 'No se puede dejar en blanco.';
+  }
 
+  if (!u.correo) {
+    errores.value.push('Debe capturar el correo electrónico.');
+    erroresCampoEdicion.value.correo = 'No se puede dejar en blanco.';
+  }
+
+  if (!u.tipo_usuario) {
+    errores.value.push('Debe seleccionar un rol.');
+    erroresCampoEdicion.value.tipo_usuario = 'Seleccione una opción.';
+  }
+
+  // Password opcional: solo valida si alguno se escribió
   if (u.password || u.confirmPassword) {
-    if (u.password.length < passwordMinLength) {
+    if (!u.password) {
+      erroresCampoEdicion.value.password = 'No se puede dejar en blanco.';
+    } else if (u.password.length < passwordMinLength) {
       errores.value.push(`La nueva contraseña debe tener al menos ${passwordMinLength} caracteres.`);
-    }
-    if (!/[A-Za-z]/.test(u.password) || !/\d/.test(u.password)) {
+      erroresCampoEdicion.value.password = `Mínimo ${passwordMinLength} caracteres.`;
+    } else if (!/[A-Za-z]/.test(u.password) || !/\d/.test(u.password)) {
       errores.value.push('La nueva contraseña debe contener letras y números.');
+      erroresCampoEdicion.value.password = 'Debe contener letras y números.';
     }
+
+    if (!u.confirmPassword) {
+      erroresCampoEdicion.value.confirmPassword = 'No se puede dejar en blanco.';
+    }
+
     if (u.password !== u.confirmPassword) {
       errores.value.push('La confirmación de la nueva contraseña no coincide.');
+      erroresCampoEdicion.value.confirmPassword = 'No coincide.';
     }
   }
+
+  if (!u.vigencia_inicio) erroresCampoEdicion.value.vigencia_inicio = 'Seleccione fecha.';
+  if (!u.vigencia_fin) erroresCampoEdicion.value.vigencia_fin = 'Seleccione fecha.';
 
   if (u.vigencia_inicio && u.vigencia_fin && u.vigencia_fin < u.vigencia_inicio) {
     errores.value.push('La fecha de fin de vigencia no puede ser menor que la fecha de inicio.');
+    erroresCampoEdicion.value.vigencia_fin = 'No puede ser menor que la fecha de inicio.';
   }
 
   return errores.value.length === 0;
@@ -1060,6 +1260,7 @@ function guardarCambiosUsuario() {
 
   mensajeExito.value = 'Los datos del usuario se han actualizado correctamente.';
   usuarioEditando.value = null;
+  resetErroresCampoEdicion();
 }
 
 // ===== Desactivar / Reactivar =====
@@ -1141,6 +1342,14 @@ function reactivarUsuario(u) {
 
 .subtitulo { font-size:18px; margin:10px 0 15px; color:#333; }
 .subtitulo-secundario { font-size:16px; margin:16px 0 10px; color:#333; }
+
+
+.campo-error{
+  color:#7a1f1f;
+  font-size:12px;
+  font-weight:600;
+  margin-top:4px;
+}
 
 /* Form */
 .sistpec-form { display:flex; flex-direction:column; gap:16px; }
@@ -1242,3 +1451,4 @@ function reactivarUsuario(u) {
   .sistpec-search-bar{ grid-template-columns: 1fr; }
 }
 </style>
+
