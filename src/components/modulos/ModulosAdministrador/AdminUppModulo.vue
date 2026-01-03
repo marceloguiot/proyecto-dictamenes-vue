@@ -134,21 +134,25 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="u in uppFiltradas" :key="u.id">
+            <!-- ==================== EMPIEZAN CAMBIOS ==================== -->
+            <!-- Se actualizaron los campos para usar nombre_predio y estatus booleano del backend -->
+            <!-- ==================== EMPIEZAN CAMBIOS ==================== -->
+            <tr v-for="u in uppFiltradas" :key="u.id_upp">
               <td>{{ u.clave_upp }}</td>
-              <td>{{ u.nombre_upp }}</td>
+              <td>{{ u.nombre_predio }}</td>
               <td>{{ u.propietario }}</td>
               <td>{{ u.municipio }}</td>
-              <td>{{ u.localidad }}</td>
+              <td>{{ u.localidad || 'N/A' }}</td>
               <td>
                 <span
                   class="badge"
-                  :class="u.estatus === 'ACTIVA' ? 'badge--activo' : 'badge--inactivo'"
+                  :class="u.estatus ? 'badge--activo' : 'badge--inactivo'"
                 >
-                  {{ u.estatus }}
+                  {{ u.estatus ? 'ACTIVA' : 'BAJA' }}
                 </span>
               </td>
             </tr>
+            <!-- ==================== TERMINAN CAMBIOS ==================== -->
             <tr v-if="uppFiltradas.length === 0">
               <td colspan="6" class="sin-resultados">
                 No se encontraron UPP con los criterios de búsqueda.
@@ -230,31 +234,35 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="u in uppFiltradas" :key="u.id">
+            <!-- ==================== EMPIEZAN CAMBIOS ==================== -->
+            <!-- Se actualizaron los campos para usar nombre_predio y estatus booleano del backend -->
+            <!-- ==================== EMPIEZAN CAMBIOS ==================== -->
+            <tr v-for="u in uppFiltradas" :key="u.id_upp">
               <td>{{ u.clave_upp }}</td>
-              <td>{{ u.nombre_upp }}</td>
+              <td>{{ u.nombre_predio }}</td>
               <td>{{ u.propietario }}</td>
               <td>{{ u.municipio }}</td>
-              <td>{{ u.localidad }}</td>
+              <td>{{ u.localidad || 'N/A' }}</td>
               <td>
                 <span
                   class="badge"
-                  :class="u.estatus === 'ACTIVA' ? 'badge--activo' : 'badge--inactivo'"
+                  :class="u.estatus ? 'badge--activo' : 'badge--inactivo'"
                 >
-                  {{ u.estatus }}
+                  {{ u.estatus ? 'ACTIVA' : 'BAJA' }}
                 </span>
               </td>
               <td>
                 <button
                   type="button"
                   class="sistpec-btn-danger sistpec-btn-sm"
-                  :disabled="u.estatus === 'BAJA'"
+                  :disabled="!u.estatus"
                   @click="bajaUpp(u)"
                 >
                   DAR DE BAJA
                 </button>
               </td>
             </tr>
+            <!-- ==================== TERMINAN CAMBIOS ==================== -->
             <tr v-if="uppFiltradas.length === 0">
               <td colspan="7" class="sin-resultados">
                 No se encontraron UPP con los criterios de búsqueda.
@@ -278,7 +286,12 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se importó uppService para conectar con el backend
+// ==================== EMPIEZAN CAMBIOS ====================
+import { computed, ref, watch, onMounted } from 'vue';
+import { uppService } from '@/services/api';
+// ==================== TERMINAN CAMBIOS ====================
 
 defineProps({
   codigo: { type: String, required: true },
@@ -288,6 +301,11 @@ defineProps({
 const errores = ref([]);
 const mensajeExito = ref('');
 const seBusco = ref(false);
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se agregó estado de carga
+// ==================== EMPIEZAN CAMBIOS ====================
+const cargandoUpp = ref(false);
+// ==================== TERMINAN CAMBIOS ====================
 
 // Acciones disponibles
 const accionesUpp = [
@@ -308,6 +326,27 @@ const descripcionAccionActual = computed(() => {
   }
 });
 
+// Cargar UPP al montar el componente
+onMounted(() => {
+  if (selectedAction.value === 'consultar' || selectedAction.value === 'eliminar') {
+    buscarUpp();
+  }
+});
+
+// Reset de mensajes y cargar datos al cambiar de acción
+watch(
+  () => selectedAction.value,
+  (newAction) => {
+    errores.value = [];
+    mensajeExito.value = '';
+
+    // Cargar UPP automáticamente al cambiar a consultar o eliminar
+    if (newAction === 'consultar' || newAction === 'eliminar') {
+      buscarUpp();
+    }
+  }
+);
+
 // Filtros
 const filtros = ref({
   clave_upp: '',
@@ -318,45 +357,23 @@ const filtros = ref({
   estatus: ''
 });
 
-// Datos demo
-const uppDemoTabla = ref([
-  {
-    id: 1,
-    clave_upp: 'UPP-VER-001',
-    nombre_upp: 'Rancho San Gabriel',
-    propietario: 'Ganadera San Gabriel',
-    municipio: 'Tantoyuca',
-    localidad: 'San Gabriel',
-    estatus: 'ACTIVA'
-  },
-  {
-    id: 2,
-    clave_upp: 'UPP-VER-002',
-    nombre_upp: 'Rancho La Gloria',
-    propietario: 'Productores La Gloria',
-    municipio: 'Perote',
-    localidad: 'La Gloria',
-    estatus: 'ACTIVA'
-  },
-  {
-    id: 3,
-    clave_upp: 'UPP-VER-003',
-    nombre_upp: 'Granja El Zapotal',
-    propietario: 'Productores Unidos',
-    municipio: 'Acajete',
-    localidad: 'El Zapotal',
-    estatus: 'BAJA'
-  }
-]);
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se reemplazó uppDemoTabla por uppTabla que se llenará desde el backend
+// ==================== EMPIEZAN CAMBIOS ====================
+const uppTabla = ref([]);
+// ==================== TERMINAN CAMBIOS ====================
 
 const uppFiltradas = computed(() => {
+  // ==================== EMPIEZAN CAMBIOS ====================
+  // Se modificó para usar uppTabla en lugar de uppDemoTabla
+  // ==================== EMPIEZAN CAMBIOS ====================
   const f = filtros.value;
 
-  return uppDemoTabla.value.filter((u) => {
+  return uppTabla.value.filter((u) => {
     if (f.clave_upp && !u.clave_upp.toLowerCase().includes(f.clave_upp.toLowerCase())) {
       return false;
     }
-    if (f.nombre_upp && !u.nombre_upp.toLowerCase().includes(f.nombre_upp.toLowerCase())) {
+    if (f.nombre_upp && !u.nombre_predio.toLowerCase().includes(f.nombre_upp.toLowerCase())) {
       return false;
     }
     if (f.propietario && !u.propietario.toLowerCase().includes(f.propietario.toLowerCase())) {
@@ -365,21 +382,28 @@ const uppFiltradas = computed(() => {
     if (f.municipio && !u.municipio.toLowerCase().includes(f.municipio.toLowerCase())) {
       return false;
     }
-    if (f.localidad && !u.localidad.toLowerCase().includes(f.localidad.toLowerCase())) {
+    if (f.localidad && u.localidad && !u.localidad.toLowerCase().includes(f.localidad.toLowerCase())) {
       return false;
     }
-    if (f.estatus && u.estatus !== f.estatus) {
-      return false;
+    if (f.estatus) {
+      const estatusActual = u.estatus ? 'ACTIVA' : 'BAJA';
+      if (estatusActual !== f.estatus) {
+        return false;
+      }
     }
     return true;
   });
+  // ==================== TERMINAN CAMBIOS ====================
 });
 
 function hayAlgunFiltro() {
   return Object.values(filtros.value).some((v) => String(v).trim() !== '');
 }
 
-function buscarUpp() {
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se convirtió buscarUpp a función async para llamar al backend
+// ==================== EMPIEZAN CAMBIOS ====================
+async function buscarUpp() {
   errores.value = [];
   mensajeExito.value = '';
   seBusco.value = false;
@@ -392,14 +416,31 @@ function buscarUpp() {
     return;
   }
 
-  seBusco.value = true;
+  cargandoUpp.value = true;
 
-  if (uppFiltradas.value.length) {
-    mensajeExito.value = `Se encontraron ${uppFiltradas.value.length} UPP que coinciden con la búsqueda.`;
-  } else {
-    mensajeExito.value = '';
+  try {
+    const response = await uppService.consultar({
+      search: [filtros.value.clave_upp, filtros.value.nombre_upp, filtros.value.propietario].filter(v => v?.trim()).join(' ') || undefined,
+      limit: 100,
+      solo_activas: filtros.value.estatus === 'ACTIVA' ? true : filtros.value.estatus === 'BAJA' ? false : undefined
+    });
+
+    uppTabla.value = response.data;
+    seBusco.value = true;
+
+    if (uppFiltradas.value.length) {
+      mensajeExito.value = `Se encontraron ${uppFiltradas.value.length} UPP que coinciden con la búsqueda.`;
+    } else {
+      mensajeExito.value = 'No se encontraron UPP con los criterios especificados.';
+    }
+  } catch (error) {
+    console.error('Error al consultar UPP:', error);
+    errores.value.push('Error al consultar UPP del servidor. Intente nuevamente.');
+  } finally {
+    cargandoUpp.value = false;
   }
 }
+// ==================== TERMINAN CAMBIOS ====================
 
 function limpiarFiltros() {
   filtros.value = {
@@ -415,33 +456,36 @@ function limpiarFiltros() {
   seBusco.value = false;
 }
 
-function bajaUpp(u) {
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se convirtió bajaUpp a función async para llamar al backend
+// ==================== EMPIEZAN CAMBIOS ====================
+async function bajaUpp(u) {
   errores.value = [];
   mensajeExito.value = '';
 
-  if (u.estatus === 'BAJA') {
+  const estatusActual = u.estatus ? 'ACTIVA' : 'BAJA';
+  if (estatusActual === 'BAJA') {
     errores.value.push('La UPP ya se encuentra dada de baja.');
     return;
   }
 
   const ok = window.confirm(
-    `¿Desea dar de baja la UPP "${u.nombre_upp}" (${u.clave_upp})?`
+    `¿Desea dar de baja la UPP "${u.nombre_predio}" (${u.clave_upp})?`
   );
   if (!ok) return;
 
-  const idx = uppDemoTabla.value.findIndex((x) => x.id === u.id);
-  if (idx === -1) {
-    errores.value.push('No se encontró la UPP en la lista.');
-    return;
+  try {
+    await uppService.darBaja(u.id_upp);
+    mensajeExito.value = 'La UPP se ha dado de baja correctamente.';
+
+    // Recargar la lista después de dar de baja
+    await buscarUpp();
+  } catch (error) {
+    console.error('Error al dar de baja UPP:', error);
+    errores.value.push('Error al dar de baja la UPP en el servidor.');
   }
-
-  uppDemoTabla.value[idx] = {
-    ...uppDemoTabla.value[idx],
-    estatus: 'BAJA'
-  };
-
-  mensajeExito.value = 'La UPP se ha dado de baja correctamente.';
 }
+// ==================== TERMINAN CAMBIOS ====================
 </script>
 
 <style scoped>

@@ -484,12 +484,17 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, nextTick } from 'vue';
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se agregó el import del servicio de propietarios para conectar con el backend
+// ==================== EMPIEZAN CAMBIOS ====================
+import { computed, ref, watch, nextTick, onMounted } from 'vue';
+import { propietariosService } from '@/services/api';
 
 defineProps({
   codigo: { type: String, required: true },
   rol:    { type: String, required: true }
 });
+// ==================== TERMINAN CAMBIOS ====================
 
 // Referencia para hacer scroll al contenido del módulo
 const moduloContenidoRef = ref(null);
@@ -503,6 +508,14 @@ function scrollAlContenido() {
     window.scrollTo({ top, behavior: 'smooth' });
   });
 }
+
+// Cargar propietarios al montar el componente si la acción requiere datos
+onMounted(() => {
+  scrollAlContenido();
+  if (selectedAction.value === 'consultar' || selectedAction.value === 'editar' || selectedAction.value === 'eliminar') {
+    buscarPropietarios();
+  }
+});
 
 // Acciones disponibles (solo consulta, edición y eliminación)
 const accionesPropietarios = [
@@ -540,61 +553,24 @@ const descripcionAccionActual = computed(() => {
 // Reset de mensajes al cambiar de acción
 watch(
   () => selectedAction.value,
-  () => {
+  (newAction) => {
     errores.value          = [];
     mensajeExito.value     = '';
     propietarioEditando.value = null;
+
+    // Cargar propietarios automáticamente al cambiar a consultar, editar o eliminar
+    if (newAction === 'consultar' || newAction === 'editar' || newAction === 'eliminar') {
+      buscarPropietarios();
+    }
   }
 );
 
-// ===== Datos demo para tabla (simula respuesta de backend) =====
-const propietariosDemoTabla = ref([
-  {
-    id: 1,
-    nombre: 'José',
-    apellido_paterno: 'López',
-    apellido_materno: 'Ramírez',
-    nombre_completo: 'José López Ramírez',
-    curp: 'LORJ800101HDFRPS01',
-    upp: 'VER-0001-2025',
-    municipio: 'Xalapa',
-    localidad: 'El Castillo',
-    domicilio: 'Camino a El Castillo S/N',
-    telefono: '2281234567',
-    correo: 'jlopez@ejemplo.com',
-    activo: true
-  },
-  {
-    id: 2,
-    nombre: 'María',
-    apellido_paterno: 'Hernández',
-    apellido_materno: 'Torres',
-    nombre_completo: 'María Hernández Torres',
-    curp: 'HETM820305MDFRRR02',
-    upp: 'VER-0020-2025',
-    municipio: 'Perote',
-    localidad: 'La Gloria',
-    domicilio: 'Calle Principal 10',
-    telefono: '2829876543',
-    correo: 'mhernandez@ejemplo.com',
-    activo: true
-  },
-  {
-    id: 3,
-    nombre: 'Carlos',
-    apellido_paterno: 'García',
-    apellido_materno: 'Santos',
-    nombre_completo: 'Carlos García Santos',
-    curp: 'GASC750910HDFRNL03',
-    upp: 'VER-0100-2025',
-    municipio: 'Isla',
-    localidad: 'Paso del Medio',
-    domicilio: 'Rancho El Progreso',
-    telefono: '',
-    correo: '',
-    activo: false
-  }
-]);
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se eliminó propietariosDemoTabla y se reemplazó por propietariosTabla que se llenará desde el backend
+// ==================== EMPIEZAN CAMBIOS ====================
+const propietariosTabla = ref([]);
+const cargandoPropietarios = ref(false);
+// ==================== TERMINAN CAMBIOS ====================
 
 // Filtros
 const filtros = ref({
@@ -604,34 +580,44 @@ const filtros = ref({
   municipio: ''
 });
 
-const propietariosFiltrados = computed(() => {
-  const curp      = filtros.value.curp.trim().toLowerCase();
-  const nombre    = filtros.value.nombre.trim().toLowerCase();
-  const upp       = filtros.value.upp.trim().toLowerCase();
-  const municipio = filtros.value.municipio.trim().toLowerCase();
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se reemplazó propietariosFiltrados por propietariosTabla que viene del backend
+// ==================== EMPIEZAN CAMBIOS ====================
+const propietariosFiltrados = computed(() => propietariosTabla.value);
 
-  return propietariosDemoTabla.value.filter(p => {
-    const matchCurp = curp
-      ? (p.curp || '').toLowerCase().includes(curp)
-      : true;
-    const matchNombre = nombre
-      ? (p.nombre_completo || '').toLowerCase().includes(nombre)
-      : true;
-    const matchUpp = upp
-      ? (p.upp || '').toLowerCase().includes(upp)
-      : true;
-    const matchMunicipio = municipio
-      ? (p.municipio || '').toLowerCase().includes(municipio)
-      : true;
+// ==================== EMPIEZAN CAMBIOS ====================
+// Función buscarPropietarios modificada para usar la API del backend
+// ==================== EMPIEZAN CAMBIOS ====================
+async function buscarPropietarios() {
+  errores.value = [];
+  mensajeExito.value = '';
+  cargandoPropietarios.value = true;
 
-    return matchCurp && matchNombre && matchUpp && matchMunicipio;
-  });
-});
+  try {
+    const response = await propietariosService.consultar({
+      curp: filtros.value.curp || undefined,
+      nombre: filtros.value.nombre || undefined,
+      upp: filtros.value.upp || undefined,
+      municipio: filtros.value.municipio || undefined,
+      limit: 100
+    });
 
-function buscarPropietarios() {
-  // La búsqueda es reactiva con los filtros;
-  // aquo se loggea o llama a backend si se requiere.
+    propietariosTabla.value = response.data;
+
+    if (response.data.length > 0) {
+      mensajeExito.value = `Se encontraron ${response.data.length} propietario(s)`;
+    } else {
+      mensajeExito.value = 'No se encontraron propietarios con los criterios especificados';
+    }
+  } catch (error) {
+    console.error('Error al buscar propietarios:', error);
+    errores.value.push('Error al consultar propietarios del servidor. Verifique su conexión.');
+    propietariosTabla.value = [];
+  } finally {
+    cargandoPropietarios.value = false;
+  }
 }
+// ==================== TERMINAN CAMBIOS ====================
 
 function limpiarFiltros() {
   filtros.value = {
@@ -640,17 +626,26 @@ function limpiarFiltros() {
     upp: '',
     municipio: ''
   };
+  // ==================== EMPIEZAN CAMBIOS ====================
+  // Limpiar también los resultados
+  propietariosTabla.value = [];
+  mensajeExito.value = '';
+  errores.value = [];
+  // ==================== TERMINAN CAMBIOS ====================
 }
 
 // ===== Edición de propietarios =====
 const soloLetrasRegex = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]+$/;
 
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se ajustó para usar id_propietario y calle en lugar de upp y domicilio
+// ==================== EMPIEZAN CAMBIOS ====================
 function seleccionarPropietario(p) {
   errores.value      = [];
   mensajeExito.value = '';
 
   propietarioEditando.value = {
-    id: p.id,
+    id: p.id_propietario,  // Cambiado de p.id
     nombre: p.nombre,
     apellido_paterno: p.apellido_paterno,
     apellido_materno: p.apellido_materno,
@@ -658,15 +653,15 @@ function seleccionarPropietario(p) {
     curp: p.curp,
     telefono: p.telefono,
     correo: p.correo,
-    upp: p.upp,
+    calle: p.calle,  // Cambiado de domicilio
     municipio: p.municipio,
     localidad: p.localidad,
-    domicilio: p.domicilio,
     activo: p.activo
   };
 
   scrollAlContenido();
 }
+// ==================== TERMINAN CAMBIOS ====================
 
 function cancelarEdicion() {
   const ok = window.confirm(
@@ -717,7 +712,10 @@ function validarFormularioEdicion() {
   return errores.value.length === 0;
 }
 
-function guardarCambiosPropietario() {
+// ==================== EMPIEZAN CAMBIOS ====================
+// Función guardarCambiosPropietario modificada para usar la API del backend
+// ==================== EMPIEZAN CAMBIOS ====================
+async function guardarCambiosPropietario() {
   mensajeExito.value = '';
 
   const esValido = validarFormularioEdicion();
@@ -729,34 +727,42 @@ function guardarCambiosPropietario() {
   if (!ok) return;
 
   const pEdit = propietarioEditando.value;
-  const idx   = propietariosDemoTabla.value.findIndex(p => p.id === pEdit.id);
 
-  if (idx === -1) {
-    errores.value.push('No se encontró el propietario en la lista.');
-    return;
+  try {
+    await propietariosService.actualizar(pEdit.id, {
+      nombre: pEdit.nombre,
+      apellido_paterno: pEdit.apellido_paterno,
+      apellido_materno: pEdit.apellido_materno,
+      curp: pEdit.curp,
+      telefono: pEdit.telefono,
+      correo: pEdit.correo,
+      calle: pEdit.calle,
+      municipio: pEdit.municipio,
+      localidad: pEdit.localidad,
+      activo: pEdit.activo
+    });
+
+    mensajeExito.value = 'Los datos del propietario se han actualizado correctamente.';
+    propietarioEditando.value = null;
+
+    // Recargar la lista
+    await buscarPropietarios();
+
+  } catch (error) {
+    console.error('Error al actualizar propietario:', error);
+    if (error.response?.data?.detail) {
+      errores.value.push(error.response.data.detail);
+    } else {
+      errores.value.push('Error al actualizar el propietario en el servidor.');
+    }
   }
-
-  propietariosDemoTabla.value[idx] = {
-    ...propietariosDemoTabla.value[idx],
-    nombre: pEdit.nombre,
-    apellido_paterno: pEdit.apellido_paterno,
-    apellido_materno: pEdit.apellido_materno,
-    nombre_completo: `${pEdit.nombre} ${pEdit.apellido_paterno} ${pEdit.apellido_materno}`.trim(),
-    curp: pEdit.curp,
-    telefono: pEdit.telefono,
-    correo: pEdit.correo,
-    upp: pEdit.upp,
-    municipio: pEdit.municipio,
-    localidad: pEdit.localidad,
-    domicilio: pEdit.domicilio,
-    activo: pEdit.activo
-  };
-
-  mensajeExito.value = 'Los datos del propietario se han actualizado correctamente.';
 }
+// ==================== TERMINAN CAMBIOS ====================
 
-// ===== Eliminar / desactivar propietarios =====
-function desactivarPropietario(p) {
+// ==================== EMPIEZAN CAMBIOS ====================
+// Funciones desactivarPropietario y reactivarPropietario modificadas para usar la API
+// ==================== EMPIEZAN CAMBIOS ====================
+async function desactivarPropietario(p) {
   errores.value      = [];
   mensajeExito.value = '';
 
@@ -770,21 +776,24 @@ function desactivarPropietario(p) {
   );
   if (!ok) return;
 
-  const idx = propietariosDemoTabla.value.findIndex(x => x.id === p.id);
-  if (idx === -1) {
-    errores.value.push('No se encontró el propietario en la lista.');
-    return;
+  try {
+    await propietariosService.desactivar(p.id_propietario);
+    mensajeExito.value = 'El propietario se ha desactivado correctamente.';
+
+    // Recargar la lista
+    await buscarPropietarios();
+
+  } catch (error) {
+    console.error('Error al desactivar propietario:', error);
+    if (error.response?.data?.detail) {
+      errores.value.push(error.response.data.detail);
+    } else {
+      errores.value.push('Error al desactivar el propietario en el servidor.');
+    }
   }
-
-  propietariosDemoTabla.value[idx] = {
-    ...propietariosDemoTabla.value[idx],
-    activo: false
-  };
-
-  mensajeExito.value = 'El propietario se ha desactivado correctamente.';
 }
 
-function reactivarPropietario(p) {
+async function reactivarPropietario(p) {
   errores.value      = [];
   mensajeExito.value = '';
 
@@ -798,19 +807,23 @@ function reactivarPropietario(p) {
   );
   if (!ok) return;
 
-  const idx = propietariosDemoTabla.value.findIndex(x => x.id === p.id);
-  if (idx === -1) {
-    errores.value.push('No se encontró el propietario en la lista.');
-    return;
+  try {
+    await propietariosService.reactivar(p.id_propietario);
+    mensajeExito.value = 'El propietario se ha reactivado correctamente.';
+
+    // Recargar la lista
+    await buscarPropietarios();
+
+  } catch (error) {
+    console.error('Error al reactivar propietario:', error);
+    if (error.response?.data?.detail) {
+      errores.value.push(error.response.data.detail);
+    } else {
+      errores.value.push('Error al reactivar el propietario en el servidor.');
+    }
   }
-
-  propietariosDemoTabla.value[idx] = {
-    ...propietariosDemoTabla.value[idx],
-    activo: true
-  };
-
-  mensajeExito.value = 'El propietario se ha reactivado correctamente.';
 }
+// ==================== TERMINAN CAMBIOS ====================
 </script>
 
 <style scoped>

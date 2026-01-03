@@ -189,7 +189,8 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
+import { resultadosService } from '@/services/api';
 
 defineProps({
   codigo: { type: String, required: true },
@@ -214,50 +215,13 @@ const filtros = ref({
   resultado: '' // POSITIVO | NEGATIVO | ''
 });
 
-// Datos demo
-const resultadosDemoTabla = ref([
-  {
-    id: 1,
-    numero_caso: 'BR25-001',
-    numero_arete: '3011520001',
-    numero_muestra: 'MX25-0001',
-    upp: 'UPP-VER-001',
-    propietario: 'Ganadera San Gabriel',
-    mvz: 'MVZ Juan Pérez',
-    fecha_registro: '2025-03-01',
-    fecha_resultado: '2025-03-05',
-    resultado: 'POSITIVO'
-  },
-  {
-    id: 2,
-    numero_caso: 'BR25-002',
-    numero_arete: '3011520002',
-    numero_muestra: 'MX25-0002',
-    upp: 'UPP-VER-002',
-    propietario: 'Rancho La Gloria',
-    mvz: 'MVZ María García',
-    fecha_registro: '2025-03-02',
-    fecha_resultado: '2025-03-06',
-    resultado: 'NEGATIVO'
-  },
-  {
-    id: 3,
-    numero_caso: 'BR25-003',
-    numero_arete: '3011520003',
-    numero_muestra: 'MX25-0003',
-    upp: 'UPP-VER-003',
-    propietario: 'Productores Unidos',
-    mvz: 'MVZ Carlos Hernández',
-    fecha_registro: '2025-03-05',
-    fecha_resultado: '2025-03-08',
-    resultado: 'POSITIVO'
-  }
-]);
+// Datos de resultados cargados desde backend
+const resultadosTabla = ref([]);
 
 const resultadosFiltrados = computed(() => {
   const f = filtros.value;
 
-  return resultadosDemoTabla.value.filter((r) => {
+  return resultadosTabla.value.filter((r) => {
     // Número de caso
     if (
       f.numero_caso &&
@@ -323,7 +287,33 @@ const resultadosFiltrados = computed(() => {
   });
 });
 
-function buscarResultados() {
+// Cargar resultados desde el backend
+async function cargarResultados() {
+  try {
+    errores.value = [];
+    const response = await resultadosService.consultar(filtros.value);
+
+    // Mapear campos del backend al formato del frontend
+    resultadosTabla.value = response.data.map(resultado => ({
+      id: resultado.id_resultado,
+      numero_caso: resultado.numero_caso || '',
+      numero_arete: resultado.numero_arete || '',
+      numero_muestra: resultado.folio_muestra || '',
+      upp: resultado.clave_upp || '',
+      propietario: resultado.nombre_propietario || '',
+      mvz: resultado.nombre_mvz || '',
+      fecha_registro: resultado.fecha_registro_caso || '',
+      fecha_resultado: resultado.fecha_carga_resultado || '',
+      resultado: resultado.resultado_final || ''
+    }));
+  } catch (error) {
+    console.error('Error al cargar resultados:', error);
+    errores.value = ['Error al cargar los resultados desde el servidor.'];
+    resultadosTabla.value = [];
+  }
+}
+
+async function buscarResultados() {
   errores.value = [];
   mensajeExito.value = '';
   seBusco.value = false;
@@ -340,6 +330,7 @@ function buscarResultados() {
     return;
   }
 
+  await cargarResultados();
   seBusco.value = true;
 
   if (resultadosFiltrados.value.length) {
@@ -365,7 +356,14 @@ function limpiarFiltros() {
   errores.value = [];
   mensajeExito.value = '';
   seBusco.value = false;
+  resultadosTabla.value = [];
 }
+
+// Cargar resultados al montar el componente
+onMounted(() => {
+  // Cargar resultados automáticamente al montar
+  buscarResultados();
+});
 </script>
 
 <style scoped>

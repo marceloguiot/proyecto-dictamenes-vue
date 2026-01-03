@@ -210,7 +210,10 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="u in usuariosFiltrados" :key="u.id">
+              <!-- ==================== EMPIEZAN CAMBIOS ==================== -->
+              <!-- Se actualizó para usar id_usuario del backend -->
+              <!-- ==================== EMPIEZAN CAMBIOS ==================== -->
+              <tr v-for="u in usuariosFiltrados" :key="u.id_usuario">
                 <td>{{ u.nombre_completo }}</td>
                 <td>{{ u.nombre_usuario }}</td>
                 <td>{{ u.correo }}</td>
@@ -223,6 +226,7 @@
                   </span>
                 </td>
               </tr>
+              <!-- ==================== TERMINAN CAMBIOS ==================== -->
               <tr v-if="usuariosFiltrados.length === 0">
                 <td colspan="7" class="sin-resultados">
                   No se encontraron usuarios con los criterios de búsqueda.
@@ -278,7 +282,10 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="u in usuariosFiltrados" :key="u.id">
+              <!-- ==================== EMPIEZAN CAMBIOS ==================== -->
+              <!-- Se actualizó para usar id_usuario del backend -->
+              <!-- ==================== EMPIEZAN CAMBIOS ==================== -->
+              <tr v-for="u in usuariosFiltrados" :key="u.id_usuario">
                 <td>{{ u.nombre_completo }}</td>
                 <td>{{ u.nombre_usuario }}</td>
                 <td>{{ u.correo }}</td>
@@ -300,6 +307,7 @@
                   </button>
                 </td>
               </tr>
+              <!-- ==================== TERMINAN CAMBIOS ==================== -->
               <tr v-if="usuariosFiltrados.length === 0">
                 <td colspan="8" class="sin-resultados">
                   No se encontraron usuarios con los criterios de búsqueda.
@@ -483,7 +491,10 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="u in usuariosFiltrados" :key="u.id">
+              <!-- ==================== EMPIEZAN CAMBIOS ==================== -->
+              <!-- Se actualizó para usar id_usuario del backend -->
+              <!-- ==================== EMPIEZAN CAMBIOS ==================== -->
+              <tr v-for="u in usuariosFiltrados" :key="u.id_usuario">
                 <td>{{ u.nombre_completo }}</td>
                 <td>{{ u.nombre_usuario }}</td>
                 <td>{{ u.correo }}</td>
@@ -516,6 +527,7 @@
                   </button>
                 </td>
               </tr>
+              <!-- ==================== TERMINAN CAMBIOS ==================== -->
               <tr v-if="usuariosFiltrados.length === 0">
                 <td colspan="8" class="sin-resultados">
                   No se encontraron usuarios con los criterios de búsqueda.
@@ -617,7 +629,12 @@
 </template>
 
 <script setup>
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se importó usuariosService para conectar con el backend
+// ==================== EMPIEZAN CAMBIOS ====================
 import { computed, ref, watch, onMounted, nextTick } from 'vue';
+import { usuariosService } from '@/services/api';
+// ==================== TERMINAN CAMBIOS ====================
 
 const props = defineProps({
   codigo: { type: String, required: true },
@@ -640,6 +657,11 @@ function desplazarAlModulo() {
 onMounted(() => {
   desplazarAlModulo();
   cargarBitacora(); // precarga demo
+
+  // Cargar usuarios si la vista por defecto requiere datos
+  if (selectedAction.value === 'consultar' || selectedAction.value === 'editar' || selectedAction.value === 'eliminar') {
+    buscarUsuarios();
+  }
 });
 
 // Catálogo de roles
@@ -653,6 +675,11 @@ const rolesCatalog = {
 
 const errores = ref([]);
 const mensajeExito = ref('');
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se agregó estado de carga
+// ==================== EMPIEZAN CAMBIOS ====================
+const cargandoUsuarios = ref(false);
+// ==================== TERMINAN CAMBIOS ====================
 
 /** errores menasje */
 const erroresCampoRegistro = ref({
@@ -859,63 +886,25 @@ const tituloAccionActual = computed(() => {
 
 watch(
   () => selectedAction.value,
-  () => {
+  (newAction) => {
     errores.value = [];
     mensajeExito.value = '';
     usuarioEditando.value = null;
     resetErroresCampoRegistro();
     resetErroresCampoEdicion();
+
+    // Cargar usuarios automáticamente al cambiar a consultar o editar
+    if (newAction === 'consultar' || newAction === 'editar' || newAction === 'eliminar') {
+      buscarUsuarios();
+    }
   }
 );
 
-// ===== Datos demo para tabla =====
-const usuariosDemoTabla = ref([
-  {
-    id: 1,
-    nombre: 'Juan',
-    apellido_paterno: 'Pérez',
-    apellido_materno: 'López',
-    nombre_completo: 'Juan Pérez López',
-    nombre_usuario: 'admin',
-    correo: 'admin@sistpec.ver.mx',
-    rol: 1,
-    rolEtiqueta: 'Administrador',
-    clave_de_rumiantes: '',
-    vigencia_inicio: '2025-01-01',
-    vigencia_fin: '2025-12-31',
-    activo: true
-  },
-  {
-    id: 2,
-    nombre: 'María',
-    apellido_paterno: 'García',
-    apellido_materno: 'Ruiz',
-    nombre_completo: 'María García Ruiz',
-    nombre_usuario: 'resplab01',
-    correo: 'resplab01@sistpec.ver.mx',
-    rol: 2,
-    rolEtiqueta: 'Responsable de laboratorio',
-    clave_de_rumiantes: '',
-    vigencia_inicio: '2025-01-01',
-    vigencia_fin: '2025-12-31',
-    activo: true
-  },
-  {
-    id: 3,
-    nombre: 'Carlos',
-    apellido_paterno: 'Hernández',
-    apellido_materno: 'Torres',
-    nombre_completo: 'Carlos Hernández Torres',
-    nombre_usuario: 'mvzver01',
-    correo: 'mvzver01@sistpec.ver.mx',
-    rol: 5,
-    rolEtiqueta: 'MVZ autorizado',
-    clave_de_rumiantes: 'VER-001-2025',
-    vigencia_inicio: '2025-03-01',
-    vigencia_fin: '2025-12-31',
-    activo: true
-  }
-]);
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se reemplazó usuariosDemoTabla por usuariosTabla que se llenará desde el backend
+// ==================== EMPIEZAN CAMBIOS ====================
+const usuariosTabla = ref([]);
+// ==================== TERMINAN CAMBIOS ====================
 
 const filtros = ref({
   nombre_usuario: '',
@@ -924,21 +913,43 @@ const filtros = ref({
 });
 
 const usuariosFiltrados = computed(() => {
-  const nom = filtros.value.nombre_usuario.trim().toLowerCase();
-  const clave = filtros.value.clave_de_rumiantes.trim().toLowerCase();
-  const mail = filtros.value.correo.trim().toLowerCase();
-
-  return usuariosDemoTabla.value.filter(u => {
-    const matchNombre = nom ? u.nombre_usuario.toLowerCase().includes(nom) : true;
-    const matchClave = clave ? (u.clave_de_rumiantes || '').toLowerCase().includes(clave) : true;
-    const matchCorreo = mail ? u.correo.toLowerCase().includes(mail) : true;
-    return matchNombre && matchClave && matchCorreo;
-  });
+  // ==================== EMPIEZAN CAMBIOS ====================
+  // Ahora solo muestra los datos cargados desde el backend
+  // ==================== EMPIEZAN CAMBIOS ====================
+  return usuariosTabla.value.map(u => ({
+    ...u,
+    nombre_completo: `${u.nombre} ${u.apellido_paterno} ${u.apellido_materno || ''}`.trim(),
+    rolEtiqueta: rolesCatalog[u.tipo_usuario] || 'Sin rol'
+  }));
+  // ==================== TERMINAN CAMBIOS ====================
 });
 
-function buscarUsuarios() {
-  // búsqueda reactiva 
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se convirtió buscarUsuarios a función async para llamar al backend
+// ==================== EMPIEZAN CAMBIOS ====================
+async function buscarUsuarios() {
+  errores.value = [];
+  mensajeExito.value = '';
+  cargandoUsuarios.value = true;
+
+  try {
+    const response = await usuariosService.consultar({
+      nombre_usuario: filtros.value.nombre_usuario || undefined,
+      clave_de_rumiantes: filtros.value.clave_de_rumiantes || undefined,
+      correo: filtros.value.correo || undefined,
+      limit: 100
+    });
+
+    usuariosTabla.value = response.data;
+    mensajeExito.value = `Se encontraron ${response.data.length} usuario(s).`;
+  } catch (error) {
+    console.error('Error al consultar usuarios:', error);
+    errores.value.push('Error al consultar usuarios del servidor. Intente nuevamente.');
+  } finally {
+    cargandoUsuarios.value = false;
+  }
 }
+// ==================== TERMINAN CAMBIOS ====================
 
 function limpiarFiltros() {
   filtros.value = { nombre_usuario: '', clave_de_rumiantes: '', correo: '' };
@@ -1048,7 +1059,10 @@ function validarFormularioRegistro() {
   return errores.value.length === 0;
 }
 
-function guardarUsuario() {
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se convirtió guardarUsuario a función async para llamar al backend
+// ==================== EMPIEZAN CAMBIOS ====================
+async function guardarUsuario() {
   mensajeExito.value = '';
 
   const esValido = validarFormularioRegistro();
@@ -1057,41 +1071,38 @@ function guardarUsuario() {
   const ok = window.confirm('¿Desea guardar el usuario con los datos capturados?');
   if (!ok) return;
 
-  const newId = usuariosDemoTabla.value.length
-    ? Math.max(...usuariosDemoTabla.value.map(u => u.id)) + 1
-    : 1;
+  cargandoUsuarios.value = true;
 
-  const rolNum = Number(nuevoUsuario.value.tipo_usuario);
-  const rolEtiqueta = rolesCatalog[rolNum] || 'Sin rol';
+  try {
+    const rolNum = Number(nuevoUsuario.value.tipo_usuario);
 
-  const usuarioCreado = {
-    id: newId,
-    nombre: nuevoUsuario.value.nombre,
-    apellido_paterno: nuevoUsuario.value.apellido_paterno,
-    apellido_materno: nuevoUsuario.value.apellido_materno,
-    nombre_completo: nuevoUsuario.value.nombre_completo,
-    nombre_usuario: nuevoUsuario.value.nombre_usuario,
-    correo: nuevoUsuario.value.correo,
-    rol: rolNum,
-    rolEtiqueta,
-    clave_de_rumiantes: nuevoUsuario.value.clave_de_rumiantes,
-    vigencia_inicio: nuevoUsuario.value.vigencia_inicio,
-    vigencia_fin: nuevoUsuario.value.vigencia_fin,
-    activo: nuevoUsuario.value.activo
-  };
+    await usuariosService.crear({
+      nombre: nuevoUsuario.value.nombre,
+      apellido_paterno: nuevoUsuario.value.apellido_paterno,
+      apellido_materno: nuevoUsuario.value.apellido_materno || null,
+      nombre_usuario: nuevoUsuario.value.nombre_usuario,
+      correo: nuevoUsuario.value.correo,
+      password: nuevoUsuario.value.password,
+      tipo_usuario: rolNum,
+      clave_de_rumiantes: nuevoUsuario.value.clave_de_rumiantes || null,
+      vigencia_inicio: nuevoUsuario.value.vigencia_inicio,
+      vigencia_fin: nuevoUsuario.value.vigencia_fin,
+      activo: nuevoUsuario.value.activo
+    });
 
-  usuariosDemoTabla.value.push(usuarioCreado);
+    mensajeExito.value = 'El usuario ha sido registrado correctamente.';
+    resetErroresCampoRegistro();
 
-  //  BITÁCORA
-  registrarCambio({
-    accion: 'REGISTRAR',
-    objetivo: usuarioCreado.nombre_usuario,
-    detalle: `Registró usuario con rol: ${rolEtiqueta}, vigencia: ${usuarioCreado.vigencia_inicio} a ${usuarioCreado.vigencia_fin}.`
-  });
-
-  mensajeExito.value = 'El usuario ha sido registrado correctamente.';
-  resetErroresCampoRegistro();
+    // Limpiar formulario
+    limpiarFormulario();
+  } catch (error) {
+    console.error('Error al registrar usuario:', error);
+    errores.value.push('Error al registrar usuario en el servidor. Verifique que el nombre de usuario y correo no estén duplicados.');
+  } finally {
+    cargandoUsuarios.value = false;
+  }
 }
+// ==================== TERMINAN CAMBIOS ====================
 
 // ===== Edición =====
 function seleccionarUsuario(u) {
@@ -1099,14 +1110,17 @@ function seleccionarUsuario(u) {
   mensajeExito.value = '';
   resetErroresCampoEdicion();
 
+  // ==================== EMPIEZAN CAMBIOS ====================
+  // Se actualizó para usar id_usuario y tipo_usuario del backend
+  // ==================== EMPIEZAN CAMBIOS ====================
   usuarioEditando.value = {
-    id: u.id,
+    id_usuario: u.id_usuario,
     nombre: u.nombre,
     apellido_paterno: u.apellido_paterno,
-    apellido_materno: u.apellido_materno,
+    apellido_materno: u.apellido_materno || '',
     nombre_usuario: u.nombre_usuario,
     correo: u.correo,
-    tipo_usuario: String(u.rol),
+    tipo_usuario: String(u.tipo_usuario),
     clave_de_rumiantes: u.clave_de_rumiantes || '',
     vigencia_inicio: u.vigencia_inicio,
     vigencia_fin: u.vigencia_fin,
@@ -1114,6 +1128,7 @@ function seleccionarUsuario(u) {
     password: '',
     confirmPassword: ''
   };
+  // ==================== TERMINAN CAMBIOS ====================
 }
 
 function cancelarEdicion() {
@@ -1203,7 +1218,10 @@ function validarFormularioEdicion() {
   return errores.value.length === 0;
 }
 
-function guardarCambiosUsuario() {
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se convirtió guardarCambiosUsuario a función async para llamar al backend
+// ==================== EMPIEZAN CAMBIOS ====================
+async function guardarCambiosUsuario() {
   mensajeExito.value = '';
 
   const esValido = validarFormularioEdicion();
@@ -1212,59 +1230,51 @@ function guardarCambiosUsuario() {
   const ok = window.confirm('¿Desea guardar los cambios del usuario seleccionado?');
   if (!ok) return;
 
-  const uEdit = usuarioEditando.value;
-  const idx = usuariosDemoTabla.value.findIndex(u => u.id === uEdit.id);
+  cargandoUsuarios.value = true;
 
-  if (idx === -1) {
-    errores.value.push('No se encontró el usuario en la lista.');
-    return;
+  try {
+    const uEdit = usuarioEditando.value;
+    const rolNum = Number(uEdit.tipo_usuario);
+
+    const payload = {
+      nombre: uEdit.nombre,
+      apellido_paterno: uEdit.apellido_paterno,
+      apellido_materno: uEdit.apellido_materno || null,
+      nombre_usuario: uEdit.nombre_usuario,
+      correo: uEdit.correo,
+      tipo_usuario: rolNum,
+      clave_de_rumiantes: uEdit.clave_de_rumiantes || null,
+      vigencia_inicio: uEdit.vigencia_inicio,
+      vigencia_fin: uEdit.vigencia_fin,
+      activo: uEdit.activo
+    };
+
+    // Solo incluir password si se especificó
+    if (uEdit.password) {
+      payload.password = uEdit.password;
+    }
+
+    await usuariosService.actualizar(uEdit.id_usuario, payload);
+
+    mensajeExito.value = 'Los datos del usuario se han actualizado correctamente.';
+    usuarioEditando.value = null;
+    resetErroresCampoEdicion();
+
+    // Recargar la lista
+    await buscarUsuarios();
+  } catch (error) {
+    console.error('Error al actualizar usuario:', error);
+    errores.value.push('Error al actualizar usuario en el servidor.');
+  } finally {
+    cargandoUsuarios.value = false;
   }
-
-  // Snapshot previo para detalle
-  const previo = { ...usuariosDemoTabla.value[idx] };
-
-  const rolNum = Number(uEdit.tipo_usuario);
-  const rolEtiqueta = rolesCatalog[rolNum] || 'Sin rol';
-
-  usuariosDemoTabla.value[idx] = {
-    ...usuariosDemoTabla.value[idx],
-    nombre: uEdit.nombre,
-    apellido_paterno: uEdit.apellido_paterno,
-    apellido_materno: uEdit.apellido_materno,
-    nombre_completo: `${uEdit.nombre} ${uEdit.apellido_paterno} ${uEdit.apellido_materno}`.trim(),
-    nombre_usuario: uEdit.nombre_usuario,
-    correo: uEdit.correo,
-    rol: rolNum,
-    rolEtiqueta,
-    clave_de_rumiantes: uEdit.clave_de_rumiantes,
-    vigencia_inicio: uEdit.vigencia_inicio,
-    vigencia_fin: uEdit.vigencia_fin,
-    activo: uEdit.activo
-  };
-
-  //  BITÁCORA (detalle resumido)
-  const cambios = [];
-  if (previo.correo !== uEdit.correo) cambios.push('correo');
-  if (previo.rol !== rolNum) cambios.push('rol');
-  if (previo.vigencia_inicio !== uEdit.vigencia_inicio || previo.vigencia_fin !== uEdit.vigencia_fin) cambios.push('vigencia');
-  if ((previo.clave_de_rumiantes || '') !== (uEdit.clave_de_rumiantes || '')) cambios.push('clave rumiantes');
-  if (previo.nombre_completo !== `${uEdit.nombre} ${uEdit.apellido_paterno} ${uEdit.apellido_materno}`.trim()) cambios.push('nombre');
-
-  registrarCambio({
-    accion: 'EDITAR',
-    objetivo: previo.nombre_usuario,
-    detalle: cambios.length
-      ? `Actualizó: ${cambios.join(', ')}.`
-      : 'Guardó cambios (sin diferencias detectadas).'
-  });
-
-  mensajeExito.value = 'Los datos del usuario se han actualizado correctamente.';
-  usuarioEditando.value = null;
-  resetErroresCampoEdicion();
 }
+// ==================== TERMINAN CAMBIOS ====================
 
-// ===== Desactivar / Reactivar =====
-function desactivarUsuario(u) {
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se convirtieron desactivarUsuario y reactivarUsuario a funciones async para llamar al backend
+// ==================== EMPIEZAN CAMBIOS ====================
+async function desactivarUsuario(u) {
   errores.value = [];
   mensajeExito.value = '';
 
@@ -1276,25 +1286,19 @@ function desactivarUsuario(u) {
   const ok = window.confirm(`¿Desea desactivar al usuario "${u.nombre_usuario}"?`);
   if (!ok) return;
 
-  const idx = usuariosDemoTabla.value.findIndex(x => x.id === u.id);
-  if (idx === -1) {
-    errores.value.push('No se encontró el usuario en la lista.');
-    return;
+  try {
+    await usuariosService.desactivar(u.id_usuario);
+    mensajeExito.value = 'El usuario se ha desactivado correctamente.';
+
+    // Recargar la lista
+    await buscarUsuarios();
+  } catch (error) {
+    console.error('Error al desactivar usuario:', error);
+    errores.value.push('Error al desactivar usuario en el servidor.');
   }
-
-  usuariosDemoTabla.value[idx] = { ...usuariosDemoTabla.value[idx], activo: false };
-
-  // BITÁCORA
-  registrarCambio({
-    accion: 'DESACTIVAR',
-    objetivo: u.nombre_usuario,
-    detalle: 'Desactivó usuario (baja lógica).'
-  });
-
-  mensajeExito.value = 'El usuario se ha desactivado correctamente.';
 }
 
-function reactivarUsuario(u) {
+async function reactivarUsuario(u) {
   errores.value = [];
   mensajeExito.value = '';
 
@@ -1306,23 +1310,18 @@ function reactivarUsuario(u) {
   const ok = window.confirm(`¿Desea reactivar al usuario "${u.nombre_usuario}"?`);
   if (!ok) return;
 
-  const idx = usuariosDemoTabla.value.findIndex(x => x.id === u.id);
-  if (idx === -1) {
-    errores.value.push('No se encontró el usuario en la lista.');
-    return;
+  try {
+    await usuariosService.reactivar(u.id_usuario);
+    mensajeExito.value = 'El usuario se ha reactivado correctamente.';
+
+    // Recargar la lista
+    await buscarUsuarios();
+  } catch (error) {
+    console.error('Error al reactivar usuario:', error);
+    errores.value.push('Error al reactivar usuario en el servidor.');
   }
-
-  usuariosDemoTabla.value[idx] = { ...usuariosDemoTabla.value[idx], activo: true };
-
-  //  BITÁCORA
-  registrarCambio({
-    accion: 'REACTIVAR',
-    objetivo: u.nombre_usuario,
-    detalle: 'Reactivó usuario.'
-  });
-
-  mensajeExito.value = 'El usuario se ha reactivado correctamente.';
 }
+// ==================== TERMINAN CAMBIOS ====================
 </script>
 
 <style scoped>

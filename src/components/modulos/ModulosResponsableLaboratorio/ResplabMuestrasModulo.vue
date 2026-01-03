@@ -460,7 +460,8 @@
 </template>
 
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch, onMounted } from 'vue';
+import { muestrasService } from '@/services/api';
 
 defineProps({
   codigo: { type: String, required: false, default: '' },
@@ -527,56 +528,41 @@ function badgeEstatusClase(estatus) {
   return 'badge--proceso';
 }
 
-/* ===================== DEMO DATA (SIN BD AÚN) ===================== */
-const muestrasDemo = ref([
-  {
-    id: 1,
-    id_muestra: 'M-0001-2025',
-    upp: '30-025-1055-001',
-    especie: 'Bovino',
-    tipo_muestra: 'Suero sanguíneo',
-    fecha_recepcion: '2025-12-14',
-    estatus: 'Pendiente',
-    origen_servicio: 'Campaña',
-    arete: '',
-    observacion: ''
-  },
-  {
-    id: 2,
-    id_muestra: 'M-0002-2025',
-    upp: '30-001-0001-001',
-    especie: 'Bovino',
-    tipo_muestra: 'Suero sanguíneo',
-    fecha_recepcion: '2025-12-14',
-    estatus: 'En proceso',
-    origen_servicio: 'Campaña',
-    arete: '301152005',
-    observacion: 'Muestra con etiqueta parcialmente dañada'
+/* ===================== Datos de muestras desde backend ===================== */
+const muestrasTabla = ref([]);
+
+// Función para cargar muestras desde backend
+async function cargarMuestras(filtros = {}) {
+  try {
+    errores.value = [];
+    const response = await muestrasService.consultar(filtros);
+
+    // Mapear campos del backend al formato del frontend
+    muestrasTabla.value = response.data.map(muestra => ({
+      id: muestra.id_muestra,
+      id_muestra: muestra.folio_muestra || muestra.id_muestra,
+      upp: muestra.clave_upp || '',
+      especie: muestra.especie || '',
+      tipo_muestra: muestra.tipo_muestra || '',
+      fecha_recepcion: muestra.fecha_recepcion || '',
+      estatus: muestra.estatus_muestra || 'Pendiente',
+      origen_servicio: muestra.origen_servicio || '',
+      arete: muestra.numero_arete || '',
+      observacion: muestra.observaciones || ''
+    }));
+  } catch (error) {
+    console.error('Error al cargar muestras:', error);
+    errores.value = ['Error al cargar las muestras desde el servidor.'];
+    muestrasTabla.value = [];
   }
-]);
+}
 
 /* ===================== 1) RECEPCIONAR (COTEJAR) - SOLO CAMPAÑA ===================== */
 const filtrosCamp = ref({ hoja: '', upp: '' });
 const buscadoCamp = ref(false);
 const mostrarAlertaCamp = ref(false);
 
-const lotesCampaniaDemo = ref([
-  {
-    id: 101,
-    folio_recepcion: 'REC-2025-001',
-    fecha_recepcion: '2025-12-14',
-    upp: '30-025-1055-001',
-    hoja_control_campo: 'CC-5409818',
-    especie: 'Bovino',
-    total_muestras: 4,
-    muestras: [
-      { id: 1001, folio_muestra: 'M-0001-2025', arete: '' },
-      { id: 1002, folio_muestra: 'M-0004-2025', arete: '' },
-      { id: 1003, folio_muestra: 'M-0005-2025', arete: '' },
-      { id: 1004, folio_muestra: 'M-0006-2025', arete: '' }
-    ]
-  }
-]);
+const lotesCampaniaTabla = ref([]);
 
 function hayAlMenosUnFiltroCamp() {
   const f = filtrosCamp.value;
@@ -605,7 +591,7 @@ const lotesCampFiltrados = computed(() => {
   const hoja = f.hoja.trim().toLowerCase();
   const upp = f.upp.trim().toLowerCase();
 
-  return lotesCampaniaDemo.value.filter(l => {
+  return lotesCampaniaTabla.value.filter(l => {
     const okHoja = hoja ? l.hoja_control_campo.toLowerCase().includes(hoja) : true;
     const okUpp = upp ? l.upp.toLowerCase().includes(upp) : true;
     return okHoja && okUpp;
@@ -688,7 +674,7 @@ const muestrasPendientesFiltradas = computed(() => {
   const folio = f.folio.trim().toLowerCase();
   const upp = f.upp.trim().toLowerCase();
 
-  return muestrasDemo.value.filter(m => {
+  return muestrasTabla.value.filter(m => {
     if (m.estatus !== 'Pendiente') return false;
     const okFolio = folio ? (m.id_muestra || '').toLowerCase().includes(folio) : true;
     const okUpp = upp ? (m.upp || '').toLowerCase().includes(upp) : true;
@@ -715,18 +701,18 @@ function guardarEdicionMuestra() {
     return;
   }
 
-  const idx = muestrasDemo.value.findIndex(x => x.id === muestraEditando.value.id);
+  const idx = muestrasTabla.value.findIndex(x => x.id === muestraEditando.value.id);
   if (idx === -1) {
     errores.value.push('No se encontró la muestra.');
     return;
   }
 
-  if (muestrasDemo.value[idx].estatus !== 'Pendiente') {
+  if (muestrasTabla.value[idx].estatus !== 'Pendiente') {
     errores.value.push('Solo se puede editar si el estatus es Pendiente.');
     return;
   }
 
-  muestrasDemo.value[idx] = { ...muestrasDemo.value[idx], ...muestraEditando.value };
+  muestrasTabla.value[idx] = { ...muestrasTabla.value[idx], ...muestraEditando.value };
   mensajeExito.value = 'Muestra actualizada.';
   muestraEditando.value = null;
 }
@@ -773,7 +759,7 @@ const muestrasConsultadasFiltradas = computed(() => {
   const ini = f.fecha_inicio;
   const fin = f.fecha_fin;
 
-  return muestrasDemo.value.filter(m => {
+  return muestrasTabla.value.filter(m => {
     const okId = id ? (m.id_muestra || '').toLowerCase().includes(id) : true;
     const okUpp = upp ? (m.upp || '').toLowerCase().includes(upp) : true;
     const okEst = est ? m.estatus === est : true;
@@ -818,7 +804,7 @@ const muestrasPendientesEliminarFiltradas = computed(() => {
   const folio = f.folio.trim().toLowerCase();
   const upp = f.upp.trim().toLowerCase();
 
-  return muestrasDemo.value.filter(m => {
+  return muestrasTabla.value.filter(m => {
     if (m.estatus !== 'Pendiente') return false;
     const okFolio = folio ? (m.id_muestra || '').toLowerCase().includes(folio) : true;
     const okUpp = upp ? (m.upp || '').toLowerCase().includes(upp) : true;
@@ -830,12 +816,12 @@ function eliminarMuestraPendiente(m) {
   errores.value = [];
   mensajeExito.value = '';
 
-  const idx = muestrasDemo.value.findIndex(x => x.id === m.id);
+  const idx = muestrasTabla.value.findIndex(x => x.id === m.id);
   if (idx === -1) {
     errores.value.push('No se encontró la muestra.');
     return;
   }
-  if (muestrasDemo.value[idx].estatus !== 'Pendiente') {
+  if (muestrasTabla.value[idx].estatus !== 'Pendiente') {
     errores.value.push('Solo se puede eliminar si el estatus es Pendiente.');
     return;
   }
@@ -843,7 +829,7 @@ function eliminarMuestraPendiente(m) {
   const ok = window.confirm(`¿Desea eliminar la muestra "${m.id_muestra}"?`);
   if (!ok) return;
 
-  muestrasDemo.value.splice(idx, 1);
+  muestrasTabla.value.splice(idx, 1);
   mensajeExito.value = 'Muestra eliminada (DEMO).';
 }
 

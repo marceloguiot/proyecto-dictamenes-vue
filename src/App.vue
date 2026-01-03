@@ -37,11 +37,16 @@
 </template>
 
 <script setup>
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se agregó el import del servicio de autenticación
+// ==================== EMPIEZAN CAMBIOS ====================
 import { ref, computed } from 'vue';
 import SistpecNavbar from './components/layout/SistpecNavbar.vue';
 import LoginSistpec from './components/auth/LoginSistpec.vue';
 import WelcomePanel from './components/panel/WelcomePanel.vue';
 import Modulo from './components/modulos/Modulo.vue';
+import { authService } from './services/api';
+// ==================== TERMINAN CAMBIOS ====================
 
 // ===== Configuración de menús por rol =====
 const menusPorRol = {
@@ -87,22 +92,19 @@ const menusPorRol = {
   ]
 };
 
-// Usuarios demo
-const usuariosDemo = {
-  admin:  { password: '1234', rol: 'administrador' },
-  resplab:{ password: '1234', rol: 'responsableLaboratorio' },
-  recep:  { password: 'abcd', rol: 'recepcionista' },
-  coord:  { password: 'efgh', rol: 'coordinador' },
-  mvz:    { password: '0000', rol: 'mvzAutorizado' }
-};
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se eliminó usuariosDemo y se agregó currentUser para almacenar datos del usuario autenticado
+// ==================== EMPIEZAN CAMBIOS ====================
 
 // Estado
 const formUsuario    = ref('');
 const formPassword   = ref('');
 const isLoggedIn     = ref(false);
 const currentRole    = ref(null);
+const currentUser    = ref(null); // Nuevo: datos del usuario autenticado
 const menuOpen       = ref(false);
 const selectedModule = ref(null);
+// ==================== TERMINAN CAMBIOS ====================
 
 // Menú actual
 const currentMenu = computed(() => menusPorRol[currentRole.value] || []);
@@ -114,31 +116,88 @@ const currentModuleTitle = computed(() => {
   return menu ? menu.texto : selectedModule.value;
 });
 
-// Métodos
-function login() {
+// ==================== EMPIEZAN CAMBIOS ====================
+// Función login modificada para usar el servicio de autenticación del backend
+// ==================== EMPIEZAN CAMBIOS ====================
+async function login() {
   const usuario = formUsuario.value.trim();
   const pwd     = formPassword.value;
 
-  const data = usuariosDemo[usuario];
-  if (data && data.password === pwd) {
-    currentRole.value     = data.rol;
-    isLoggedIn.value      = true;
-    menuOpen.value        = false;
-    formPassword.value    = '';
-    selectedModule.value  = null;
-  } else {
-    alert('Usuario o contraseña incorrectos');
+  if (!usuario || !pwd) {
+    alert('Por favor ingrese usuario y contraseña');
+    return;
+  }
+
+  try {
+    // Llamada al backend
+    const response = await authService.login({
+      nombre_usuario: usuario,
+      password: pwd
+    });
+
+    // Si el login es exitoso
+    if (response.data.success && response.data.usuario) {
+      const userData = response.data.usuario;
+
+      currentUser.value     = userData;
+      currentRole.value     = userData.rol;
+      isLoggedIn.value      = true;
+      menuOpen.value        = false;
+      formPassword.value    = '';
+      selectedModule.value  = null;
+
+      console.log('Login exitoso:', userData);
+    } else {
+      alert('Error de autenticación');
+    }
+  } catch (error) {
+    console.error('Error en login:', error);
+
+    // Manejo de errores específicos
+    if (error.response) {
+      // El servidor respondió con un código de error
+      const status = error.response.status;
+      const detail = error.response.data?.detail || 'Error desconocido';
+
+      if (status === 401) {
+        alert('Usuario o contraseña incorrectos');
+      } else if (status === 403) {
+        alert(detail); // Usuario inactivo o vigencia expirada
+      } else {
+        alert(`Error: ${detail}`);
+      }
+    } else if (error.request) {
+      // La petición se hizo pero no hubo respuesta
+      alert('No se pudo conectar con el servidor. Verifique que el backend esté ejecutándose.');
+    } else {
+      // Algo pasó al configurar la petición
+      alert('Error al procesar la solicitud');
+    }
   }
 }
+// ==================== TERMINAN CAMBIOS ====================
 
-function logout() {
-  isLoggedIn.value     = false;
-  currentRole.value    = null;
-  formUsuario.value    = '';
-  formPassword.value   = '';
-  menuOpen.value       = false;
-  selectedModule.value = null;
+// ==================== EMPIEZAN CAMBIOS ====================
+// Función logout modificada para llamar al backend (opcional)
+// ==================== EMPIEZAN CAMBIOS ====================
+async function logout() {
+  try {
+    // Llamada opcional al backend para cerrar sesión
+    await authService.logout();
+  } catch (error) {
+    console.error('Error al cerrar sesión:', error);
+  } finally {
+    // Limpiar estado local siempre
+    isLoggedIn.value     = false;
+    currentRole.value    = null;
+    currentUser.value    = null;
+    formUsuario.value    = '';
+    formPassword.value   = '';
+    menuOpen.value       = false;
+    selectedModule.value = null;
+  }
 }
+// ==================== TERMINAN CAMBIOS ====================
 
 function toggleNavbarMenu() {
   menuOpen.value = !menuOpen.value;

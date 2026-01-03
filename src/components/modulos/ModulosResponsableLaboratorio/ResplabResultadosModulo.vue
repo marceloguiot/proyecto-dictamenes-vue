@@ -526,7 +526,8 @@
 </template>
 
 <script setup>
-import { computed, nextTick, ref } from 'vue';
+import { computed, nextTick, ref, onMounted } from 'vue';
+import { resultadosService } from '@/services/api';
 
 const moduloContenidoRef = ref(null);
 const printAreaRef = ref(null);

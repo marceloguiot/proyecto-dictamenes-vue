@@ -173,7 +173,8 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, nextTick } from 'vue';
+import { computed, ref, watch, nextTick, onMounted } from 'vue';
+import { muestrasService } from '@/services/api';
 
 defineProps({
   codigo: { type: String, required: true },
@@ -222,51 +223,19 @@ const descripcionAccionActual = computed(() => {
 // Reset de mensajes al cambiar de acción
 watch(
   () => selectedAction.value,
-  () => {
+  (newAction) => {
     errores.value      = [];
     mensajeExito.value = '';
+
+    // Cargar muestras automáticamente al cambiar a consultar
+    if (newAction === 'consultar') {
+      cargarMuestras();
+    }
   }
 );
 
-// ===== Datos demo para tabla (simulación de backend) =====
-const muestrasDemoTabla = ref([
-  {
-    id: 1,
-    id_muestra: 'M-0001-2025',
-    upp: 'VER-0001-2025',
-    propietario: 'José López Ramírez',
-    especie: 'Bovino',
-    tipo_muestra: 'Suero sanguíneo',
-    fecha_recepcion: '2025-03-10',
-    estatus: 'Concluido',
-    resultado: 'Negativo',
-    comentarios: 'Muestra en condiciones adecuadas.'
-  },
-  {
-    id: 2,
-    id_muestra: 'M-0002-2025',
-    upp: 'VER-0020-2025',
-    propietario: 'María Hernández Torres',
-    especie: 'Bovino',
-    tipo_muestra: 'Suero sanguíneo',
-    fecha_recepcion: '2025-03-12',
-    estatus: 'En proceso',
-    resultado: '',
-    comentarios: 'Pendiente de análisis serológico.'
-  },
-  {
-    id: 3,
-    id_muestra: 'M-0003-2025',
-    upp: 'VER-0100-2025',
-    propietario: 'Carlos García Santos',
-    especie: 'Caprino',
-    tipo_muestra: 'Suero sanguíneo',
-    fecha_recepcion: '2025-03-05',
-    estatus: 'Rechazado',
-    resultado: 'No aplica',
-    comentarios: 'Muestra coagulada, no viable para análisis.'
-  }
-]);
+// Datos de muestras cargados desde backend
+const muestrasTabla = ref([]);
 
 // Filtros
 const filtros = ref({
@@ -286,7 +255,7 @@ const muestrasFiltradas = computed(() => {
   const fInicio   = filtros.value.fecha_inicio;
   const fFin      = filtros.value.fecha_fin;
 
-  return muestrasDemoTabla.value.filter(m => {
+  return muestrasTabla.value.filter(m => {
     const matchId = idMuestra
       ? (m.id_muestra || '').toLowerCase().includes(idMuestra)
       : true;
@@ -312,9 +281,34 @@ const muestrasFiltradas = computed(() => {
   });
 });
 
-function buscarMuestras() {
-  // La búsqueda es reactiva con los filtros;
-  // aquí se puede llamar a backend si lo requiere.
+// Cargar muestras desde el backend
+async function cargarMuestras() {
+  try {
+    errores.value = [];
+    const response = await muestrasService.consultar(filtros.value);
+
+    // Mapear campos del backend al formato del frontend
+    muestrasTabla.value = response.data.map(muestra => ({
+      id: muestra.id_muestra,
+      id_muestra: muestra.folio_muestra || muestra.id_muestra,
+      upp: muestra.clave_upp || '',
+      propietario: muestra.nombre_propietario || '',
+      especie: muestra.especie || '',
+      tipo_muestra: muestra.tipo_muestra || '',
+      fecha_recepcion: muestra.fecha_recepcion || '',
+      estatus: muestra.estatus_muestra || '',
+      resultado: muestra.resultado_general || '',
+      comentarios: muestra.observaciones || ''
+    }));
+  } catch (error) {
+    console.error('Error al cargar muestras:', error);
+    errores.value = ['Error al cargar las muestras desde el servidor.'];
+    muestrasTabla.value = [];
+  }
+}
+
+async function buscarMuestras() {
+  await cargarMuestras();
 }
 
 function limpiarFiltros() {
@@ -326,6 +320,7 @@ function limpiarFiltros() {
     fecha_inicio: '',
     fecha_fin: ''
   };
+  cargarMuestras();
 }
 
 // Clase de badge según estatus
@@ -338,6 +333,11 @@ function badgeEstatusClase(estatus) {
   }
   return 'badge--proceso';
 }
+
+// Cargar muestras al montar el componente
+onMounted(() => {
+  cargarMuestras();
+});
 </script>
 
 <style scoped>

@@ -383,6 +383,12 @@
 </template>
 
 <script>
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se importó propietariosService para conectar con el backend
+// ==================== EMPIEZAN CAMBIOS ====================
+import { propietariosService } from '@/services/api';
+// ==================== TERMINAN CAMBIOS ====================
+
 export default {
   name: "MvzPropietariosModulo",
 
@@ -416,46 +422,15 @@ export default {
       errores: [],
       mensajeExito: "",
       moduloContenidoRef: null,
+      // ==================== EMPIEZAN CAMBIOS ====================
+      // Se agregó estado de carga
+      // ==================== EMPIEZAN CAMBIOS ====================
+      cargando: false,
+      // ==================== TERMINAN CAMBIOS ====================
 
-      // Mock DB
-      propietariosDB: [
-        {
-          id: 1,
-          curp: "RUMM690828HVZZNG03",
-          apellido_paterno: "Ruiz",
-          apellido_materno: "Mendoza",
-          nombres: "Miguel Angel",
-          telefono: "2282132079",
-          correo: "soto95.cars@gmail.com",
-          domicilio: "C. Niño Artillero s/n",
-          municipio: "Ayahualulco",
-          localidad: "Los Altos",
-          cp: "91260",
-          estado: "Veracruz",
-          estatus: "ACTIVO",
-          upps: [
-            { clave: "30-025-1055-001", nombre_predio: "San Francisco", municipio: "Ayahualulco" },
-          ],
-        },
-        {
-          id: 2,
-          curp: "AAAA000000HVZXXX00",
-          apellido_paterno: "López",
-          apellido_materno: "Pérez",
-          nombres: "Juan",
-          telefono: "2290000000",
-          correo: "",
-          domicilio: "Calle 1",
-          municipio: "Xalapa",
-          localidad: "Centro",
-          cp: "91000",
-          estado: "Veracruz",
-          estatus: "FINADO",
-          upps: [
-            { clave: "30-999-0000-001", nombre_predio: "Rancho Ejemplo", municipio: "Xalapa" },
-          ],
-        },
-      ],
+      // ==================== EMPIEZAN CAMBIOS ====================
+      // Se eliminó propietariosDB mock ya que ahora se consulta desde el backend
+      // ==================== EMPIEZAN CAMBIOS ====================
 
       // Registrar
       formRegistro: this.formPropietarioVacio(),
@@ -482,9 +457,9 @@ export default {
     },
   },
 
-  mounted() {
-    this.resultados = [...this.propietariosDB];
-  },
+  // ==================== EMPIEZAN CAMBIOS ====================
+  // Se eliminó mounted() que cargaba datos mock
+  // ==================== EMPIEZAN CAMBIOS ====================
 
   methods: {
     formPropietarioVacio() {
@@ -520,8 +495,10 @@ export default {
       setTimeout(() => (this.mensajeExito = ""), 3500);
     },
 
-    // ================= REGISTRAR =================
-    registrarPropietario() {
+    // ==================== EMPIEZAN CAMBIOS ====================
+    // Se convirtió a async y se integró con backend
+    // ==================== EMPIEZAN CAMBIOS ====================
+    async registrarPropietario() {
       this.errores = [];
 
       const f = this.formRegistro;
@@ -530,25 +507,35 @@ export default {
         return;
       }
 
-      const yaExiste = this.propietariosDB.some((p) => p.curp.toUpperCase() === f.curp.toUpperCase());
-      if (yaExiste) {
-        this.setError("El propietario ya existe (CURP duplicada).");
-        return;
+      this.cargando = true;
+      try {
+        await propietariosService.crear({
+          curp: f.curp.toUpperCase(),
+          telefono: f.telefono,
+          correo: f.correo || null,
+          apellido_paterno: f.apellido_paterno,
+          apellido_materno: f.apellido_materno || null,
+          nombre: f.nombres,
+          calle: f.domicilio,
+          municipio: f.municipio,
+          localidad: f.localidad,
+          codigo_postal: f.cp || null,
+          estado: f.estado,
+        });
+
+        this.setExito("Propietario registrado con éxito.");
+        this.formRegistro = this.formPropietarioVacio();
+      } catch (error) {
+        if (error.response?.status === 400) {
+          this.setError("El propietario ya existe (CURP duplicada).");
+        } else {
+          this.setError("Error al registrar propietario en el servidor.");
+        }
+      } finally {
+        this.cargando = false;
       }
-
-      // TODO: API -> POST /propietarios
-      const nuevo = {
-        id: Date.now(),
-        ...JSON.parse(JSON.stringify(f)),
-        estatus: "ACTIVO",
-        upps: [],
-      };
-      nuevo.curp = nuevo.curp.toUpperCase();
-      this.propietariosDB.unshift(nuevo);
-
-      this.setExito("Propietario registrado con éxito.");
-      this.formRegistro = this.formPropietarioVacio();
     },
+    // ==================== TERMINAN CAMBIOS ====================
 
     limpiarFormRegistro() {
       this.errores = [];
@@ -556,8 +543,10 @@ export default {
       this.formRegistro = this.formPropietarioVacio();
     },
 
-    // ================= CONSULTAR =================
-    buscarPropietarios() {
+    // ==================== EMPIEZAN CAMBIOS ====================
+    // Se convirtió a async y se integró con backend
+    // ==================== EMPIEZAN CAMBIOS ====================
+    async buscarPropietarios() {
       this.errores = [];
       this.propSeleccionado = null;
 
@@ -568,38 +557,60 @@ export default {
         return;
       }
 
-      const curpN = (curp || "").trim().toUpperCase();
-      const nombreN = (nombre || "").trim().toLowerCase();
-      const muniN = (municipio || "").trim().toLowerCase();
-      const estN = (estatus || "").trim().toUpperCase();
+      this.cargando = true;
+      try {
+        const response = await propietariosService.consultar({
+          curp: curp || undefined,
+          nombre: nombre || undefined,
+          municipio: municipio || undefined,
+          activo: estatus === 'ACTIVO' ? true : (estatus === 'FINADO' ? false : undefined),
+          limit: 100
+        });
 
-      // TODO: API -> GET /propietarios?...
-      let res = [...this.propietariosDB];
+        const res = response.data;
 
-      if (curpN) res = res.filter((p) => (p.curp || "").toUpperCase().includes(curpN));
-      if (nombreN) {
-        res = res.filter((p) =>
-          `${p.apellido_paterno} ${p.apellido_materno} ${p.nombres}`.toLowerCase().includes(nombreN)
-        );
-      }
-      if (muniN) res = res.filter((p) => (p.municipio || "").toLowerCase().includes(muniN));
-      if (estN) res = res.filter((p) => (p.estatus || "").toUpperCase() === estN);
+        if (!res.length) {
+          this.setError("No se encontraron resultados con los criterios ingresados, favor de verificar.");
+          this.resultados = [];
+          return;
+        }
 
-      if (!res.length) {
-        this.setError("No se encontraron resultados con los criterios ingresados, favor de verificar.");
+        // Mapear respuesta del backend al formato del frontend
+        this.resultados = res.map(p => ({
+          id: p.id_propietario,
+          curp: p.curp,
+          apellido_paterno: p.apellido_paterno,
+          apellido_materno: p.apellido_materno,
+          nombres: p.nombre,
+          telefono: p.telefono,
+          correo: p.correo,
+          domicilio: p.calle,
+          municipio: p.municipio,
+          localidad: p.localidad,
+          cp: p.codigo_postal,
+          estado: p.estado,
+          estatus: p.activo ? 'ACTIVO' : 'FINADO',
+          upps: [] // Se llena al seleccionar
+        }));
+
+        this.setExito(`Se encontraron ${res.length} resultado(s).`);
+      } catch (error) {
+        this.setError("Error al consultar propietarios del servidor.");
         this.resultados = [];
-        return;
+      } finally {
+        this.cargando = false;
       }
-
-      this.resultados = res;
-      this.setExito(`Se encontraron ${res.length} resultado(s).`);
     },
+    // ==================== TERMINAN CAMBIOS ====================
 
     limpiarFiltros() {
       this.errores = [];
       this.mensajeExito = "";
       this.filtros = { curp: "", nombre: "", municipio: "", estatus: "" };
-      this.resultados = [...this.propietariosDB];
+      // ==================== EMPIEZAN CAMBIOS ====================
+      // Se eliminó referencia a propietariosDB mock
+      // ==================== EMPIEZAN CAMBIOS ====================
+      this.resultados = [];
       this.propSeleccionado = null;
     },
 
@@ -607,8 +618,10 @@ export default {
       this.propSeleccionado = JSON.parse(JSON.stringify(p));
     },
 
-    // ================= EDITAR =================
-    buscarParaEditar() {
+    // ==================== EMPIEZAN CAMBIOS ====================
+    // Se convirtió a async y se integró con backend
+    // ==================== EMPIEZAN CAMBIOS ====================
+    async buscarParaEditar() {
       this.errores = [];
       this.mensajeExito = "";
 
@@ -618,19 +631,46 @@ export default {
         return;
       }
 
-      // TODO: API -> GET /propietarios/:curp
-      const p = this.propietariosDB.find((x) => (x.curp || "").toUpperCase() === curp);
+      this.cargando = true;
+      try {
+        const response = await propietariosService.obtenerPorCurp(curp);
+        const p = response.data;
 
-      if (!p) {
-        this.setError("No se pudo encontrar el propietario, favor de verificar.");
-        return;
+        // Mapear respuesta del backend al formato del frontend
+        this.formEdicion = {
+          id: p.id_propietario,
+          curp: p.curp,
+          apellido_paterno: p.apellido_paterno,
+          apellido_materno: p.apellido_materno,
+          nombres: p.nombre,
+          telefono: p.telefono,
+          correo: p.correo,
+          domicilio: p.calle,
+          municipio: p.municipio,
+          localidad: p.localidad,
+          cp: p.codigo_postal,
+          estado: p.estado,
+          estatus: p.activo ? 'ACTIVO' : 'FINADO',
+          upps: [] // Se llena si es necesario
+        };
+
+        this.setExito("Propietario cargado para edición.");
+      } catch (error) {
+        if (error.response?.status === 404) {
+          this.setError("No se pudo encontrar el propietario, favor de verificar.");
+        } else {
+          this.setError("Error al consultar el propietario del servidor.");
+        }
+      } finally {
+        this.cargando = false;
       }
-
-      this.formEdicion = JSON.parse(JSON.stringify(p));
-      this.setExito("Propietario cargado para edición.");
     },
+    // ==================== TERMINAN CAMBIOS ====================
 
-    guardarEdicion() {
+    // ==================== EMPIEZAN CAMBIOS ====================
+    // Se convirtió a async y se integró con backend
+    // ==================== EMPIEZAN CAMBIOS ====================
+    async guardarEdicion() {
       this.errores = [];
       const f = this.formEdicion;
 
@@ -639,31 +679,39 @@ export default {
         return;
       }
 
-      // TODO: API -> PUT /propietarios/:id
-      const idx = this.propietariosDB.findIndex((p) => p.id === f.id);
-      if (idx === -1) {
-        this.setError("No se pudo actualizar (registro no encontrado).");
-        return;
+      this.cargando = true;
+      try {
+        await propietariosService.actualizar(f.id, {
+          telefono: f.telefono,
+          correo: f.correo || null,
+          apellido_paterno: f.apellido_paterno,
+          apellido_materno: f.apellido_materno || null,
+          nombre: f.nombres,
+          calle: f.domicilio,
+          municipio: f.municipio,
+          localidad: f.localidad,
+          codigo_postal: f.cp || null,
+          estado: f.estado,
+        });
+
+        this.setExito("Datos actualizados con éxito.");
+
+        // Actualizar los resultados de búsqueda si existen
+        const idx = this.resultados.findIndex((p) => p.id === f.id);
+        if (idx !== -1) {
+          this.resultados[idx] = { ...this.resultados[idx], ...f };
+        }
+      } catch (error) {
+        if (error.response?.status === 404) {
+          this.setError("No se pudo actualizar (registro no encontrado).");
+        } else {
+          this.setError("Error al actualizar propietario en el servidor.");
+        }
+      } finally {
+        this.cargando = false;
       }
-
-      // Importante: UPP se mantiene (solo lectura aquí)
-      this.propietariosDB[idx] = {
-        ...this.propietariosDB[idx],
-        telefono: f.telefono,
-        correo: f.correo,
-        apellido_paterno: f.apellido_paterno,
-        apellido_materno: f.apellido_materno,
-        nombres: f.nombres,
-        domicilio: f.domicilio,
-        municipio: f.municipio,
-        localidad: f.localidad,
-        cp: f.cp,
-        estado: f.estado,
-      };
-
-      this.setExito("Datos actualizados con éxito.");
-      this.resultados = [...this.propietariosDB];
     },
+    // ==================== TERMINAN CAMBIOS ====================
 
     limpiarEdicion() {
       this.errores = [];
@@ -672,8 +720,10 @@ export default {
       this.formEdicion = {};
     },
 
-    // ================= BAJA (FINADO) =================
-    buscarParaBaja() {
+    // ==================== EMPIEZAN CAMBIOS ====================
+    // Se convirtió a async y se integró con backend
+    // ==================== EMPIEZAN CAMBIOS ====================
+    async buscarParaBaja() {
       this.errores = [];
       this.mensajeExito = "";
       this.propBaja = {};
@@ -684,19 +734,39 @@ export default {
         return;
       }
 
-      // TODO: API -> GET /propietarios/:curp
-      const p = this.propietariosDB.find((x) => (x.curp || "").toUpperCase() === curp);
+      this.cargando = true;
+      try {
+        const response = await propietariosService.obtenerPorCurp(curp);
+        const p = response.data;
 
-      if (!p) {
-        this.setError("No se pudo encontrar el propietario, favor de verificar.");
-        return;
+        // Mapear respuesta del backend al formato del frontend
+        this.propBaja = {
+          id: p.id_propietario,
+          curp: p.curp,
+          apellido_paterno: p.apellido_paterno,
+          apellido_materno: p.apellido_materno,
+          nombres: p.nombre,
+          estatus: p.activo ? 'ACTIVO' : 'FINADO',
+          upps: []
+        };
+
+        this.setExito("Propietario encontrado.");
+      } catch (error) {
+        if (error.response?.status === 404) {
+          this.setError("No se pudo encontrar el propietario, favor de verificar.");
+        } else {
+          this.setError("Error al consultar el propietario del servidor.");
+        }
+      } finally {
+        this.cargando = false;
       }
-
-      this.propBaja = JSON.parse(JSON.stringify(p));
-      this.setExito("Propietario encontrado.");
     },
+    // ==================== TERMINAN CAMBIOS ====================
 
-    confirmarBajaFinado() {
+    // ==================== EMPIEZAN CAMBIOS ====================
+    // Se convirtió a async y se integró con backend
+    // ==================== EMPIEZAN CAMBIOS ====================
+    async confirmarBajaFinado() {
       this.errores = [];
       if (!this.propBaja?.id) {
         this.setError("Seleccione un propietario antes de confirmar.");
@@ -707,20 +777,30 @@ export default {
         return;
       }
 
-      // TODO: API -> PATCH /propietarios/:id/estatus FINADO
-      const idx = this.propietariosDB.findIndex((p) => p.id === this.propBaja.id);
-      if (idx === -1) {
-        this.setError("No se pudo actualizar el estatus (registro no encontrado).");
-        return;
+      this.cargando = true;
+      try {
+        await propietariosService.desactivar(this.propBaja.id);
+
+        this.setExito("Estatus actualizado a FINADO.");
+        this.propBaja = {};
+        this.buscarBaja = { curp: "" };
+
+        // Actualizar resultados si existen
+        const idx = this.resultados.findIndex((p) => p.id === this.propBaja.id);
+        if (idx !== -1) {
+          this.resultados[idx].estatus = "FINADO";
+        }
+      } catch (error) {
+        if (error.response?.status === 404) {
+          this.setError("No se pudo actualizar el estatus (registro no encontrado).");
+        } else {
+          this.setError("Error al actualizar estatus en el servidor.");
+        }
+      } finally {
+        this.cargando = false;
       }
-
-      this.propietariosDB[idx].estatus = "FINADO";
-
-      this.setExito("Estatus actualizado a FINADO.");
-      this.propBaja = {};
-      this.buscarBaja = { curp: "" };
-      this.resultados = [...this.propietariosDB];
     },
+    // ==================== TERMINAN CAMBIOS ====================
 
     limpiarBaja() {
       this.errores = [];

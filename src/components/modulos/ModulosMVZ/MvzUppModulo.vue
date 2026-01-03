@@ -388,8 +388,14 @@
   </section>
 </template>
 
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se importaron servicios para conectar con el backend
+// ==================== EMPIEZAN CAMBIOS ====================
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch, onMounted } from 'vue';
+import { uppService } from '@/services/api';
+import { propietariosService } from '@/services/api';
+// ==================== TERMINAN CAMBIOS ====================
 
 defineProps({
   codigo: { type: String, required: false, default: '' },
@@ -419,6 +425,11 @@ const acciones = [
 const selectedAction = ref('agregar');
 const errores = ref([]);
 const mensajeExito = ref('');
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se agregó estado de carga
+// ==================== EMPIEZAN CAMBIOS ====================
+const cargando = ref(false);
+// ==================== TERMINAN CAMBIOS ====================
 
 function cambiarAccion(id) {
   selectedAction.value = id;
@@ -448,56 +459,65 @@ watch(
   }
 );
 
-/* ===================== DEMO: usuario MVZ actual ===================== */
-const mvzUserId = 10;
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se eliminaron datos mock y se cargará del backend
+// ==================== EMPIEZAN CAMBIOS ====================
+const propietariosList = ref([]);
 
-/* ===================== DEMO DATA: propietarios ===================== */
-const propietariosDemo = ref([
-  { id: 1, mvz_user_id: 10, curp: 'RUMM690828HVZZNG03', nombre_completo: 'Ruiz Mendoza Miguel Ángel', estatus: 'Activo' },
-  { id: 2, mvz_user_id: 10, curp: 'XXXX690828HVZZNG00', nombre_completo: 'García López Juan', estatus: 'Finado' },
-  { id: 3, mvz_user_id: 99, curp: 'YYYY690828HVZZNG00', nombre_completo: 'Otro MVZ - Propietario Ajeno', estatus: 'Activo' }
-]);
+const propietariosActivosYFinados = computed(() => propietariosList.value);
+const propietariosSoloActivos = computed(() => propietariosList.value.filter(p => p.estatus === 'Activo'));
 
-const propietariosActivosYFinados = computed(() => propietariosDemo.value);
-const propietariosSoloActivos = computed(() => propietariosDemo.value.filter(p => p.estatus === 'Activo'));
-
-/* ===================== DEMO DATA: UPP ===================== */
-const uppDemo = ref([
-  {
-    id: 101,
-    mvz_user_id: 10,
-    propietario_id: 2, // finado
-    clave_upp: '30-025-1055-001',
-    nombre_upp: 'San Francisco',
-    estado: 'Veracruz',
-    municipio: 'Ayahualulco',
-    localidad: 'Ayahualulco',
-    codigo_postal: '91260',
-    latitud: '19.449141',
-    longitud: '-97.200479',
-    estatus: 'Activa',
-    observaciones: ''
-  },
-  {
-    id: 102,
-    mvz_user_id: 10,
-    propietario_id: 1,
-    clave_upp: '30-025-2000-001',
-    nombre_upp: 'El Encino',
-    estado: 'Veracruz',
-    municipio: 'Ayahualulco',
-    localidad: 'Los Altos',
-    codigo_postal: '91260',
-    latitud: '',
-    longitud: '',
-    estatus: 'Activa',
-    observaciones: ''
+async function cargarPropietarios() {
+  try {
+    const response = await propietariosService.consultar({ limit: 500 });
+    propietariosList.value = response.data.map(p => ({
+      id: p.id_propietario,
+      curp: p.curp,
+      nombre_completo: `${p.apellido_paterno} ${p.apellido_materno || ''} ${p.nombre}`.trim(),
+      estatus: p.activo ? 'Activo' : 'Finado'
+    }));
+  } catch (error) {
+    console.error('Error al cargar propietarios:', error);
   }
-]);
+}
+// ==================== TERMINAN CAMBIOS ====================
+
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se eliminaron datos mock de UPP y se cargará del backend
+// ==================== EMPIEZAN CAMBIOS ====================
+const uppList = ref([]);
+
+async function cargarUpp() {
+  try {
+    const response = await uppService.consultar({ limit: 500 });
+    uppList.value = response.data.map(u => ({
+      id: u.id_upp,
+      propietario_id: u.id_propietario,
+      clave_upp: u.clave_upp,
+      nombre_upp: u.nombre_predio,
+      estado: u.estado,
+      municipio: u.municipio,
+      localidad: u.localidad,
+      codigo_postal: u.codigo_postal,
+      latitud: u.latitud || '',
+      longitud: u.longitud || '',
+      estatus: u.estatus ? 'Activa' : 'Inactiva',
+      observaciones: ''
+    }));
+  } catch (error) {
+    console.error('Error al cargar UPP:', error);
+  }
+}
+
+onMounted(() => {
+  cargarPropietarios();
+  cargarUpp();
+});
+// ==================== TERMINAN CAMBIOS ====================
 
 /* ===================== Helpers propietario ===================== */
 function propietarioById(id) {
-  return propietariosDemo.value.find(p => p.id === id) || null;
+  return propietariosList.value.find(p => p.id === id) || null;
 }
 function propietarioNombre(id) {
   return propietarioById(id)?.nombre_completo || '—';
@@ -537,7 +557,10 @@ function limpiarFormUpp() {
   };
 }
 
-function guardarUpp() {
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se convirtió a async y se integró con backend
+// ==================== EMPIEZAN CAMBIOS ====================
+async function guardarUpp() {
   errores.value = [];
   mensajeExito.value = '';
 
@@ -553,29 +576,36 @@ function guardarUpp() {
   if (!prop) return errores.value.push('Propietario no válido.');
   if (prop.estatus === 'Finado') return errores.value.push('No se permite registrar una nueva UPP a nombre de un propietario Finado.');
 
-  const clave = String(f.clave_upp).trim();
-  const existe = uppDemo.value.some(u => (u.clave_upp || '').trim().toLowerCase() === clave.toLowerCase());
-  if (existe) return errores.value.push('La clave UPP ya existe. Verifique antes de guardar.');
+  cargando.value = true;
+  try {
+    await uppService.crear({
+      clave_upp: String(f.clave_upp).trim().toUpperCase(),
+      nombre_predio: String(f.nombre_upp || '').trim(),
+      id_propietario: Number(f.propietario_id),
+      calle: null,
+      municipio: String(f.municipio || '').trim(),
+      localidad: String(f.localidad || '').trim(),
+      codigo_postal: String(f.codigo_postal || '').trim() || null,
+      estado: String(f.estado || '').trim(),
+      latitud: f.latitud ? parseFloat(f.latitud) : null,
+      longitud: f.longitud ? parseFloat(f.longitud) : null,
+      estatus: f.estatus === 'Activa'
+    });
 
-  uppDemo.value.push({
-    id: Date.now(),
-    mvz_user_id: mvzUserId,
-    propietario_id: Number(f.propietario_id),
-    clave_upp: clave,
-    nombre_upp: String(f.nombre_upp || '').trim(),
-    estado: String(f.estado || '').trim(),
-    municipio: String(f.municipio || '').trim(),
-    localidad: String(f.localidad || '').trim(),
-    codigo_postal: String(f.codigo_postal || '').trim(),
-    latitud: String(f.latitud || '').trim(),
-    longitud: String(f.longitud || '').trim(),
-    estatus: f.estatus,
-    observaciones: String(f.observaciones || '').trim()
-  });
-
-  mensajeExito.value = 'UPP registrada (DEMO).';
-  limpiarFormUpp();
+    mensajeExito.value = 'UPP registrada exitosamente.';
+    limpiarFormUpp();
+    await cargarUpp(); // Recargar lista
+  } catch (error) {
+    if (error.response?.status === 400) {
+      errores.value.push('La clave UPP ya existe. Verifique antes de guardar.');
+    } else {
+      errores.value.push('Error al registrar UPP en el servidor.');
+    }
+  } finally {
+    cargando.value = false;
+  }
 }
+// ==================== TERMINAN CAMBIOS ====================
 
 /* ===================== 2) Consultar UPP ===================== */
 const filtros = ref({ clave_upp: '', propietario: '', municipio: '', estatus_upp: '', estatus_prop: '' });
@@ -596,6 +626,9 @@ function limpiarBusqueda() {
   mensajeExito.value = '';
 }
 
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se modificó para filtrar datos reales del backend
+// ==================== EMPIEZAN CAMBIOS ====================
 const uppFiltradas = computed(() => {
   if (!buscado.value) return [];
   const f = filtros.value;
@@ -606,7 +639,8 @@ const uppFiltradas = computed(() => {
   const estU = f.estatus_upp;
   const estP = f.estatus_prop;
 
-  const base = uppDemo.value.filter(u => u.mvz_user_id === mvzUserId);
+  // Mostrar todas las UPP (no filtrar por mvz_user_id ya que ese control no existe en backend)
+  const base = uppList.value;
 
   return base.filter(u => {
     const okClave = clave ? (u.clave_upp || '').toLowerCase().includes(clave) : true;
@@ -619,6 +653,7 @@ const uppFiltradas = computed(() => {
     return okClave && okProp && okMun && okEstU && okEstP;
   });
 });
+// ==================== TERMINAN CAMBIOS ====================
 
 function verDetalle(u) {
   uppDetalle.value = { ...u };
@@ -627,9 +662,14 @@ function verDetalle(u) {
 /* ===================== 3) Editar UPP ===================== */
 const uppEditando = ref(null);
 
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se removió validación de mvz_user_id (no existe en backend)
+// Ahora todos pueden editar cualquier UPP
+// ==================== EMPIEZAN CAMBIOS ====================
 function puedeEditarUpp(u) {
-  return u?.mvz_user_id === mvzUserId;
+  return true; // Backend no tiene control de usuario MVZ
 }
+// ==================== TERMINAN CAMBIOS ====================
 
 function abrirEdicion(u) {
   errores.value = [];
@@ -644,7 +684,10 @@ function cancelarEdicion() {
   selectedAction.value = 'consultar';
 }
 
-function guardarEdicionUpp() {
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se convirtió a async y se integró con backend
+// ==================== EMPIEZAN CAMBIOS ====================
+async function guardarEdicionUpp() {
   errores.value = [];
   mensajeExito.value = '';
 
@@ -661,32 +704,57 @@ function guardarEdicionUpp() {
 
   if (errores.value.length) return;
 
-  const existe = uppDemo.value.some(u => u.id !== uppEditando.value.id && (u.clave_upp || '').trim().toLowerCase() === clave.toLowerCase());
-  if (existe) return errores.value.push('La clave UPP ya existe en otro registro.');
+  cargando.value = true;
+  try {
+    await uppService.actualizar(uppEditando.value.id, {
+      clave_upp: clave.toUpperCase(),
+      nombre_predio: String(uppEditando.value.nombre_upp || '').trim(),
+      id_propietario: Number(uppEditando.value.propietario_id),
+      calle: null,
+      municipio: String(uppEditando.value.municipio || '').trim(),
+      localidad: String(uppEditando.value.localidad || '').trim(),
+      codigo_postal: String(uppEditando.value.codigo_postal || '').trim() || null,
+      estado: String(uppEditando.value.estado || '').trim(),
+      latitud: uppEditando.value.latitud ? parseFloat(uppEditando.value.latitud) : null,
+      longitud: uppEditando.value.longitud ? parseFloat(uppEditando.value.longitud) : null,
+      estatus: uppEditando.value.estatus === 'Activa'
+    });
 
-  const idx = uppDemo.value.findIndex(x => x.id === uppEditando.value.id);
-  if (idx === -1) return errores.value.push('No se encontró la UPP para actualizar.');
-
-  uppDemo.value[idx] = { ...uppDemo.value[idx], ...uppEditando.value, clave_upp: clave, propietario_id: Number(uppEditando.value.propietario_id) };
-  mensajeExito.value = 'UPP actualizada.';
-  uppEditando.value = null;
-  selectedAction.value = 'consultar';
+    mensajeExito.value = 'UPP actualizada.';
+    uppEditando.value = null;
+    selectedAction.value = 'consultar';
+    await cargarUpp(); // Recargar lista
+  } catch (error) {
+    if (error.response?.status === 400) {
+      errores.value.push('La clave UPP ya existe en otro registro.');
+    } else if (error.response?.status === 404) {
+      errores.value.push('No se encontró la UPP para actualizar.');
+    } else {
+      errores.value.push('Error al actualizar UPP en el servidor.');
+    }
+  } finally {
+    cargando.value = false;
+  }
 }
+// ==================== TERMINAN CAMBIOS ====================
 
 /* ===================== 4) Trasladar UPP ===================== */
 const uppTrasladando = ref(null);
 const traslado = ref({ nuevo_propietario_id: '', observaciones: '' });
 
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se removió validación de mvz_user_id (no existe en backend)
+// ==================== EMPIEZAN CAMBIOS ====================
 function puedeTrasladar(u) {
   if (!u) return false;
-  if (u.mvz_user_id !== mvzUserId) return false;
   return propietarioEstatus(u.propietario_id) === 'Finado';
 }
+// ==================== TERMINAN CAMBIOS ====================
 
 function abrirTraslado(u) {
   errores.value = [];
   mensajeExito.value = '';
-  if (!puedeTrasladar(u)) return errores.value.push('Solo se permite trasladar si el propietario actual está Finado (y la UPP es suya).');
+  if (!puedeTrasladar(u)) return errores.value.push('Solo se permite trasladar si el propietario actual está Finado.');
   uppTrasladando.value = { ...u };
   traslado.value = { nuevo_propietario_id: '', observaciones: '' };
   selectedAction.value = 'trasladar';
@@ -698,7 +766,10 @@ function cancelarTraslado() {
   selectedAction.value = 'consultar';
 }
 
-function confirmarTraslado() {
+// ==================== EMPIEZAN CAMBIOS ====================
+// Se convirtió a async y se integró con backend
+// ==================== EMPIEZAN CAMBIOS ====================
+async function confirmarTraslado() {
   errores.value = [];
   mensajeExito.value = '';
 
@@ -714,16 +785,28 @@ function confirmarTraslado() {
   const ok = window.confirm(`¿Confirma trasladar la UPP "${uppTrasladando.value.clave_upp}" al propietario "${nuevoProp.nombre_completo}"?`);
   if (!ok) return;
 
-  const idx = uppDemo.value.findIndex(x => x.id === uppTrasladando.value.id);
-  if (idx === -1) return errores.value.push('No se encontró la UPP para traslado.');
+  cargando.value = true;
+  try {
+    await uppService.actualizar(uppTrasladando.value.id, {
+      id_propietario: nuevoId
+    });
 
-  uppDemo.value[idx] = { ...uppDemo.value[idx], propietario_id: nuevoId };
-
-  mensajeExito.value = 'Traslado realizado (DEMO). Bitácora debe registrarse en backend.';
-  uppTrasladando.value = null;
-  traslado.value = { nuevo_propietario_id: '', observaciones: '' };
-  selectedAction.value = 'consultar';
+    mensajeExito.value = 'Traslado realizado exitosamente.';
+    uppTrasladando.value = null;
+    traslado.value = { nuevo_propietario_id: '', observaciones: '' };
+    selectedAction.value = 'consultar';
+    await cargarUpp(); // Recargar lista
+  } catch (error) {
+    if (error.response?.status === 404) {
+      errores.value.push('No se encontró la UPP para traslado.');
+    } else {
+      errores.value.push('Error al realizar el traslado en el servidor.');
+    }
+  } finally {
+    cargando.value = false;
+  }
 }
+// ==================== TERMINAN CAMBIOS ====================
 
 /* ===================== Badges ===================== */
 function badgePropClase(estatus) {

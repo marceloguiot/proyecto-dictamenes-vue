@@ -174,7 +174,8 @@
 </template>
 
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch, onMounted } from 'vue';
+import { casosService } from '@/services/api';
 
 defineProps({
   codigo: { type: String, required: false, default: '' },
@@ -222,54 +223,8 @@ watch(
   }
 );
 
-/* ===================== DEMO: MVZ actual ===================== */
-const mvzUserId = 10;
-
-/* ===================== DEMO DATA ===================== */
-/**
- * En producción, esto vendría del backend
- */
-const casosDemo = ref([
-  {
-    id: 9001,
-    mvz_user_id: 10,
-    numero_caso: 'BR25-001',
-    folio_hoja: 'HCC-2025-020',
-    fecha_asignacion: '2025-12-12',
-    upp: '30-025-2000-001',
-    especie: 'Bovino',
-    total_muestras: 1,
-    estatus: 'En proceso',
-    aretes: ['301152010'],
-    observaciones: 'Recepcionado en oficina central.'
-  },
-  {
-    id: 9002,
-    mvz_user_id: 10,
-    numero_caso: 'BR25-002',
-    folio_hoja: 'HCC-2025-021',
-    fecha_asignacion: '2025-12-15',
-    upp: '30-025-2000-001',
-    especie: 'Bovino',
-    total_muestras: 4,
-    estatus: 'Pendiente',
-    aretes: ['301152111', '301152112', '301152113', '301152114'],
-    observaciones: ''
-  },
-  {
-    id: 9003,
-    mvz_user_id: 99,
-    numero_caso: 'BR25-003',
-    folio_hoja: 'HCC-2025-999',
-    fecha_asignacion: '2025-12-15',
-    upp: 'XX-XXX-XXXX-XXX',
-    especie: 'Bovino',
-    total_muestras: 2,
-    estatus: 'Pendiente',
-    aretes: ['000', '111'],
-    observaciones: 'AJENO'
-  }
-]);
+// Datos de casos cargados desde backend
+const casosTabla = ref([]);
 
 /* ===================== Consultar ===================== */
 const filtros = ref({
@@ -285,6 +240,32 @@ const buscado = ref(false);
 const mostrarAlerta = ref(false);
 const detalle = ref(null);
 
+// Cargar casos desde el backend
+async function cargarCasos() {
+  try {
+    errores.value = [];
+    const response = await casosService.consultar(filtros.value);
+
+    // Mapear campos del backend al formato del frontend
+    casosTabla.value = response.data.map(caso => ({
+      id: caso.id_caso,
+      numero_caso: caso.numero_caso || '',
+      folio_hoja: caso.folio_hoja_control || '',
+      fecha_asignacion: caso.fecha_asignacion || '',
+      upp: caso.clave_upp || '',
+      especie: caso.especie || '',
+      total_muestras: caso.total_muestras || 0,
+      estatus: caso.estatus_caso || '',
+      aretes: caso.aretes ? caso.aretes.split(',') : [],
+      observaciones: caso.observaciones || ''
+    }));
+  } catch (error) {
+    console.error('Error al cargar casos:', error);
+    errores.value = ['Error al cargar los casos desde el servidor.'];
+    casosTabla.value = [];
+  }
+}
+
 function hayAlMenosUnFiltro() {
   const f = filtros.value;
   return (
@@ -297,7 +278,7 @@ function hayAlMenosUnFiltro() {
   );
 }
 
-function buscar() {
+async function buscar() {
   errores.value = [];
   mensajeExito.value = '';
   detalle.value = null;
@@ -308,6 +289,8 @@ function buscar() {
     mostrarAlerta.value = true;
     return;
   }
+
+  await cargarCasos();
   buscado.value = true;
 }
 
@@ -318,6 +301,7 @@ function limpiar() {
   detalle.value = null;
   errores.value = [];
   mensajeExito.value = '';
+  casosTabla.value = [];
 }
 
 const casosFiltrados = computed(() => {
@@ -331,8 +315,7 @@ const casosFiltrados = computed(() => {
   const ini = f.fecha_inicio;
   const fin = f.fecha_fin;
 
-  return casosDemo.value
-    .filter(c => c.mvz_user_id === mvzUserId)
+  return casosTabla.value
     .filter(c => (num ? String(c.numero_caso || '').toLowerCase().includes(num) : true))
     .filter(c => (fol ? String(c.folio_hoja || '').toLowerCase().includes(fol) : true))
     .filter(c => (upp ? String(c.upp || '').toLowerCase().includes(upp) : true))
@@ -356,6 +339,11 @@ function badgeEstatusClase(estatus) {
   if (estatus === 'Pendiente') return 'badge--proceso';
   return 'badge--proceso';
 }
+
+// Cargar casos al montar el componente (opcional)
+onMounted(() => {
+  // No cargamos automáticamente, esperamos a que el usuario presione BUSCAR
+});
 </script>
 
 <style scoped>
