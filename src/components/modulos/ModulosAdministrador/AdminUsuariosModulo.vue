@@ -216,7 +216,7 @@
               <tr v-for="u in usuariosFiltrados" :key="u.id_usuario">
                 <td>{{ u.nombre_completo }}</td>
                 <td>{{ u.nombre_usuario }}</td>
-                <td>{{ u.correo }}</td>
+                <td>{{ u.email }}</td>
                 <td>{{ u.rolEtiqueta }}</td>
                 <td>{{ u.clave_de_rumiantes || '-' }}</td>
                 <td>{{ u.vigencia_inicio }} a {{ u.vigencia_fin }}</td>
