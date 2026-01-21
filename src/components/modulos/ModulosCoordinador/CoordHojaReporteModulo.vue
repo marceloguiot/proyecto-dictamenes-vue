@@ -11,6 +11,10 @@
       Debe capturar <strong>al menos un criterio de búsqueda</strong> para realizar la consulta.
     </div>
 
+    <div v-if="errorCarga" class="modulo-alert modulo-alert--error">
+      {{ errorCarga }}
+    </div>
+
     <div class="sistpec-search-bar">
       <div class="sistpec-form-group">
         <label>Folio / ID</label>
@@ -33,8 +37,10 @@
       </div>
 
       <div class="sistpec-form-group sistpec-search-actions">
-        <button type="button" class="sistpec-btn-primary" @click="buscar">BUSCAR</button>
-        <button type="button" class="sistpec-btn-secondary" @click="limpiar">LIMPIAR FILTROS</button>
+        <button type="button" class="sistpec-btn-primary" @click="buscar" :disabled="cargando">
+          {{ cargando ? 'BUSCANDO...' : 'BUSCAR' }}
+        </button>
+        <button type="button" class="sistpec-btn-secondary" @click="limpiar" :disabled="cargando">LIMPIAR FILTROS</button>
       </div>
     </div>
 
@@ -71,6 +77,7 @@
 
 <script setup>
 import { computed, ref } from 'vue';
+import { hojaReporteService } from '@/services/api';
 
 const filtros = ref({
   folio: '',
@@ -81,49 +88,58 @@ const filtros = ref({
 
 const buscado = ref(false);
 const mostrarAlerta = ref(false);
-
-const demo = ref([
-  { id: 1, folio: 'HR-2025-001', fecha: '2025-12-01', mvz: 'MVZ Juan Pérez', upp: 'UPP-VER-001', obs: 'Sin novedades' },
-  { id: 2, folio: 'HR-2025-002', fecha: '2025-12-03', mvz: 'MVZ Ana López', upp: 'UPP-VER-014', obs: 'Se anexan evidencias' }
-]);
+const cargando = ref(false);
+const errorCarga = ref('');
+const hojasReporte = ref([]);
 
 function hayAlMenosUnFiltro() {
   const f = filtros.value;
   return f.folio.trim() || f.mvz.trim() || f.upp.trim() || f.fecha;
 }
 
-function buscar() {
+async function buscar() {
   mostrarAlerta.value = false;
+  errorCarga.value = '';
+
   if (!hayAlMenosUnFiltro()) {
     buscado.value = false;
     mostrarAlerta.value = true;
     return;
   }
-  buscado.value = true;
+
+  cargando.value = true;
+
+  try {
+    const params = {};
+    if (filtros.value.folio.trim()) params.folio = filtros.value.folio.trim();
+    if (filtros.value.mvz.trim()) params.mvz = filtros.value.mvz.trim();
+    if (filtros.value.upp.trim()) params.upp = filtros.value.upp.trim();
+    if (filtros.value.fecha) params.fecha = filtros.value.fecha;
+
+    const response = await hojaReporteService.consultar(params);
+    hojasReporte.value = response.data || [];
+    buscado.value = true;
+  } catch (error) {
+    console.error('Error al consultar hojas de reporte:', error);
+    errorCarga.value = 'Error al consultar hojas de reporte del servidor. Verifique su conexión.';
+    hojasReporte.value = [];
+    buscado.value = false;
+  } finally {
+    cargando.value = false;
+  }
 }
 
 function limpiar() {
   filtros.value = { folio: '', mvz: '', upp: '', fecha: '' };
   buscado.value = false;
   mostrarAlerta.value = false;
+  errorCarga.value = '';
+  hojasReporte.value = [];
 }
 
 const resultadosFiltrados = computed(() => {
   if (!buscado.value) return [];
-
-  const f = filtros.value;
-  const folio = f.folio.trim().toLowerCase();
-  const mvz   = f.mvz.trim().toLowerCase();
-  const upp   = f.upp.trim().toLowerCase();
-  const fec   = f.fecha;
-
-  return demo.value.filter(h => {
-    const okFolio = folio ? h.folio.toLowerCase().includes(folio) : true;
-    const okMvz   = mvz   ? h.mvz.toLowerCase().includes(mvz) : true;
-    const okUpp   = upp   ? h.upp.toLowerCase().includes(upp) : true;
-    const okFec   = fec ? h.fecha === fec : true;
-    return okFolio && okMvz && okUpp && okFec;
-  });
+  return hojasReporte.value;
 });
 </script>
 

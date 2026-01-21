@@ -91,6 +91,17 @@ export const resultadosService = {
   eliminar: (id) => api.delete(`/api/resultados/${id}`),
 };
 
+// ==================== EMPIEZAN CAMBIOS ====================
+// Servicios de Hoja de Reporte
+// ==================== EMPIEZAN CAMBIOS ====================
+export const hojaReporteService = {
+  consultar: (filtros = {}) => api.get("/api/hoja-reporte", { params: filtros }),
+  obtenerPorId: (id) => api.get(`/api/hoja-reporte/${id}`),
+  crear: (hojaReporte) => api.post("/api/hoja-reporte", hojaReporte),
+  actualizar: (id, hojaReporte) => api.put(`/api/hoja-reporte/${id}`, hojaReporte),
+  eliminar: (id) => api.delete(`/api/hoja-reporte/${id}`),
+};
+
 // ==================== TERMINAN CAMBIOS ====================
 
 export default api;
