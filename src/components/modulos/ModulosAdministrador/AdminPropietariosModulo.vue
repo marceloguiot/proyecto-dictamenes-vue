@@ -294,31 +294,16 @@
 
             <div class="sistpec-form-group">
               <label>Correo electrónico</label>
-              <input v-model="propietarioEditando.correo" type="email" />
+              <input v-model="propietarioEditando.email" type="email" />
             </div>
 
             <div class="sistpec-form-group">
-              <label>UPP</label>
-              <input v-model="propietarioEditando.upp" type="text" required />
-            </div>
-
-            <div class="sistpec-form-group">
-              <label>Municipio</label>
-              <input v-model="propietarioEditando.municipio" type="text" required />
+              <label>RFC</label>
+              <input v-model="propietarioEditando.rfc" type="text" placeholder="RFC (opcional)" />
             </div>
           </div>
 
           <div class="sistpec-form-row">
-            <div class="sistpec-form-group">
-              <label>Localidad</label>
-              <input v-model="propietarioEditando.localidad" type="text" />
-            </div>
-
-            <div class="sistpec-form-group">
-              <label>Domicilio</label>
-              <input v-model="propietarioEditando.domicilio" type="text" />
-            </div>
-
             <div class="sistpec-form-group sistpec-form-row-end">
               <label class="sistpec-checkbox">
                 <input
@@ -644,18 +629,17 @@ function seleccionarPropietario(p) {
   errores.value      = [];
   mensajeExito.value = '';
 
+  // BD propietarios: id_propietario, nombre, curp, rfc, telefono, email, estatus
   propietarioEditando.value = {
-    id: p.id_propietario,  // Cambiado de p.id
+    id: p.id_propietario,
     nombre: p.nombre,
-    apellido_paterno: p.apellido_paterno,
-    apellido_materno: p.apellido_materno,
+    apellido_paterno: p.apellido_paterno || '',
+    apellido_materno: p.apellido_materno || '',
     nombre_completo: p.nombre_completo,
     curp: p.curp,
+    rfc: p.rfc || '',
     telefono: p.telefono,
-    correo: p.correo,
-    calle: p.calle,  // Cambiado de domicilio
-    municipio: p.municipio,
-    localidad: p.localidad,
+    email: p.email,
     activo: p.activo
   };
 
@@ -701,14 +685,6 @@ function validarFormularioEdicion() {
     errores.value.push('El campo CURP es obligatorio.');
   }
 
-  if (!p.upp) {
-    errores.value.push('El campo UPP es obligatorio.');
-  }
-
-  if (!p.municipio) {
-    errores.value.push('El campo Municipio es obligatorio.');
-  }
-
   return errores.value.length === 0;
 }
 
@@ -729,16 +705,15 @@ async function guardarCambiosPropietario() {
   const pEdit = propietarioEditando.value;
 
   try {
+    // BD propietarios: id_propietario, nombre, curp, rfc, telefono, email, estatus
     await propietariosService.actualizar(pEdit.id, {
       nombre: pEdit.nombre,
       apellido_paterno: pEdit.apellido_paterno,
       apellido_materno: pEdit.apellido_materno,
       curp: pEdit.curp,
+      rfc: pEdit.rfc,
       telefono: pEdit.telefono,
-      correo: pEdit.correo,
-      calle: pEdit.calle,
-      municipio: pEdit.municipio,
-      localidad: pEdit.localidad,
+      email: pEdit.email,
       activo: pEdit.activo
     });
 

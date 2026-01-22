@@ -84,9 +84,9 @@
           <div class="sistpec-form-row">
             <div class="sistpec-form-group">
               <label>Correo electrónico</label>
-              <input v-model="nuevoUsuario.correo" type="email" required />
-              <small v-if="erroresCampoRegistro.correo" class="campo-error">
-                {{ erroresCampoRegistro.correo }}
+              <input v-model="nuevoUsuario.email" type="email" required />
+              <small v-if="erroresCampoRegistro.email" class="campo-error">
+                {{ erroresCampoRegistro.email }}
               </small>
             </div>
 
@@ -183,7 +183,7 @@
 
           <div class="sistpec-form-group">
             <label>Correo electrónico</label>
-            <input v-model="filtros.correo" type="email" placeholder="usuario@ejemplo.com" />
+            <input v-model="filtros.email" type="email" placeholder="usuario@ejemplo.com" />
           </div>
 
           <div class="sistpec-form-group sistpec-search-actions">
@@ -254,7 +254,7 @@
 
           <div class="sistpec-form-group">
             <label>Correo electrónico</label>
-            <input v-model="filtros.correo" type="email" placeholder="usuario@ejemplo.com" />
+            <input v-model="filtros.email" type="email" placeholder="usuario@ejemplo.com" />
           </div>
 
           <div class="sistpec-form-group sistpec-search-actions">
@@ -359,9 +359,9 @@
             <div class="sistpec-form-row">
               <div class="sistpec-form-group">
                 <label>Correo electrónico</label>
-                <input v-model="usuarioEditando.correo" type="email" required />
-                <small v-if="erroresCampoEdicion.correo" class="campo-error">
-                  {{ erroresCampoEdicion.correo }}
+                <input v-model="usuarioEditando.email" type="email" required />
+                <small v-if="erroresCampoEdicion.email" class="campo-error">
+                  {{ erroresCampoEdicion.email }}
                 </small>
               </div>
 
@@ -463,7 +463,7 @@
 
           <div class="sistpec-form-group">
             <label>Correo electrónico</label>
-            <input v-model="filtros.correo" type="email" placeholder="usuario@ejemplo.com" />
+            <input v-model="filtros.email" type="email" placeholder="usuario@ejemplo.com" />
           </div>
 
           <div class="sistpec-form-group sistpec-search-actions">
@@ -497,7 +497,7 @@
               <tr v-for="u in usuariosFiltrados" :key="u.id_usuario">
                 <td>{{ u.nombre_completo }}</td>
                 <td>{{ u.nombre_usuario }}</td>
-                <td>{{ u.correo }}</td>
+                <td>{{ u.email }}</td>
                 <td>{{ u.rolEtiqueta }}</td>
                 <td>{{ u.clave_de_rumiantes || '-' }}</td>
                 <td>{{ u.vigencia_inicio }} a {{ u.vigencia_fin }}</td>
@@ -687,7 +687,7 @@ const erroresCampoRegistro = ref({
   apellido_paterno: '',
   apellido_materno: '',
   nombre_usuario: '',
-  correo: '',
+  email: '',
   tipo_usuario: '',
   password: '',
   confirmPassword: '',
@@ -700,7 +700,7 @@ const erroresCampoEdicion = ref({
   apellido_paterno: '',
   apellido_materno: '',
   nombre_usuario: '',
-  correo: '',
+  email: '',
   tipo_usuario: '',
   password: '',
   confirmPassword: '',
@@ -714,7 +714,7 @@ function resetErroresCampoRegistro() {
     apellido_paterno: '',
     apellido_materno: '',
     nombre_usuario: '',
-    correo: '',
+    email: '',
     tipo_usuario: '',
     password: '',
     confirmPassword: '',
@@ -729,7 +729,7 @@ function resetErroresCampoEdicion() {
     apellido_paterno: '',
     apellido_materno: '',
     nombre_usuario: '',
-    correo: '',
+    email: '',
     tipo_usuario: '',
     password: '',
     confirmPassword: '',
@@ -844,7 +844,7 @@ const nuevoUsuario = ref({
   apellido_materno: '',
   nombre_completo: '',
   nombre_usuario: '',
-  correo: '',
+  email: '',
   password: '',
   confirmPassword: '',
   tipo_usuario: '',
@@ -909,7 +909,7 @@ const usuariosTabla = ref([]);
 const filtros = ref({
   nombre_usuario: '',
   clave_de_rumiantes: '',
-  correo: ''
+  email: ''
 });
 
 const usuariosFiltrados = computed(() => {
@@ -936,7 +936,7 @@ async function buscarUsuarios() {
     const response = await usuariosService.consultar({
       nombre_usuario: filtros.value.nombre_usuario || undefined,
       clave_de_rumiantes: filtros.value.clave_de_rumiantes || undefined,
-      correo: filtros.value.correo || undefined,
+      email: filtros.value.email || undefined,
       limit: 100
     });
 
@@ -952,7 +952,7 @@ async function buscarUsuarios() {
 // ==================== TERMINAN CAMBIOS ====================
 
 function limpiarFiltros() {
-  filtros.value = { nombre_usuario: '', clave_de_rumiantes: '', correo: '' };
+  filtros.value = { nombre_usuario: '', clave_de_rumiantes: '', email: '' };
 }
 
 // ===== Registrar =====
@@ -966,7 +966,7 @@ function limpiarFormulario() {
     apellido_materno: '',
     nombre_completo: '',
     nombre_usuario: '',
-    correo: '',
+    email: '',
     password: '',
     confirmPassword: '',
     tipo_usuario: '',
@@ -1012,9 +1012,9 @@ function validarFormularioRegistro() {
     erroresCampoRegistro.value.nombre_usuario = 'No se puede dejar en blanco.';
   }
 
-  if (!u.correo) {
+  if (!u.email) {
     errores.value.push('Debe capturar el correo electrónico.');
-    erroresCampoRegistro.value.correo = 'No se puede dejar en blanco.';
+    erroresCampoRegistro.value.email = 'No se puede dejar en blanco.';
   }
 
   if (!u.tipo_usuario) {
@@ -1081,7 +1081,7 @@ async function guardarUsuario() {
       apellido_paterno: nuevoUsuario.value.apellido_paterno,
       apellido_materno: nuevoUsuario.value.apellido_materno || null,
       nombre_usuario: nuevoUsuario.value.nombre_usuario,
-      correo: nuevoUsuario.value.correo,
+      email: nuevoUsuario.value.email,
       password: nuevoUsuario.value.password,
       tipo_usuario: rolNum,
       clave_de_rumiantes: nuevoUsuario.value.clave_de_rumiantes || null,
@@ -1097,7 +1097,7 @@ async function guardarUsuario() {
     limpiarFormulario();
   } catch (error) {
     console.error('Error al registrar usuario:', error);
-    errores.value.push('Error al registrar usuario en el servidor. Verifique que el nombre de usuario y correo no estén duplicados.');
+    errores.value.push('Error al registrar usuario en el servidor. Verifique que el nombre de usuario y email no estén duplicados.');
   } finally {
     cargandoUsuarios.value = false;
   }
@@ -1119,7 +1119,7 @@ function seleccionarUsuario(u) {
     apellido_paterno: u.apellido_paterno,
     apellido_materno: u.apellido_materno || '',
     nombre_usuario: u.nombre_usuario,
-    correo: u.correo,
+    email: u.email,
     tipo_usuario: String(u.tipo_usuario),
     clave_de_rumiantes: u.clave_de_rumiantes || '',
     vigencia_inicio: u.vigencia_inicio,
@@ -1175,9 +1175,9 @@ function validarFormularioEdicion() {
     erroresCampoEdicion.value.nombre_usuario = 'No se puede dejar en blanco.';
   }
 
-  if (!u.correo) {
+  if (!u.email) {
     errores.value.push('Debe capturar el correo electrónico.');
-    erroresCampoEdicion.value.correo = 'No se puede dejar en blanco.';
+    erroresCampoEdicion.value.email = 'No se puede dejar en blanco.';
   }
 
   if (!u.tipo_usuario) {
@@ -1241,7 +1241,7 @@ async function guardarCambiosUsuario() {
       apellido_paterno: uEdit.apellido_paterno,
       apellido_materno: uEdit.apellido_materno || null,
       nombre_usuario: uEdit.nombre_usuario,
-      correo: uEdit.correo,
+      email: uEdit.email,
       tipo_usuario: rolNum,
       clave_de_rumiantes: uEdit.clave_de_rumiantes || null,
       vigencia_inicio: uEdit.vigencia_inicio,

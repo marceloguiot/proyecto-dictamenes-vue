@@ -294,17 +294,18 @@ async function cargarResultados() {
     const response = await resultadosService.consultar(filtros.value);
 
     // Mapear campos del backend al formato del frontend
+    // Backend retorna: id_resultado_lab, numero_caso, codigo_muestra, clave_upp, propietario, resultado, fecha_resultado, created_at
     resultadosTabla.value = response.data.map(resultado => ({
-      id: resultado.id_resultado,
+      id: resultado.id_resultado_lab || resultado.id_resultado,
       numero_caso: resultado.numero_caso || '',
       numero_arete: resultado.numero_arete || '',
-      numero_muestra: resultado.folio_muestra || '',
+      numero_muestra: resultado.codigo_muestra || '',
       upp: resultado.clave_upp || '',
-      propietario: resultado.nombre_propietario || '',
-      mvz: resultado.nombre_mvz || '',
-      fecha_registro: resultado.fecha_registro_caso || '',
-      fecha_resultado: resultado.fecha_carga_resultado || '',
-      resultado: resultado.resultado_final || ''
+      propietario: resultado.propietario || '',
+      mvz: resultado.usuario_valida || '',  // Usuario que validó el resultado
+      fecha_registro: resultado.created_at || '',
+      fecha_resultado: resultado.fecha_resultado || resultado.fecha_analisis || '',
+      resultado: resultado.resultado || resultado.resultado_nombre || ''
     }));
   } catch (error) {
     console.error('Error al cargar resultados:', error);

@@ -27,11 +27,6 @@
       </div>
 
       <div class="sistpec-form-group">
-        <label>UPP</label>
-        <input v-model="filtros.upp" type="text" placeholder="Clave o nombre UPP" />
-      </div>
-
-      <div class="sistpec-form-group">
         <label>Fecha de reporte</label>
         <input v-model="filtros.fecha" type="date" />
       </div>
@@ -51,8 +46,7 @@
             <th>Folio</th>
             <th>Fecha</th>
             <th>MVZ</th>
-            <th>UPP</th>
-            <th>Observaciones</th>
+            <th>Periodo</th>
           </tr>
         </thead>
         <tbody>
@@ -60,12 +54,11 @@
             <td>{{ h.folio }}</td>
             <td>{{ h.fecha }}</td>
             <td>{{ h.mvz }}</td>
-            <td>{{ h.upp }}</td>
-            <td>{{ h.obs }}</td>
+            <td>{{ h.periodo_inicio }} - {{ h.periodo_fin }}</td>
           </tr>
 
           <tr v-if="resultadosFiltrados.length === 0">
-            <td colspan="5" class="sin-resultados">
+            <td colspan="4" class="sin-resultados">
               No se encontraron hojas de reporte con los criterios capturados.
             </td>
           </tr>
@@ -82,7 +75,6 @@ import { hojaReporteService } from '@/services/api';
 const filtros = ref({
   folio: '',
   mvz: '',
-  upp: '',
   fecha: ''
 });
 
@@ -94,7 +86,7 @@ const hojasReporte = ref([]);
 
 function hayAlMenosUnFiltro() {
   const f = filtros.value;
-  return f.folio.trim() || f.mvz.trim() || f.upp.trim() || f.fecha;
+  return f.folio.trim() || f.mvz.trim() || f.fecha;
 }
 
 async function buscar() {
@@ -113,7 +105,6 @@ async function buscar() {
     const params = {};
     if (filtros.value.folio.trim()) params.folio = filtros.value.folio.trim();
     if (filtros.value.mvz.trim()) params.mvz = filtros.value.mvz.trim();
-    if (filtros.value.upp.trim()) params.upp = filtros.value.upp.trim();
     if (filtros.value.fecha) params.fecha = filtros.value.fecha;
 
     const response = await hojaReporteService.consultar(params);
@@ -130,7 +121,7 @@ async function buscar() {
 }
 
 function limpiar() {
-  filtros.value = { folio: '', mvz: '', upp: '', fecha: '' };
+  filtros.value = { folio: '', mvz: '', fecha: '' };
   buscado.value = false;
   mostrarAlerta.value = false;
   errorCarga.value = '';
