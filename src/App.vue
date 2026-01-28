@@ -58,7 +58,7 @@ const menusPorRol = {
     { texto: 'Resultados', modulo: 'adminAdministrarResultados' },
     { texto: 'Cerrar Sesión', modulo: 'cerrarSesion', especial: true }
   ],
-  responsableLaboratorio: [
+  RESP_LAB: [
     { texto: 'Número de caso', modulo: 'resplabAdminNumdeCaso' },
     { texto: 'Muestras', modulo: 'resplabAdminMuestra' },
     { texto: 'Resultados', modulo: 'resplabAdminResultados' },
@@ -66,7 +66,7 @@ const menusPorRol = {
     { texto: 'Hoja de reporte', modulo: 'resplabAdminHojaReporte' },
     { texto: 'Cerrar Sesión', modulo: 'cerrarSesion', especial: true }
   ],
-  recepcionista: [
+  RECEPCIONISTA: [
     { texto: 'Número de caso', modulo: 'recepAdminNumCaso' },
     { texto: 'Muestras', modulo: 'recepAdminMuestras' },
     { texto: 'Resultados', modulo: 'recepAdminResultados' },
@@ -82,7 +82,7 @@ const menusPorRol = {
   { texto: 'Cerrar Sesión', modulo: 'cerrarSesion', especial: true }
   ],
 
-  mvzAutorizado: [
+  MVZ: [
     { texto: 'Hoja de reporte', modulo: 'mvzAdminHojaReporte' },
     { texto: 'Propietarios', modulo: 'mvzAdminPropietario' },
     { texto: 'UPP', modulo: 'mvzAdminUpp' },
