@@ -22,7 +22,7 @@ const props = defineProps({
 
 const panel = computed(() => {
   switch (props.rol) {
-    case 'administrador':
+    case 'ADMIN':
       return {
         id: 'adminPanel',
         titulo: 'Administrador - SISTPEC'
