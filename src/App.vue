@@ -50,7 +50,7 @@ import { authService } from './services/api';
 
 // ===== Configuración de menús por rol =====
 const menusPorRol = {
-  administrador: [
+  ADMIN: [
     { texto: 'Usuarios', modulo: 'adminAdministrarUsuarios' },
     { texto: 'Propietarios', modulo: 'adminAdministrarPropietarios' },
     { texto: 'UPP', modulo: 'adminAdministrarUPP' },
