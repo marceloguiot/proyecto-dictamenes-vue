@@ -27,12 +27,12 @@ const panel = computed(() => {
         id: 'adminPanel',
         titulo: 'Administrador - SISTPEC'
       };
-    case 'responsableLaboratorio':
+    case 'RESP_LAB':
       return {
         id: 'responsablelabPanel',
         titulo: 'Responsable de laboratorio - SISTPEC'
       };
-    case 'recepcionista':
+    case 'RECEPCIONISTA':
       return {
         id: 'recepcionistaPanel',
         titulo: 'Recepcionista - SISTPEC'
@@ -42,7 +42,7 @@ const panel = computed(() => {
         id: 'coordinadorPanel',
         titulo: 'Coordinador - SISTPEC'
       };
-    case 'mvzAutorizado':
+    case 'MVZ':
       return {
         id: 'mvzPanel',
         titulo: 'MVZ - SISTPEC'
