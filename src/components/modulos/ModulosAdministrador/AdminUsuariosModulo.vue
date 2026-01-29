@@ -95,10 +95,10 @@
               <select v-model="nuevoUsuario.tipo_usuario" required>
                 <option value="" disabled>Seleccione un rol</option>
                 <option value="1">Administrador</option>
-                <option value="2">Responsable de laboratorio</option>
-                <option value="3">Recepcionista</option>
-                <option value="4">Coordinador</option>
-                <option value="5">MVZ autorizado</option>
+                <option value="3">Responsable de laboratorio</option>
+                <option value="2">Recepcionista</option>
+                <option value="5">Coordinador</option>
+                <option value="4">MVZ autorizado</option>
               </select>
               <small v-if="erroresCampoRegistro.tipo_usuario" class="campo-error">
                 {{ erroresCampoRegistro.tipo_usuario }}
