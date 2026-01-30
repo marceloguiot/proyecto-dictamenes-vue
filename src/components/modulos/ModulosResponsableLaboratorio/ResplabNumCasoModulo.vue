@@ -170,6 +170,16 @@
         </div>
       </div>
 
+      <!-- Botones de descarga -->
+      <div v-if="resultados.length > 0" class="sistpec-export-actions">
+        <button type="button" class="sistpec-btn-export sistpec-btn-excel" @click="descargarExcel">
+          DESCARGAR EXCEL
+        </button>
+        <button type="button" class="sistpec-btn-export sistpec-btn-pdf" @click="descargarPDF">
+          DESCARGAR PDF
+        </button>
+      </div>
+
       <div v-if="buscado" class="sistpec-table-wrapper">
         <table class="sistpec-table">
           <thead>
@@ -479,6 +489,106 @@ function limpiarFiltros() {
   buscado.value = false;
   mostrarAlerta.value = false;
 }
+
+/* ===================== DESCARGAS ===================== */
+function descargarExcel() {
+  const datos = resultados.value;
+  if (datos.length === 0) return;
+
+  const encabezados = ['Folio', 'Número de caso', 'Fecha', 'UPP', 'Propietario', 'MVZ', 'Estatus'];
+  const filas = datos.map(c => [
+    c.folio || '',
+    c.numero_caso || c.caso || '',
+    c.fecha || c.fecha_asignacion || '',
+    c.upp || (c.clave_upp ? (c.clave_upp + ' — ' + (c.nombre_upp || '')) : ''),
+    c.propietario || '',
+    c.mvz || '',
+    c.estatus || ''
+  ]);
+
+  const bom = '\uFEFF';
+  const csv = [encabezados, ...filas]
+    .map(fila => fila.map(celda => `"${String(celda).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `numeros_caso_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function descargarPDF() {
+  const datos = resultados.value;
+  if (datos.length === 0) return;
+
+  const filasHTML = datos.map(c => {
+    const badgeClass = c.estatus === 'Pendiente' ? 'proceso' : 'activo';
+    return `
+    <tr>
+      <td>${c.folio || '—'}</td>
+      <td><strong>${c.numero_caso || c.caso || '—'}</strong></td>
+      <td>${c.fecha || c.fecha_asignacion || '—'}</td>
+      <td>${c.upp || (c.clave_upp ? (c.clave_upp + ' — ' + (c.nombre_upp || '')) : '—')}</td>
+      <td>${c.propietario || '—'}</td>
+      <td>${c.mvz || '—'}</td>
+      <td><span class="badge ${badgeClass}">${c.estatus || '—'}</span></td>
+    </tr>
+  `;
+  }).join('');
+
+  const tablaHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Números de Caso</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { font-size: 18px; color: #333; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background-color: #7a061e; color: #fff; padding: 8px; text-align: left; }
+        td { padding: 8px; border: 1px solid #ddd; }
+        tr:nth-child(even) { background-color: #fafafa; }
+        .badge { padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+        .activo { background: #e1f3e1; color: #225522; }
+        .proceso { background: #fff4e5; color: #b26a00; }
+        @media print {
+          body { padding: 0; }
+          @page { margin: 1cm; }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Números de Caso - SISTPEC</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>Folio</th>
+            <th>Número de caso</th>
+            <th>Fecha</th>
+            <th>UPP</th>
+            <th>Propietario</th>
+            <th>MVZ</th>
+            <th>Estatus</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filasHTML}
+        </tbody>
+      </table>
+    </body>
+    </html>
+  `;
+
+  const ventana = window.open('', '_blank');
+  ventana.document.write(tablaHTML);
+  ventana.document.close();
+}
 </script>
 
 <style scoped>
@@ -531,6 +641,40 @@ function limpiarFiltros() {
 .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
 .badge--activo { background: #e1f3e1; color: #225522; }
 .badge--proceso { background: #fff4e5; color: #b26a00; }
+
+/* Botones de exportación */
+.sistpec-export-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.sistpec-btn-export {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sistpec-btn-excel {
+  background-color: #217346;
+  color: #fff;
+}
+
+.sistpec-btn-excel:hover {
+  background-color: #1a5c38;
+}
+
+.sistpec-btn-pdf {
+  background-color: #c42b1c;
+  color: #fff;
+}
+
+.sistpec-btn-pdf:hover {
+  background-color: #a32315;
+}
 
 @media (max-width: 768px) {
   .sistpec-form-row { grid-template-columns: 1fr; }

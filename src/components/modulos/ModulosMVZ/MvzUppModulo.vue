@@ -162,6 +162,16 @@
         </div>
       </div>
 
+      <!-- Botones de descarga -->
+      <div v-if="uppFiltradas.length > 0" class="sistpec-export-actions">
+        <button type="button" class="sistpec-btn-export sistpec-btn-excel" @click="descargarExcel">
+          DESCARGAR EXCEL
+        </button>
+        <button type="button" class="sistpec-btn-export sistpec-btn-pdf" @click="descargarPDF">
+          DESCARGAR PDF
+        </button>
+      </div>
+
       <div v-if="buscado" class="sistpec-table-wrapper">
         <table class="sistpec-table">
           <thead>
@@ -819,6 +829,106 @@ function badgeUppClase(estatus) {
   if (estatus === 'Inactiva') return 'badge--inactivo';
   return 'badge--proceso';
 }
+
+/* ===================== Descargar Excel / PDF ===================== */
+function descargarExcel() {
+  const datos = uppFiltradas.value;
+  if (datos.length === 0) return;
+
+  const encabezados = ['Clave UPP', 'Nombre / Rancho', 'Propietario', 'Estatus propietario', 'Municipio', 'Estatus UPP'];
+  const filas = datos.map(u => [
+    u.clave_upp || '',
+    u.nombre_upp || '',
+    propietarioNombre(u.propietario_id),
+    propietarioEstatus(u.propietario_id),
+    u.municipio || '',
+    u.estatus || ''
+  ]);
+
+  const bom = '\uFEFF';
+  const csv = [encabezados, ...filas]
+    .map(fila => fila.map(celda => `"${String(celda).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `upp_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function descargarPDF() {
+  const datos = uppFiltradas.value;
+  if (datos.length === 0) return;
+
+  const filasHTML = datos.map(u => {
+    const estatusProp = propietarioEstatus(u.propietario_id);
+    const badgeProp = estatusProp === 'Activo' ? 'activo' : 'finado';
+    const badgeUpp = u.estatus === 'Activa' ? 'activo' : 'inactivo';
+
+    return `
+    <tr>
+      <td>${u.clave_upp || ''}</td>
+      <td>${u.nombre_upp || ''}</td>
+      <td>${propietarioNombre(u.propietario_id)}</td>
+      <td><span class="badge ${badgeProp}">${estatusProp}</span></td>
+      <td>${u.municipio || ''}</td>
+      <td><span class="badge ${badgeUpp}">${u.estatus || ''}</span></td>
+    </tr>
+  `;
+  }).join('');
+
+  const tablaHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Unidades de Producción Pecuaria</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { font-size: 18px; color: #333; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background-color: #7a061e; color: #fff; padding: 8px; text-align: left; }
+        td { padding: 8px; border: 1px solid #ddd; }
+        tr:nth-child(even) { background-color: #fafafa; }
+        .badge { padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+        .activo { background: #e1f3e1; color: #225522; }
+        .finado, .inactivo { background: #fbeaea; color: #7a1f1f; }
+        @media print {
+          body { padding: 0; }
+          @page { margin: 1cm; }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Unidades de Producción Pecuaria (UPP) - SISTPEC</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>Clave UPP</th>
+            <th>Nombre / Rancho</th>
+            <th>Propietario</th>
+            <th>Estatus propietario</th>
+            <th>Municipio</th>
+            <th>Estatus UPP</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filasHTML}
+        </tbody>
+      </table>
+    </body>
+    </html>
+  `;
+
+  const ventana = window.open('', '_blank');
+  ventana.document.write(tablaHTML);
+  ventana.document.close();
+}
 </script>
 
 <style scoped>
@@ -919,6 +1029,40 @@ function badgeUppClase(estatus) {
   font-size:13px;
 }
 .lbl{ font-weight:800; color:#444; }
+
+/* Botones de exportación */
+.sistpec-export-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.sistpec-btn-export {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sistpec-btn-excel {
+  background-color: #217346;
+  color: #fff;
+}
+
+.sistpec-btn-excel:hover {
+  background-color: #1a5c38;
+}
+
+.sistpec-btn-pdf {
+  background-color: #c42b1c;
+  color: #fff;
+}
+
+.sistpec-btn-pdf:hover {
+  background-color: #a32315;
+}
 
 @media (max-width: 768px) {
   .sistpec-search-bar { grid-template-columns: 1fr; }

@@ -213,6 +213,16 @@
         </div>
       </div>
 
+      <!-- Botones de descarga -->
+      <div v-if="resultadosConsulta.length > 0" class="sistpec-export-actions">
+        <button type="button" class="sistpec-btn-export sistpec-btn-excel" @click="descargarExcel">
+          DESCARGAR EXCEL
+        </button>
+        <button type="button" class="sistpec-btn-export sistpec-btn-pdf" @click="descargarPDFTabla">
+          DESCARGAR PDF
+        </button>
+      </div>
+
       <div v-if="resultadosConsulta.length" class="sistpec-table-wrapper">
         <div class="acciones-inferiores">
           <button class="sistpec-btn-secondary" type="button" @click="imprimirPDF('consulta')">
@@ -974,6 +984,112 @@ function imprimirPDF(origen) {
   window.scrollTo({ top: 0, behavior: 'instant' });
   nextTick(() => window.print());
 }
+
+/* ===================== DESCARGAS ===================== */
+function descargarExcel() {
+  const datos = resultadosConsulta.value;
+  if (datos.length === 0) return;
+
+  const encabezados = ['Caso', 'CC No.', 'Tarjeta', 'Arete', 'Resultado', 'Tubo', 'Fecha', 'Estado', 'Observaciones'];
+  const filas = datos.map(r => [
+    r.caso || '',
+    r.cc_no || '',
+    r.tarjeta || '',
+    r.arete || '',
+    r.resultado_tarjeta || '',
+    r.tubo || '',
+    r.fecha_captura || '',
+    r.estado || '',
+    r.observaciones || ''
+  ]);
+
+  const bom = '\uFEFF';
+  const csv = [encabezados, ...filas]
+    .map(fila => fila.map(celda => `"${String(celda).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `resultados_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function descargarPDFTabla() {
+  const datos = resultadosConsulta.value;
+  if (datos.length === 0) return;
+
+  const filasHTML = datos.map(r => {
+    const badgeClass = r.estado === 'Pendiente' ? 'proceso' : 'activo';
+    return `
+    <tr>
+      <td>${r.caso || ''}</td>
+      <td>${r.cc_no || ''}</td>
+      <td>${r.tarjeta || ''}</td>
+      <td>${r.arete || ''}</td>
+      <td>${r.resultado_tarjeta || '-'}</td>
+      <td>${r.tubo || '-'}</td>
+      <td>${r.fecha_captura || '-'}</td>
+      <td><span class="badge ${badgeClass}">${r.estado || ''}</span></td>
+      <td>${(r.observaciones && r.observaciones.trim()) ? r.observaciones : '-'}</td>
+    </tr>
+  `;
+  }).join('');
+
+  const tablaHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Resultados Brucelosis</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { font-size: 18px; color: #333; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background-color: #7a061e; color: #fff; padding: 8px; text-align: left; }
+        td { padding: 8px; border: 1px solid #ddd; }
+        tr:nth-child(even) { background-color: #fafafa; }
+        .badge { padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+        .activo { background: #e1f3e1; color: #225522; }
+        .proceso { background: #fff4e5; color: #b26a00; }
+        @media print {
+          body { padding: 0; }
+          @page { margin: 1cm; }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Resultados Brucelosis - SISTPEC</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>Caso</th>
+            <th>CC No.</th>
+            <th>Tarjeta</th>
+            <th>Arete</th>
+            <th>Resultado</th>
+            <th>Tubo</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th>Observaciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filasHTML}
+        </tbody>
+      </table>
+    </body>
+    </html>
+  `;
+
+  const ventana = window.open('', '_blank');
+  ventana.document.write(tablaHTML);
+  ventana.document.close();
+}
 </script>
 
 <style scoped>
@@ -1084,6 +1200,40 @@ function imprimirPDF(origen) {
 .badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:900; }
 .badge--proceso { background:#fff4e5; color:#b26a00; border:1px solid #ffd7a3; }
 .badge--activo { background:#e1f3e1; color:#225522; border:1px solid #c3e6c3; }
+
+/* Botones de exportación */
+.sistpec-export-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.sistpec-btn-export {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sistpec-btn-excel {
+  background-color: #217346;
+  color: #fff;
+}
+
+.sistpec-btn-excel:hover {
+  background-color: #1a5c38;
+}
+
+.sistpec-btn-pdf {
+  background-color: #c42b1c;
+  color: #fff;
+}
+
+.sistpec-btn-pdf:hover {
+  background-color: #a32315;
+}
 
 /* ===================== PRINT ===================== */
 .print-area { display: none; }

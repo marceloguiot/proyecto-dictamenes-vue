@@ -170,6 +170,16 @@
         </div>
       </div>
 
+      <!-- Botones de descarga -->
+      <div v-if="hojasFiltradas.length > 0" class="sistpec-export-actions">
+        <button type="button" class="sistpec-btn-export sistpec-btn-excel" @click="descargarExcel">
+          DESCARGAR EXCEL
+        </button>
+        <button type="button" class="sistpec-btn-export sistpec-btn-pdf" @click="descargarPdfTabla">
+          DESCARGAR PDF
+        </button>
+      </div>
+
       <div v-if="buscado" class="sistpec-table-wrapper">
         <table class="sistpec-table">
           <thead>
@@ -536,6 +546,100 @@ function verPdf(h) {
 
 function cerrarModal() {
   modal.value = { abierto: false, archivo: '' };
+}
+
+/* ===================== Descargar Excel / PDF ===================== */
+function descargarExcel() {
+  const datos = hojasFiltradas.value;
+  if (datos.length === 0) return;
+
+  const encabezados = ['Folio', 'Caso', 'UPP', 'MVZ', 'Fecha carga', 'Archivo', 'Comentarios'];
+  const filas = datos.map(h => [
+    h.folio || '',
+    h.caso || '',
+    h.upp || '',
+    h.mvz || '',
+    h.fecha_carga || '',
+    h.archivo_nombre || '',
+    h.comentarios || ''
+  ]);
+
+  const bom = '\uFEFF';
+  const csv = [encabezados, ...filas]
+    .map(fila => fila.map(celda => `"${String(celda).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `hojas_resultados_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function descargarPdfTabla() {
+  const datos = hojasFiltradas.value;
+  if (datos.length === 0) return;
+
+  const filasHTML = datos.map(h => `
+    <tr>
+      <td>${h.folio || ''}</td>
+      <td>${h.caso || ''}</td>
+      <td>${h.upp || ''}</td>
+      <td>${h.mvz || ''}</td>
+      <td>${h.fecha_carga || ''}</td>
+      <td>${h.archivo_nombre || ''}</td>
+      <td>${h.comentarios || ''}</td>
+    </tr>
+  `).join('');
+
+  const tablaHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Hojas de Resultados</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { font-size: 18px; color: #333; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background-color: #7a061e; color: #fff; padding: 8px; text-align: left; }
+        td { padding: 8px; border: 1px solid #ddd; }
+        tr:nth-child(even) { background-color: #fafafa; }
+        @media print {
+          body { padding: 0; }
+          @page { margin: 1cm; }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Hojas de Resultados - SISTPEC</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>Folio</th>
+            <th>Caso</th>
+            <th>UPP</th>
+            <th>MVZ</th>
+            <th>Fecha carga</th>
+            <th>Archivo</th>
+            <th>Comentarios</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filasHTML}
+        </tbody>
+      </table>
+    </body>
+    </html>
+  `;
+
+  const ventana = window.open('', '_blank');
+  ventana.document.write(tablaHTML);
+  ventana.document.close();
 }
 </script>
 

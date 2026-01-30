@@ -336,6 +336,16 @@
         </div>
       </div>
 
+      <!-- Botones de descarga -->
+      <div v-if="muestrasConsultadasFiltradas.length > 0" class="sistpec-export-actions">
+        <button type="button" class="sistpec-btn-export sistpec-btn-excel" @click="descargarExcel">
+          DESCARGAR EXCEL
+        </button>
+        <button type="button" class="sistpec-btn-export sistpec-btn-pdf" @click="descargarPDF">
+          DESCARGAR PDF
+        </button>
+      </div>
+
       <div v-if="buscadoCons" class="sistpec-table-wrapper">
         <table class="sistpec-table">
           <thead>
@@ -895,6 +905,118 @@ function escapeHtml(str) {
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
 }
+
+/* ===================== DESCARGAS ===================== */
+function descargarExcel() {
+  const datos = muestrasConsultadasFiltradas.value;
+  if (datos.length === 0) return;
+
+  const encabezados = ['Folio', 'UPP', 'Especie', 'Tipo', 'Fecha recepción', 'Estatus', 'Observación', 'Origen', 'Arete'];
+  const filas = datos.map(m => [
+    m.id_muestra || '',
+    m.upp || '',
+    m.especie || '',
+    m.tipo_muestra || '',
+    m.fecha_recepcion || '',
+    m.estatus || '',
+    m.observacion || '',
+    m.origen_servicio || '',
+    m.arete || ''
+  ]);
+
+  const bom = '\uFEFF';
+  const csv = [encabezados, ...filas]
+    .map(fila => fila.map(celda => `"${String(celda).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `muestras_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function descargarPDF() {
+  const datos = muestrasConsultadasFiltradas.value;
+  if (datos.length === 0) return;
+
+  const filasHTML = datos.map(m => {
+    let badgeClass = 'proceso';
+    if (m.estatus === 'Concluido') badgeClass = 'activo';
+    else if (m.estatus === 'Rechazado') badgeClass = 'inactivo';
+    else if (m.estatus === 'Pendiente') badgeClass = 'pendiente';
+
+    return `
+    <tr>
+      <td>${m.id_muestra || ''}</td>
+      <td>${m.upp || ''}</td>
+      <td>${m.especie || ''}</td>
+      <td>${m.tipo_muestra || ''}</td>
+      <td>${m.fecha_recepcion || ''}</td>
+      <td><span class="badge ${badgeClass}">${m.estatus || ''}</span></td>
+      <td>${m.observacion || '-'}</td>
+      <td>${m.origen_servicio || ''}</td>
+      <td>${m.arete || '-'}</td>
+    </tr>
+  `;
+  }).join('');
+
+  const tablaHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Muestras</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { font-size: 18px; color: #333; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th { background-color: #7a061e; color: #fff; padding: 8px; text-align: left; }
+        td { padding: 8px; border: 1px solid #ddd; }
+        tr:nth-child(even) { background-color: #fafafa; }
+        .badge { padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+        .activo { background: #e1f3e1; color: #225522; }
+        .inactivo { background: #fbeaea; color: #7a1f1f; }
+        .pendiente { background: #fff4e5; color: #b26a00; }
+        .proceso { background: #e8f1ff; color: #0b3d91; }
+        @media print {
+          body { padding: 0; }
+          @page { margin: 1cm; }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Muestras - SISTPEC</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>Folio</th>
+            <th>UPP</th>
+            <th>Especie</th>
+            <th>Tipo</th>
+            <th>Fecha recepción</th>
+            <th>Estatus</th>
+            <th>Observación</th>
+            <th>Origen</th>
+            <th>Arete</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filasHTML}
+        </tbody>
+      </table>
+    </body>
+    </html>
+  `;
+
+  const ventana = window.open('', '_blank');
+  ventana.document.write(tablaHTML);
+  ventana.document.close();
+}
 </script>
 
 <style scoped>
@@ -1032,6 +1154,40 @@ function escapeHtml(str) {
   border:1px solid #ccc;
   font-size:14px;
   outline:none;
+}
+
+/* Botones de exportación */
+.sistpec-export-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.sistpec-btn-export {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sistpec-btn-excel {
+  background-color: #217346;
+  color: #fff;
+}
+
+.sistpec-btn-excel:hover {
+  background-color: #1a5c38;
+}
+
+.sistpec-btn-pdf {
+  background-color: #c42b1c;
+  color: #fff;
+}
+
+.sistpec-btn-pdf:hover {
+  background-color: #a32315;
 }
 
 /* responsive */

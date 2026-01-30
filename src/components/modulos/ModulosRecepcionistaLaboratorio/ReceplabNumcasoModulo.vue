@@ -166,6 +166,16 @@
           </div>
         </div>
 
+        <!-- Botones de descarga -->
+        <div v-if="resultados.length > 0" class="sistpec-export-actions">
+          <button type="button" class="sistpec-btn-export sistpec-btn-excel" @click="descargarExcel">
+            DESCARGAR EXCEL
+          </button>
+          <button type="button" class="sistpec-btn-export sistpec-btn-pdf" @click="descargarPDF">
+            DESCARGAR PDF
+          </button>
+        </div>
+
         <div v-if="buscado" class="sistpec-table-wrapper">
           <table class="sistpec-table">
             <thead>
@@ -436,6 +446,94 @@ function limpiar() {
   uppSearch2.value = "";
   uppOptions2.value = [];
 }
+
+/* ===================== Descargar Excel / PDF ===================== */
+function descargarExcel() {
+  const datos = resultados.value;
+  if (datos.length === 0) return;
+
+  const encabezados = ['No. Caso', 'Hoja control', 'UPP', 'MVZ', 'Fecha asignación'];
+  const filas = datos.map(r => [
+    r.numero_caso || '',
+    r.folio_hoja_control || '',
+    `${r.clave_upp || ''} — ${r.nombre_upp || ''}`,
+    r.mvz || '',
+    r.fecha_asignacion || ''
+  ]);
+
+  const bom = '\uFEFF';
+  const csv = [encabezados, ...filas]
+    .map(fila => fila.map(celda => `"${String(celda).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `numeros_caso_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function descargarPDF() {
+  const datos = resultados.value;
+  if (datos.length === 0) return;
+
+  const filasHTML = datos.map(r => `
+    <tr>
+      <td><strong>${r.numero_caso || ''}</strong></td>
+      <td>${r.folio_hoja_control || '-'}</td>
+      <td>${r.clave_upp || ''} — ${r.nombre_upp || ''}</td>
+      <td>${r.mvz || '-'}</td>
+      <td>${r.fecha_asignacion || '-'}</td>
+    </tr>
+  `).join('');
+
+  const tablaHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Números de Caso</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { font-size: 18px; color: #333; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background-color: #7a061e; color: #fff; padding: 8px; text-align: left; }
+        td { padding: 8px; border: 1px solid #ddd; }
+        tr:nth-child(even) { background-color: #fafafa; }
+        @media print {
+          body { padding: 0; }
+          @page { margin: 1cm; }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Números de Caso - SISTPEC</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>No. Caso</th>
+            <th>Hoja control</th>
+            <th>UPP</th>
+            <th>MVZ</th>
+            <th>Fecha asignación</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filasHTML}
+        </tbody>
+      </table>
+    </body>
+    </html>
+  `;
+
+  const ventana = window.open('', '_blank');
+  ventana.document.write(tablaHTML);
+  ventana.document.close();
+}
 </script>
 
 <style scoped>
@@ -523,6 +621,40 @@ function limpiar() {
   font-size: 18px;
   line-height: 1;
   color: #1f4d1f;
+}
+
+/* Botones de exportación */
+.sistpec-export-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.sistpec-btn-export {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sistpec-btn-excel {
+  background-color: #217346;
+  color: #fff;
+}
+
+.sistpec-btn-excel:hover {
+  background-color: #1a5c38;
+}
+
+.sistpec-btn-pdf {
+  background-color: #c42b1c;
+  color: #fff;
+}
+
+.sistpec-btn-pdf:hover {
+  background-color: #a32315;
 }
 
 @media (max-width: 768px) {

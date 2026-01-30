@@ -89,6 +89,16 @@
         </div>
       </div>
 
+      <!-- Botones de descarga -->
+      <div v-if="resultadosFiltrados.length > 0" class="sistpec-export-actions">
+        <button type="button" class="sistpec-btn-export sistpec-btn-excel" @click="descargarExcel">
+          DESCARGAR EXCEL
+        </button>
+        <button type="button" class="sistpec-btn-export sistpec-btn-pdf" @click="descargarPDF">
+          DESCARGAR PDF
+        </button>
+      </div>
+
       <!-- resultados -->
       <div v-if="buscado" class="sistpec-table-wrapper">
         <table class="sistpec-table">
@@ -382,6 +392,110 @@ function badgeEstatusResultado(estatus) {
   if (estatus === 'Cancelado') return 'badge--inactivo';
   return 'badge--proceso';
 }
+
+/* ===================== Descargas ===================== */
+function descargarExcel() {
+  const datos = resultadosFiltrados.value;
+  if (datos.length === 0) return;
+
+  const encabezados = ['Número de caso', 'Folio hoja', 'Fecha emisión', 'UPP', 'Especie', 'Total muestras', 'Estatus'];
+  const filas = datos.map(r => [
+    r.numero_caso || '',
+    r.folio_hoja || '',
+    r.fecha_emision || '',
+    r.upp || '',
+    r.especie || '',
+    r.total_muestras || '',
+    r.estatus_resultado || ''
+  ]);
+
+  const bom = '\uFEFF';
+  const csv = [encabezados, ...filas]
+    .map(fila => fila.map(celda => `"${String(celda).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `hojas_resultados_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function descargarPDF() {
+  const datos = resultadosFiltrados.value;
+  if (datos.length === 0) return;
+
+  const filasHTML = datos.map(r => {
+    let badgeClass = 'proceso';
+    if (r.estatus_resultado === 'Emitido') badgeClass = 'activo';
+    else if (r.estatus_resultado === 'Cancelado') badgeClass = 'inactivo';
+
+    return `
+    <tr>
+      <td><strong>${r.numero_caso || ''}</strong></td>
+      <td>${r.folio_hoja || ''}</td>
+      <td>${r.fecha_emision || ''}</td>
+      <td>${r.upp || ''}</td>
+      <td>${r.especie || ''}</td>
+      <td>${r.total_muestras || ''}</td>
+      <td><span class="badge ${badgeClass}">${r.estatus_resultado || ''}</span></td>
+    </tr>
+  `;
+  }).join('');
+
+  const tablaHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Hojas de Resultados</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { font-size: 18px; color: #333; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background-color: #7a061e; color: #fff; padding: 8px; text-align: left; }
+        td { padding: 8px; border: 1px solid #ddd; }
+        tr:nth-child(even) { background-color: #fafafa; }
+        .badge { padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+        .activo { background: #e1f3e1; color: #225522; }
+        .inactivo { background: #fbeaea; color: #7a1f1f; }
+        .proceso { background: #fff4e5; color: #b26a00; }
+        @media print {
+          body { padding: 0; }
+          @page { margin: 1cm; }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Hojas de Resultados - SISTPEC</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>Número de caso</th>
+            <th>Folio hoja</th>
+            <th>Fecha emisión</th>
+            <th>UPP</th>
+            <th>Especie</th>
+            <th>Total muestras</th>
+            <th>Estatus</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filasHTML}
+        </tbody>
+      </table>
+    </body>
+    </html>
+  `;
+
+  const ventana = window.open('', '_blank');
+  ventana.document.write(tablaHTML);
+  ventana.document.close();
+}
 </script>
 
 <style scoped>
@@ -498,6 +612,40 @@ function badgeEstatusResultado(estatus) {
   background:#f0f0f0;
   border:1px solid #ddd;
   color:#333;
+}
+
+/* Botones de exportación */
+.sistpec-export-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.sistpec-btn-export {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sistpec-btn-excel {
+  background-color: #217346;
+  color: #fff;
+}
+
+.sistpec-btn-excel:hover {
+  background-color: #1a5c38;
+}
+
+.sistpec-btn-pdf {
+  background-color: #c42b1c;
+  color: #fff;
+}
+
+.sistpec-btn-pdf:hover {
+  background-color: #a32315;
 }
 
 /* responsive */

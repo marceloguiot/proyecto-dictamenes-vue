@@ -181,6 +181,15 @@
         </div>
       </div>
 
+      <div v-if="hojasFiltradasEliminar.length > 0" class="sistpec-export-actions">
+        <button type="button" class="sistpec-btn-export sistpec-btn-excel" @click="descargarExcel">
+          DESCARGAR EXCEL
+        </button>
+        <button type="button" class="sistpec-btn-export sistpec-btn-pdf" @click="descargarPDF">
+          DESCARGAR PDF
+        </button>
+      </div>
+
       <div v-if="buscado" class="sistpec-table-wrapper">
         <table class="sistpec-table">
           <thead>
@@ -472,6 +481,91 @@ function eliminarHoja(id) {
   hojas.value = hojas.value.filter(x => x.id !== id);
   mensajeExito.value = 'Hoja eliminada correctamente.';
 }
+
+// =====================
+// DESCARGAS
+// =====================
+function descargarExcel() {
+  const datos = hojasFiltradasEliminar.value;
+  if (datos.length === 0) return;
+
+  const encabezados = ['Folio hoja', 'Número de caso', 'UPP', 'MVZ', 'Fecha carga', 'Archivo'];
+  const filas = datos.map(h => [
+    h.folio || '',
+    h.numero_caso || '',
+    h.upp || '',
+    h.mvz || '',
+    h.fecha_carga || '',
+    h.fileName || ''
+  ]);
+
+  const bom = '\uFEFF';
+  const csv = [encabezados, ...filas]
+    .map(fila => fila.map(celda => `"${String(celda).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `hojas_resultados_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function descargarPDF() {
+  const datos = hojasFiltradasEliminar.value;
+  if (datos.length === 0) return;
+
+  const encabezados = ['Folio hoja', 'Número de caso', 'UPP', 'MVZ', 'Fecha carga', 'Archivo'];
+
+  let html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Hojas de resultados</title>
+      <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; }
+        h1 { font-size: 16px; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #333; padding: 6px 8px; text-align: left; }
+        th { background-color: #7a061e; color: #fff; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        @media print { body { margin: 0; } }
+      </style>
+    </head>
+    <body>
+      <h1>Hojas de resultados</h1>
+      <table>
+        <thead><tr>${encabezados.map(e => `<th>${e}</th>`).join('')}</tr></thead>
+        <tbody>
+  `;
+
+  datos.forEach(h => {
+    html += `<tr>
+      <td>${h.folio || ''}</td>
+      <td>${h.numero_caso || ''}</td>
+      <td>${h.upp || ''}</td>
+      <td>${h.mvz || ''}</td>
+      <td>${h.fecha_carga || ''}</td>
+      <td>${h.fileName || ''}</td>
+    </tr>`;
+  });
+
+  html += `
+        </tbody>
+      </table>
+    </body>
+    </html>
+  `;
+
+  const ventana = window.open('', '_blank');
+  ventana.document.write(html);
+  ventana.document.close();
+  ventana.print();
+}
 </script>
 
 <style scoped>
@@ -658,9 +752,38 @@ function eliminarHoja(id) {
 .sistpec-table tbody tr:nth-child(even) { 
     background:#fafafa; 
 }
-.sin-resultados { 
-    text-align:center; 
-    color:#777; 
+.sin-resultados {
+    text-align:center;
+    color:#777;
+}
+
+/* Botones exportar */
+.sistpec-export-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.sistpec-btn-export {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.sistpec-btn-excel {
+  background-color: #217346;
+  color: #fff;
+}
+.sistpec-btn-excel:hover {
+  background-color: #1a5c38;
+}
+.sistpec-btn-pdf {
+  background-color: #c42b1c;
+  color: #fff;
+}
+.sistpec-btn-pdf:hover {
+  background-color: #a32315;
 }
 
 @media (max-width: 768px){

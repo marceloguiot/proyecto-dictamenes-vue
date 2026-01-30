@@ -83,20 +83,20 @@
         <div class="reportes-actions">
           <button
             type="button"
-            class="sistpec-btn-secondary"
+            class="sistpec-btn-export sistpec-btn-excel"
             :disabled="resultadosFiltrados.length === 0"
             @click="exportarCSV"
           >
-            EXPORTAR EXCEL
+            DESCARGAR EXCEL
           </button>
 
           <button
             type="button"
-            class="sistpec-btn-secondary"
+            class="sistpec-btn-export sistpec-btn-pdf"
             :disabled="resultadosFiltrados.length === 0"
             @click="exportarPDF"
           >
-            EXPORTAR PDF
+            DESCARGAR PDF
           </button>
         </div>
       </div>
@@ -549,6 +549,39 @@ function safe(s) {
 }
 .badge--activo { background: #e1f3e1; color: #225522; }
 .badge--proceso { background: #fff4e5; color: #b26a00; }
+
+/* Botones de exportación */
+.sistpec-btn-export {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sistpec-btn-export:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.sistpec-btn-excel {
+  background-color: #217346;
+  color: #fff;
+}
+
+.sistpec-btn-excel:hover:not(:disabled) {
+  background-color: #1a5c38;
+}
+
+.sistpec-btn-pdf {
+  background-color: #c42b1c;
+  color: #fff;
+}
+
+.sistpec-btn-pdf:hover:not(:disabled) {
+  background-color: #a32315;
+}
 
 @media (max-width: 768px) {
   .sistpec-search-bar { grid-template-columns: 1fr; }

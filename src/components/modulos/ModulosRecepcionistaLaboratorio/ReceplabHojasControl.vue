@@ -84,6 +84,16 @@
       </div>
     </div>
 
+    <!-- Botones de descarga -->
+    <div v-if="hojasFiltradas.length > 0" class="sistpec-export-actions">
+      <button type="button" class="sistpec-btn-export sistpec-btn-excel" @click="descargarExcel">
+        DESCARGAR EXCEL
+      </button>
+      <button type="button" class="sistpec-btn-export sistpec-btn-pdf" @click="descargarPdfTabla">
+        DESCARGAR PDF
+      </button>
+    </div>
+
     <!-- RESULTADOS -->
     <div v-if="buscado" class="sistpec-table-wrapper">
       <table class="sistpec-table">
@@ -283,6 +293,110 @@ function badgeClase(estatus) {
   if (estatus === 'Pendiente') return 'badge--proceso';
   return 'badge--proceso';
 }
+
+/* ===================== Descargar Excel / PDF ===================== */
+function descargarExcel() {
+  const datos = hojasFiltradas.value;
+  if (datos.length === 0) return;
+
+  const encabezados = ['Folio hoja', 'Fecha', 'MVZ', 'UPP', 'Especie', 'Total muestras', 'Estatus'];
+  const filas = datos.map(h => [
+    h.folio_hoja || '',
+    h.fecha || '',
+    h.mvz || '',
+    h.upp || '',
+    h.especie || '',
+    h.total_muestras || '',
+    h.estatus || ''
+  ]);
+
+  const bom = '\uFEFF';
+  const csv = [encabezados, ...filas]
+    .map(fila => fila.map(celda => `"${String(celda).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `hojas_control_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function descargarPdfTabla() {
+  const datos = hojasFiltradas.value;
+  if (datos.length === 0) return;
+
+  const filasHTML = datos.map(h => {
+    let badgeClass = 'proceso';
+    if (h.estatus === 'Concluida') badgeClass = 'activo';
+    else if (h.estatus === 'Cancelada') badgeClass = 'inactivo';
+
+    return `
+    <tr>
+      <td>${h.folio_hoja || ''}</td>
+      <td>${h.fecha || ''}</td>
+      <td>${h.mvz || ''}</td>
+      <td>${h.upp || ''}</td>
+      <td>${h.especie || ''}</td>
+      <td>${h.total_muestras || ''}</td>
+      <td><span class="badge ${badgeClass}">${h.estatus || ''}</span></td>
+    </tr>
+  `;
+  }).join('');
+
+  const tablaHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Hojas de Control de Campo</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { font-size: 18px; color: #333; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background-color: #7a061e; color: #fff; padding: 8px; text-align: left; }
+        td { padding: 8px; border: 1px solid #ddd; }
+        tr:nth-child(even) { background-color: #fafafa; }
+        .badge { padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+        .activo { background: #e1f3e1; color: #225522; }
+        .inactivo { background: #fbeaea; color: #7a1f1f; }
+        .proceso { background: #fff4e5; color: #b26a00; }
+        @media print {
+          body { padding: 0; }
+          @page { margin: 1cm; }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Hojas de Control de Campo - SISTPEC</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>Folio hoja</th>
+            <th>Fecha</th>
+            <th>MVZ</th>
+            <th>UPP</th>
+            <th>Especie</th>
+            <th>Total muestras</th>
+            <th>Estatus</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filasHTML}
+        </tbody>
+      </table>
+    </body>
+    </html>
+  `;
+
+  const ventana = window.open('', '_blank');
+  ventana.document.write(tablaHTML);
+  ventana.document.close();
+}
 </script>
 
 <style scoped>
@@ -396,4 +510,38 @@ function badgeClase(estatus) {
 
 .acciones-pdf { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
 .nota-pdf { margin-top: 4px; font-size: 11px; color: #999; }
+
+/* Botones de exportación */
+.sistpec-export-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.sistpec-btn-export {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sistpec-btn-excel {
+  background-color: #217346;
+  color: #fff;
+}
+
+.sistpec-btn-excel:hover {
+  background-color: #1a5c38;
+}
+
+.sistpec-btn-pdf {
+  background-color: #c42b1c;
+  color: #fff;
+}
+
+.sistpec-btn-pdf:hover {
+  background-color: #a32315;
+}
 </style>
