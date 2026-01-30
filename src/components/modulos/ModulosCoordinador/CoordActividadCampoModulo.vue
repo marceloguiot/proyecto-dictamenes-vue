@@ -102,6 +102,16 @@
         </div>
       </div>
 
+      <!-- Botones de descarga -->
+      <div v-if="visitasFiltradas.length > 0" class="sistpec-export-actions">
+        <button type="button" class="sistpec-btn-export sistpec-btn-excel" @click="descargarExcel">
+          DESCARGAR EXCEL
+        </button>
+        <button type="button" class="sistpec-btn-export sistpec-btn-pdf" @click="descargarPDF">
+          DESCARGAR PDF
+        </button>
+      </div>
+
       <!-- Tabla -->
       <div class="sistpec-table-wrapper">
         <table class="sistpec-table">
@@ -589,6 +599,124 @@ function badgePrioridadClase(p) {
   if (p === 'Media') return 'badge--media';
   return 'badge--baja';
 }
+
+// ===== FUNCIONES DE DESCARGA =====
+
+function descargarExcel() {
+  const datos = visitasFiltradas.value;
+  if (datos.length === 0) return;
+
+  // Cabeceras
+  const cabeceras = ['UPP', 'MVZ', 'Periodo Inicio', 'Periodo Fin', 'Prioridad', 'Estatus', 'Fecha Visita', 'Hoja Campo', 'Latitud', 'Longitud', 'Comentarios'];
+
+  // Filas de datos
+  const filas = datos.map(v => [
+    v.upp || '',
+    v.mvz || '',
+    v.fecha_inicio || '',
+    v.fecha_fin || '',
+    v.prioridad || '',
+    v.estatus || '',
+    v.fecha_visita || '',
+    v.hoja_control || '',
+    v.latitud ?? '',
+    v.longitud ?? '',
+    (v.comentarios || '').replace(/"/g, '""')
+  ]);
+
+  // Generar CSV
+  let csv = cabeceras.map(c => `"${c}"`).join(',') + '\n';
+  filas.forEach(fila => {
+    csv += fila.map(celda => `"${celda}"`).join(',') + '\n';
+  });
+
+  // Agregar BOM para que Excel reconozca UTF-8
+  const bom = '\uFEFF';
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', `actividad_campo_${new Date().toISOString().slice(0, 10)}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function descargarPDF() {
+  const datos = visitasFiltradas.value;
+  if (datos.length === 0) return;
+
+  // Crear contenido HTML para imprimir
+  const cabeceras = ['UPP', 'MVZ', 'Periodo', 'Prioridad', 'Estatus', 'Fecha Visita', 'Hoja Campo', 'Latitud', 'Longitud', 'Comentarios'];
+
+  let tablaHTML = `
+    <html>
+    <head>
+      <title>Actividad de Campo - SISTPEC</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #7a061e; font-size: 18px; margin-bottom: 5px; }
+        .fecha { color: #666; font-size: 12px; margin-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th { background-color: #7a061e; color: white; padding: 8px 6px; text-align: left; }
+        td { border: 1px solid #ddd; padding: 6px; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .badge { padding: 2px 6px; border-radius: 8px; font-size: 10px; font-weight: bold; }
+        .alta { background: #fbeaea; color: #7a061e; }
+        .media { background: #fff4e5; color: #b26a00; }
+        .baja { background: #e1f3e1; color: #225522; }
+        .pendiente { background: #fff4e5; color: #b26a00; }
+        .realizada { background: #e1f3e1; color: #225522; }
+        .cancelada { background: #fbeaea; color: #7a1f1f; }
+        @media print { body { margin: 0; } }
+      </style>
+    </head>
+    <body>
+      <h1>Reporte de Actividad de Campo</h1>
+      <p class="fecha">Generado: ${new Date().toLocaleString('es-MX')}</p>
+      <table>
+        <thead>
+          <tr>${cabeceras.map(c => `<th>${c}</th>`).join('')}</tr>
+        </thead>
+        <tbody>
+  `;
+
+  datos.forEach(v => {
+    const prioridadClase = v.prioridad === 'Alta' ? 'alta' : v.prioridad === 'Media' ? 'media' : 'baja';
+    const estatusClase = v.estatus === 'Realizada' ? 'realizada' : v.estatus === 'Cancelada' ? 'cancelada' : 'pendiente';
+
+    tablaHTML += `
+      <tr>
+        <td>${v.upp || '-'}</td>
+        <td>${v.mvz || '-'}</td>
+        <td>${v.fecha_inicio || ''} a ${v.fecha_fin || ''}</td>
+        <td><span class="badge ${prioridadClase}">${v.prioridad || '-'}</span></td>
+        <td><span class="badge ${estatusClase}">${v.estatus || '-'}</span></td>
+        <td>${v.fecha_visita || '-'}</td>
+        <td>${v.hoja_control || '-'}</td>
+        <td>${v.latitud ?? '-'}</td>
+        <td>${v.longitud ?? '-'}</td>
+        <td>${v.comentarios || '-'}</td>
+      </tr>
+    `;
+  });
+
+  tablaHTML += `
+        </tbody>
+      </table>
+      <script>window.onload = function() { window.print(); }<\/script>
+    </body>
+    </html>
+  `;
+
+  // Abrir en nueva ventana para imprimir/guardar como PDF
+  const ventana = window.open('', '_blank');
+  ventana.document.write(tablaHTML);
+  ventana.document.close();
+}
 </script>
 
 <style scoped>
@@ -795,9 +923,46 @@ function badgePrioridadClase(p) {
   grid-template-columns: repeat(3, minmax(0, 1fr)); 
 }
 
-.sistpec-search-actions { 
-  display: flex; align-items: flex-end; 
-  gap: 8px; 
+.sistpec-search-actions {
+  display: flex; align-items: flex-end;
+  gap: 8px;
+}
+
+/* Botones de exportación */
+.sistpec-export-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.sistpec-btn-export {
+  border: none;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sistpec-btn-excel {
+  background-color: #1d6f42;
+  color: #ffffff;
+}
+
+.sistpec-btn-excel:hover {
+  background-color: #165c36;
+}
+
+.sistpec-btn-pdf {
+  background-color: #c62828;
+  color: #ffffff;
+}
+
+.sistpec-btn-pdf:hover {
+  background-color: #a31f1f;
 }
 
 /* Tabla */
