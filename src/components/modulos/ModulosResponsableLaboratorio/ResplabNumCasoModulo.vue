@@ -224,7 +224,7 @@
 
 <script setup>
 import { computed, ref, nextTick } from "vue";
-import api from "@/services/api";
+import api, { hojaControlService } from "@/services/api";
 
 defineProps({ codigo: String, rol: String });
 
@@ -314,8 +314,7 @@ async function buscarHoja() {
 
   loadingBuscarHoja.value = true;
   try {
-    console.log(folio);
-    const res = await api.get("/api/hojas/por-folio", { params: { folio } });
+    const res = await hojaControlService.obtenerPorFolio(folio);
 
     if (!res?.data) {
       errores.value.push("No se encontró el folio capturado. Verifique que la hoja exista (registrada por el MVZ).");
@@ -348,7 +347,7 @@ async function buscarHoja() {
     errores.value.push(
       e?.response?.data?.detail ||
       e?.response?.data?.message ||
-      "Error al buscar el folio en el servidor. Verifica que exista el endpoint /api/hojas/por-folio."
+      "Error al buscar el folio en el servidor. Verifica que exista el endpoint /api/hoja-control/por-folio."
     );
     scrollAlContenido();
     console.error(e);

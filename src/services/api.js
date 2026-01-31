@@ -102,6 +102,18 @@ export const hojaReporteService = {
   eliminar: (id) => api.delete(`/api/hoja-reporte/${id}`),
 };
 
+// ==================== EMPIEZAN CAMBIOS ====================
+// Servicios de Hoja de Control de Campo
+// ==================== EMPIEZAN CAMBIOS ====================
+export const hojaControlService = {
+  consultar: (filtros = {}) => api.get("/api/hoja-control", { params: filtros }),
+  obtenerPorId: (id) => api.get(`/api/hoja-control/${id}`),
+  obtenerPorFolio: (folio) => api.get("/api/hoja-control/por-folio", { params: { folio } }),
+  crear: (hojaControl) => api.post("/api/hoja-control", hojaControl),
+  actualizar: (id, hojaControl) => api.put(`/api/hoja-control/${id}`, hojaControl),
+  eliminar: (id) => api.delete(`/api/hoja-control/${id}`),
+};
+
 // ==================== TERMINAN CAMBIOS ====================
 
 export default api;
