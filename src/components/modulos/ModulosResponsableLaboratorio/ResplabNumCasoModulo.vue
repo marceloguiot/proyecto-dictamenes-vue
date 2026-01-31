@@ -314,8 +314,7 @@ async function buscarHoja() {
 
   loadingBuscarHoja.value = true;
   try {
-    // ✅ Endpoint requerido en backend:
-    // GET /api/hojas/por-folio?folio=...
+    console.log(folio);
     const res = await api.get("/api/hojas/por-folio", { params: { folio } });
 
     if (!res?.data) {
